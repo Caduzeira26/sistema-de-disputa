@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
 import { BrandFooter } from "@/components/BrandFooter";
 import { CheckoutButton } from "@/components/CheckoutButton";
 import { PromoCountdown } from "@/components/PromoCountdown";
@@ -25,7 +24,6 @@ const FAQ_ITEMS = [
 export default async function PlansPage() {
   const session = await auth();
   const isLoggedIn = !!session?.user;
-  const tournamentCount = await prisma.tournament.count();
   const proEntry = PLAN_CATALOG.PRO;
   const proPromoActive = isPromoActive(proEntry);
 
@@ -165,13 +163,6 @@ export default async function PlansPage() {
         {/* Chamada final */}
         <div className="mt-20 rounded-xl bg-slate-900 px-6 py-12 text-center text-white">
           <h2 className="text-2xl font-semibold">Você organiza o esporte. A gente organiza a bagunça.</h2>
-          {tournamentCount > 0 && (
-            <p className="mt-2 text-slate-300">
-              {tournamentCount === 1
-                ? "1 campeonato já criado por aqui."
-                : `${tournamentCount} campeonatos já criados por aqui.`}
-            </p>
-          )}
           <Link
             href={isLoggedIn ? "/admin/torneios/novo" : "/admin/signup"}
             className="mt-6 inline-block rounded-md bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100"
