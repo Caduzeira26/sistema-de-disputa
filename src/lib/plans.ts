@@ -8,6 +8,9 @@ export type PlanCatalogEntry = {
   priceMonthlyCents: number;
   /** Only START offers a one-off "avulso" purchase instead of a subscription. */
   priceAvulsoCents?: number;
+  /** Time-limited launch promo: `promoPriceMonthlyCents` replaces `priceMonthlyCents` until `promoEndsAt`. */
+  promoPriceMonthlyCents?: number;
+  promoEndsAt?: Date;
   highlight?: boolean;
   maxTeamsPerTournament: number | null;
   maxActiveTournaments: number | null;
@@ -16,6 +19,9 @@ export type PlanCatalogEntry = {
   canWhiteLabel: boolean;
   features: string[];
 };
+
+/** Launch promo window: 7 days from the promo's launch (2026-09-10 19:23 UTC). */
+export const PRO_PROMO_ENDS_AT = new Date("2026-09-17T19:23:33Z");
 
 export const PLAN_CATALOG: Record<PlanTier, PlanCatalogEntry> = {
   START: {
@@ -38,7 +44,9 @@ export const PLAN_CATALOG: Record<PlanTier, PlanCatalogEntry> = {
   PRO: {
     tier: "PRO",
     label: "Pro",
-    priceMonthlyCents: 8700,
+    priceMonthlyCents: 14700,
+    promoPriceMonthlyCents: 8700,
+    promoEndsAt: PRO_PROMO_ENDS_AT,
     highlight: true,
     maxTeamsPerTournament: null,
     maxActiveTournaments: null,
@@ -167,6 +175,23 @@ export function isWithinTournamentLimit(limits: PlanLimits, currentCount: number
 
 export function isWithinTeamLimit(limits: PlanLimits, currentCount: number): boolean {
   return limits.maxTeamsPerTournament === null || currentCount < limits.maxTeamsPerTournament;
+}
+
+/**
+ * The price actually charged for a monthly subscription right now — the
+ * promo price while it's running, the regular price otherwise. Used by both
+ * the /planos page display and createSubscriptionCharge, so what's shown
+ * always matches what's billed.
+ */
+export function getEffectiveMonthlyPriceCents(entry: PlanCatalogEntry, now = new Date()): number {
+  if (entry.promoPriceMonthlyCents && entry.promoEndsAt && now < entry.promoEndsAt) {
+    return entry.promoPriceMonthlyCents;
+  }
+  return entry.priceMonthlyCents;
+}
+
+export function isPromoActive(entry: PlanCatalogEntry, now = new Date()): boolean {
+  return Boolean(entry.promoPriceMonthlyCents && entry.promoEndsAt && now < entry.promoEndsAt);
 }
 
 export function formatBRL(cents: number): string {

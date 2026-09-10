@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import * as efi from "@/lib/efi";
-import { PLAN_CATALOG } from "@/lib/plans";
+import { getEffectiveMonthlyPriceCents, PLAN_CATALOG } from "@/lib/plans";
 import type { PaymentType, PixTransactionStatus } from "@prisma/client";
 
 /** Our commission per paid team registration, in cents — on top of the organizer's own fee. */
@@ -77,7 +77,7 @@ export async function createSubscriptionCharge(subscriptionId: string) {
   const amountCents =
     subscription.paymentType === "PER_TOURNAMENT"
       ? (catalogEntry.priceAvulsoCents ?? catalogEntry.priceMonthlyCents)
-      : catalogEntry.priceMonthlyCents;
+      : getEffectiveMonthlyPriceCents(catalogEntry);
 
   return createChargeAndPersist({
     amountCents,
