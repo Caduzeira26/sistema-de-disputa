@@ -95,6 +95,12 @@ export default async function TournamentDetailPage({
                 /torneios/{tournament.slug}
               </Link>
             </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Ficha de inscrição (compartilhe com as equipes):{" "}
+              <Link href={`/torneios/${tournament.slug}/inscricao`} className="underline" target="_blank">
+                /torneios/{tournament.slug}/inscricao
+              </Link>
+            </p>
             <div className="mt-1 flex gap-3">
               <Link href={`/admin/torneios/${tournament.id}/agenda`} className="text-sm text-slate-600 underline">
                 Gerenciar agenda e locais
