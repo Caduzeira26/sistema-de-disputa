@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { BrandFooter } from "@/components/BrandFooter";
 
 const BRACKET_LABEL: Record<string, string> = {
   GROUP: "Grupo",
@@ -87,6 +88,8 @@ export default async function PublicAgendaPage({ params }: { params: Promise<{ s
           {unscheduled.length} partida(s) ainda sem data/horário definidos.
         </p>
       )}
+
+      <BrandFooter />
     </main>
   );
 }

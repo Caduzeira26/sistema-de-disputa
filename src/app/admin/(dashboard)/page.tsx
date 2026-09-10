@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SPORT_LABELS } from "@/lib/sport";
 import { formatTournamentDateRange } from "@/lib/formatDateRange";
+import { BrandFooter } from "@/components/BrandFooter";
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Rascunho",
@@ -57,6 +58,8 @@ export default async function AdminHomePage() {
           ))}
         </ul>
       )}
+
+      <BrandFooter />
     </div>
   );
 }

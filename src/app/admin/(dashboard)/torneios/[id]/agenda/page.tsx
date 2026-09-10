@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { VenueManager } from "@/components/admin/VenueManager";
 import { AutoScheduleForm } from "@/components/admin/AutoScheduleForm";
 import { MatchScheduleRow } from "@/components/admin/MatchScheduleRow";
+import { BrandFooter } from "@/components/BrandFooter";
 
 const BRACKET_LABEL: Record<string, string> = {
   GROUP: "Grupo",
@@ -94,6 +95,8 @@ export default async function TournamentAgendaPage({
           )}
         </div>
       </div>
+
+      <BrandFooter />
     </div>
   );
 }

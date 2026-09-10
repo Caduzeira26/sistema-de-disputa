@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { EditTeamForm } from "@/components/admin/EditTeamForm";
+import { BrandFooter } from "@/components/BrandFooter";
 
 export default async function EditTeamPage({
   params,
@@ -26,6 +27,8 @@ export default async function EditTeamPage({
       <div className="mt-6">
         <EditTeamForm team={team} />
       </div>
+
+      <BrandFooter />
     </div>
   );
 }

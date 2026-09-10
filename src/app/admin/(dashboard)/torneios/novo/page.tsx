@@ -1,4 +1,5 @@
 import { CreateTournamentForm } from "@/components/admin/CreateTournamentForm";
+import { BrandFooter } from "@/components/BrandFooter";
 
 export default function NewTournamentPage() {
   return (
@@ -10,6 +11,8 @@ export default function NewTournamentPage() {
       <div className="mt-6">
         <CreateTournamentForm />
       </div>
+
+      <BrandFooter />
     </div>
   );
 }
