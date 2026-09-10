@@ -62,6 +62,36 @@ enum SportType {
   TENIS_DE_MESA
 }
 
+enum PlanTier {
+  START
+  PRO
+  LIGA
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELED
+}
+
+enum PaymentType {
+  MONTHLY
+  PER_TOURNAMENT
+}
+
+enum PixTransactionKind {
+  TEAM_REGISTRATION
+  SUBSCRIPTION
+}
+
+enum PixTransactionStatus {
+  PENDING
+  PAID
+  EXPIRED
+  CANCELED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -69,7 +99,54 @@ model User {
   name         String
   createdAt    DateTime @default(now())
 
-  tournaments Tournament[]
+  tournaments   Tournament[]
+  subscriptions Subscription[]
+}
+
+/// An organizer's plan purchase. MONTHLY subscriptions expire after ~30 days
+/// and must be renewed manually (Efí Pix has no native recurring billing).
+/// PER_TOURNAMENT (Start avulso) never expires — it's a one-tournament
+/// credit consumed by creating a tournament, not a calendar window.
+model Subscription {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id])
+  plan        PlanTier
+  status      SubscriptionStatus @default(PENDING)
+  paymentType PaymentType
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime           @default(now())
+
+  pixTransactions PixTransaction[]
+
+  @@index([userId, status])
+}
+
+/// A single PIX charge, either for a team's paid registration or for a
+/// plan purchase. Never trust `status` from a webhook alone — always
+/// re-confirm against Efí before flipping it to PAID (see src/lib/pix.ts).
+model PixTransaction {
+  id             String             @id @default(cuid())
+  kind           PixTransactionKind
+  tournamentId   String?
+  tournament     Tournament?        @relation(fields: [tournamentId], references: [id])
+  teamId         String?            @unique
+  team           Team?              @relation(fields: [teamId], references: [id])
+  subscriptionId String?
+  subscription   Subscription?      @relation(fields: [subscriptionId], references: [id])
+
+  amountCents       Int
+  platformFeeCents  Int                  @default(0)
+  status            PixTransactionStatus @default(PENDING)
+  txid              String               @unique
+  qrCode            String?
+  qrCodeImageBase64 String?              @db.Text
+  locId             Int?
+  paidAt            DateTime?
+  createdAt         DateTime             @default(now())
+
+  @@index([status])
 }
 
 model Tournament {
@@ -83,6 +160,10 @@ model Tournament {
   sportType   SportType        @default(FUTEBOL_CAMPO)
   startDate   DateTime?
   endDate     DateTime?
+
+  /// Team registration fee in cents, organizer-defined. Null/0 = free.
+  /// Only settable when the organizer's plan allows charging (Pro/Liga).
+  registrationFeeCents Int?
 
   pointsWin  Int @default(3)
   pointsDraw Int @default(1)
@@ -98,10 +179,11 @@ model Tournament {
   organizerId String
   organizer   User   @relation(fields: [organizerId], references: [id])
 
-  venues  Venue[]
-  teams   Team[]  @relation("TournamentTeams")
-  groups  Group[]
-  matches Match[]
+  venues          Venue[]
+  teams           Team[]           @relation("TournamentTeams")
+  groups          Group[]
+  matches         Match[]
+  pixTransactions PixTransaction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -133,14 +215,15 @@ model Team {
   group   Group?  @relation(fields: [groupId], references: [id])
   seed    Int?
 
-  players     Player[]
-  homeMatches Match[]     @relation("HomeTeam")
-  awayMatches Match[]     @relation("AwayTeam")
-  goals       Goal[]
-  cards       Card[]
-  baskets     Basket[]
-  fouls       Foul[]
-  championOf  Tournament? @relation("Champion")
+  players        Player[]
+  homeMatches    Match[]         @relation("HomeTeam")
+  awayMatches    Match[]         @relation("AwayTeam")
+  goals          Goal[]
+  cards          Card[]
+  baskets        Basket[]
+  fouls          Foul[]
+  championOf     Tournament?     @relation("Champion")
+  pixTransaction PixTransaction?
 
   createdAt DateTime @default(now())
 

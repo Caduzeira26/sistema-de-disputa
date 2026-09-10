@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { TeamRegistrationForm } from "@/components/public/TeamRegistrationForm";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
+import { formatBRL } from "@/lib/plans";
 
 export default async function TeamRegistrationPage({
   params,
@@ -30,7 +31,13 @@ export default async function TeamRegistrationPage({
         </p>
       ) : (
         <div className="mt-6">
-          <TeamRegistrationForm tournamentId={tournament.id} />
+          {tournament.registrationFeeCents ? (
+            <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+              Inscrição paga: {formatBRL(tournament.registrationFeeCents)} por equipe. Você poderá pagar via PIX
+              logo após enviar os dados.
+            </p>
+          ) : null}
+          <TeamRegistrationForm tournamentId={tournament.id} tournamentSlug={tournament.slug} />
         </div>
       )}
     </main>

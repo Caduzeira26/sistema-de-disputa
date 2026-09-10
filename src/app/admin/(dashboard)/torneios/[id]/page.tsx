@@ -14,8 +14,10 @@ import { computeStandings } from "@/lib/bracket";
 import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
 import { TournamentLogoForm } from "@/components/admin/TournamentLogoForm";
 import { TournamentDatesForm } from "@/components/admin/TournamentDatesForm";
+import { TournamentFeeForm } from "@/components/admin/TournamentFeeForm";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 import { formatTournamentDateRange } from "@/lib/formatDateRange";
+import { getPlanLimits } from "@/lib/plans";
 
 const STATUS_OPTIONS = [
   { value: "DRAFT", label: "Rascunho" },
@@ -59,6 +61,8 @@ export default async function TournamentDetailPage({
   });
 
   if (!tournament || tournament.organizerId !== session.user.id) notFound();
+
+  const limits = await getPlanLimits(session.user.id);
 
   const approvedTeams = tournament.teams.filter((t) => t.status === "APPROVED");
   const displayMatches = toDisplayMatches(tournament.matches, tournament.teams);
@@ -148,6 +152,21 @@ export default async function TournamentDetailPage({
         <h2 className="mb-2 text-sm font-semibold text-slate-700">Datas do torneio</h2>
         <TournamentDatesForm tournamentId={tournament.id} startDate={tournament.startDate} endDate={tournament.endDate} />
       </div>
+
+      {limits.canChargeRegistration ? (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-semibold text-slate-700">Inscrição paga (PIX)</h2>
+          <TournamentFeeForm tournamentId={tournament.id} registrationFeeCents={tournament.registrationFeeCents} />
+        </div>
+      ) : (
+        <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+          Cobrança de inscrição por PIX é exclusiva dos planos Pro e Liga.{" "}
+          <Link href="/planos" className="underline">
+            Ver planos
+          </Link>
+          .
+        </div>
+      )}
 
       <div className="mt-8">
         <h2 className="text-lg font-semibold text-slate-900">

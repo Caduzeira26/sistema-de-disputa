@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { registerTeam, type RegisterTeamState } from "@/lib/actions/teams";
 
 const initialState: RegisterTeamState = {};
@@ -16,9 +17,17 @@ function emptyPlayer(): PlayerDraft {
   return { name: "", shirtNumber: "", position: "", birthDate: "" };
 }
 
-export function TeamRegistrationForm({ tournamentId }: { tournamentId: string }) {
+export function TeamRegistrationForm({ tournamentId, tournamentSlug }: { tournamentId: string; tournamentSlug: string }) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(registerTeam, initialState);
   const [players, setPlayers] = useState<PlayerDraft[]>([emptyPlayer()]);
+
+  useEffect(() => {
+    if (state.paymentTxid) {
+      router.push(`/torneios/${tournamentSlug}/inscricao/pagamento/${state.paymentTxid}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.paymentTxid]);
 
   function updatePlayer(index: number, field: keyof PlayerDraft, value: string) {
     setPlayers((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)));
@@ -32,7 +41,7 @@ export function TeamRegistrationForm({ tournamentId }: { tournamentId: string })
     setPlayers((prev) => prev.filter((_, i) => i !== index));
   }
 
-  if (state.success) {
+  if (state.success && !state.paymentTxid) {
     return (
       <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6 text-emerald-800">
         <p className="font-medium">Inscrição enviada com sucesso!</p>

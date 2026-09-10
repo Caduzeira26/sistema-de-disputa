@@ -18,7 +18,8 @@ export const authConfig = {
     authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
       const { pathname } = request.nextUrl;
-      const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin/login";
+      const isAdminRoute =
+        pathname.startsWith("/admin") && pathname !== "/admin/login" && pathname !== "/admin/signup";
       return isAdminRoute ? isLoggedIn : true;
     },
   },

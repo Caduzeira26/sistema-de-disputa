@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { createTournament, type CreateTournamentState } from "@/lib/actions/tournaments";
-import { SPORT_TYPES, SPORT_LABELS } from "@/lib/sport";
+import { SPORT_LABELS, type SportType } from "@/lib/sport";
 
 const initialState: CreateTournamentState = {};
 
@@ -13,7 +14,7 @@ const FORMAT_OPTIONS = [
   { value: "GROUPS_DOUBLE_ELIM", label: "Fase de grupos + eliminatória dupla" },
 ];
 
-export function CreateTournamentForm() {
+export function CreateTournamentForm({ allowedSports }: { allowedSports: readonly SportType[] }) {
   const [state, formAction, pending] = useActionState(createTournament, initialState);
 
   return (
@@ -49,15 +50,23 @@ export function CreateTournamentForm() {
         <select
           id="sportType"
           name="sportType"
-          defaultValue="FUTEBOL_CAMPO"
+          defaultValue={allowedSports[0]}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
         >
-          {SPORT_TYPES.map((sport) => (
+          {allowedSports.map((sport) => (
             <option key={sport} value={sport}>
               {SPORT_LABELS[sport]}
             </option>
           ))}
         </select>
+        {allowedSports.length < 7 && (
+          <p className="text-xs text-slate-400">
+            Mais modalidades disponíveis nos planos Pro e Liga.{" "}
+            <Link href="/planos" className="underline">
+              Ver planos
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">

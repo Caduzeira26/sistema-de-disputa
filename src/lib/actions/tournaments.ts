@@ -8,6 +8,12 @@ import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
 import { SPORT_TYPES } from "@/lib/sport";
 import { saveTournamentLogo } from "@/lib/storage";
+import {
+  countTournamentsForLimit,
+  getPlanLimits,
+  isSportAllowed,
+  isWithinTournamentLimit,
+} from "@/lib/plans";
 
 const createTournamentSchema = z
   .object({
@@ -47,6 +53,20 @@ export async function createTournament(
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
+
+  const limits = await getPlanLimits(session.user.id);
+  if (!isSportAllowed(limits, parsed.data.sportType)) {
+    return { error: "Essa modalidade não está disponível no seu plano atual. Veja os planos em /planos." };
+  }
+  const tournamentCount = await countTournamentsForLimit(session.user.id, limits);
+  if (!isWithinTournamentLimit(limits, tournamentCount)) {
+    return {
+      error:
+        limits.plan === "TRIAL"
+          ? "Seu teste grátis permite 1 campeonato. Assine um plano em /planos para criar mais."
+          : "Você atingiu o limite de campeonatos do seu plano. Faça upgrade em /planos.",
+    };
   }
 
   const baseSlug = slugify(parsed.data.name) || "torneio";
@@ -135,6 +155,52 @@ export async function updateTournamentDates(_prevState: UpdateDatesState, formDa
       endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : null,
     },
   });
+
+  revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
+  revalidatePath(`/torneios/${tournament.slug}`);
+  return {};
+}
+
+const updateFeeSchema = z.object({
+  tournamentId: z.string().min(1),
+  feeReais: z.string().optional(),
+});
+
+export type UpdateFeeState = { error?: string };
+
+export async function updateTournamentFee(_prevState: UpdateFeeState, formData: FormData): Promise<UpdateFeeState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Sessão expirada. Faça login novamente." };
+
+  const parsed = updateFeeSchema.safeParse({
+    tournamentId: formData.get("tournamentId"),
+    feeReais: formData.get("feeReais"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const tournament = await prisma.tournament.findUnique({ where: { id: parsed.data.tournamentId } });
+  if (!tournament || tournament.organizerId !== session.user.id) {
+    return { error: "Torneio não encontrado." };
+  }
+
+  const limits = await getPlanLimits(session.user.id);
+  if (!limits.canChargeRegistration) {
+    return { error: "Cobrança de inscrição não está disponível no seu plano atual. Faça upgrade em /planos." };
+  }
+
+  const trimmed = parsed.data.feeReais?.trim();
+  let feeCents: number | null = null;
+  if (trimmed) {
+    const reais = Number(trimmed.replace(",", "."));
+    if (!Number.isFinite(reais) || reais < 0) {
+      return { error: "Valor de inscrição inválido." };
+    }
+    feeCents = Math.round(reais * 100);
+  }
+
+  await prisma.tournament.update({ where: { id: parsed.data.tournamentId }, data: { registrationFeeCents: feeCents } });
 
   revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
   revalidatePath(`/torneios/${tournament.slug}`);

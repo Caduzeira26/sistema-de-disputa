@@ -13,6 +13,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin" className="text-slate-900">
               Torneios
             </Link>
+            <Link href="/planos" className="hover:text-slate-900">
+              Planos
+            </Link>
           </nav>
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <span>{session?.user?.name ?? session?.user?.email}</span>

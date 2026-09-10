@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { saveTeamLogo } from "@/lib/storage";
+import { countTeamsForLimit, getPlanLimits, isWithinTeamLimit } from "@/lib/plans";
+import { createTeamRegistrationCharge } from "@/lib/pix";
+import { EfiNotConfiguredError } from "@/lib/efi";
 
 const playerSchema = z.object({
   name: z.string().min(1, "Nome do jogador é obrigatório"),
@@ -25,6 +28,8 @@ const registerTeamSchema = z.object({
 export type RegisterTeamState = {
   error?: string;
   success?: boolean;
+  /** Set when the tournament charges a registration fee — the form should redirect to the PIX payment page. */
+  paymentTxid?: string;
 };
 
 export async function registerTeam(
@@ -58,6 +63,12 @@ export async function registerTeam(
     return { error: "As inscrições para este torneio não estão abertas." };
   }
 
+  const limits = await getPlanLimits(tournament.organizerId);
+  const teamCount = await countTeamsForLimit(tournament.id);
+  if (!isWithinTeamLimit(limits, teamCount)) {
+    return { error: "Este campeonato atingiu o limite de equipes permitido pelo plano do organizador." };
+  }
+
   const logoFile = formData.get("logo");
   let logoUrl: string | undefined;
   if (logoFile instanceof File && logoFile.size > 0) {
@@ -70,7 +81,7 @@ export async function registerTeam(
     logoUrl = await saveTeamLogo(logoFile);
   }
 
-  await prisma.team.create({
+  const team = await prisma.team.create({
     data: {
       tournamentId: parsed.data.tournamentId,
       name: parsed.data.name,
@@ -90,6 +101,17 @@ export async function registerTeam(
   });
 
   revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
+
+  if (tournament.registrationFeeCents && tournament.registrationFeeCents > 0) {
+    try {
+      const charge = await createTeamRegistrationCharge(team.id);
+      return { success: true, paymentTxid: charge.txid };
+    } catch (err) {
+      // Team already exists PENDING; the organizer can still approve it manually if PIX is unavailable.
+      const message = err instanceof EfiNotConfiguredError ? "Pagamento por PIX indisponível no momento." : "Não foi possível gerar a cobrança PIX. Tente novamente.";
+      return { error: message };
+    }
+  }
 
   return { success: true };
 }

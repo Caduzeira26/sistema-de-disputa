@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { SPORT_LABELS } from "@/lib/sport";
 import { formatTournamentDateRange } from "@/lib/formatDateRange";
 import { BrandFooter } from "@/components/BrandFooter";
+import { PlanUsageCard } from "@/components/admin/PlanUsageCard";
+import { countTournamentsForLimit, getPlanLimits } from "@/lib/plans";
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Rascunho",
@@ -23,8 +25,13 @@ export default async function AdminHomePage() {
       })
     : [];
 
+  const limits = session?.user ? await getPlanLimits(session.user.id) : null;
+  const usedTournamentCount = session?.user && limits ? await countTournamentsForLimit(session.user.id, limits) : 0;
+
   return (
     <div>
+      {limits && <PlanUsageCard limits={limits} usedCount={usedTournamentCount} />}
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">Seus torneios</h1>
         <Link

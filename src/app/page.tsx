@@ -9,12 +9,20 @@ export default function HomePage() {
         <p className="max-w-md text-sm text-slate-500">
           Gestão de torneios esportivos: inscrições, chaveamento, agenda, súmulas e estatísticas.
         </p>
-        <Link
-          href="/admin/login"
-          className="mt-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
-          Área do organizador
-        </Link>
+        <div className="mt-2 flex gap-3">
+          <Link
+            href="/admin/login"
+            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Área do organizador
+          </Link>
+          <Link
+            href="/planos"
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Ver planos
+          </Link>
+        </div>
       </main>
       <BrandFooter />
     </div>
