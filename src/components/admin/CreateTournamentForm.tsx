@@ -78,6 +78,31 @@ export function CreateTournamentForm() {
         </select>
       </div>
 
+      <div className="flex gap-4">
+        <div className="flex flex-1 flex-col gap-1">
+          <label htmlFor="startDate" className="text-sm font-medium text-slate-700">
+            Início (opcional)
+          </label>
+          <input
+            id="startDate"
+            name="startDate"
+            type="date"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          />
+        </div>
+        <div className="flex flex-1 flex-col gap-1">
+          <label htmlFor="endDate" className="text-sm font-medium text-slate-700">
+            Término (opcional)
+          </label>
+          <input
+            id="endDate"
+            name="endDate"
+            type="date"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          />
+        </div>
+      </div>
+
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
       <button

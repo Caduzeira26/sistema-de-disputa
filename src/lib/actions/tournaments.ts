@@ -9,12 +9,19 @@ import { slugify } from "@/lib/slug";
 import { SPORT_TYPES } from "@/lib/sport";
 import { saveTournamentLogo } from "@/lib/storage";
 
-const createTournamentSchema = z.object({
-  name: z.string().min(2, "Informe o nome do torneio"),
-  description: z.string().optional(),
-  format: z.enum(["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION", "GROUPS_SINGLE_ELIM", "GROUPS_DOUBLE_ELIM"]),
-  sportType: z.enum(SPORT_TYPES),
-});
+const createTournamentSchema = z
+  .object({
+    name: z.string().min(2, "Informe o nome do torneio"),
+    description: z.string().optional(),
+    format: z.enum(["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION", "GROUPS_SINGLE_ELIM", "GROUPS_DOUBLE_ELIM"]),
+    sportType: z.enum(SPORT_TYPES),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  })
+  .refine((d) => !d.startDate || !d.endDate || d.endDate >= d.startDate, {
+    message: "A data de término não pode ser anterior à data de início.",
+    path: ["endDate"],
+  });
 
 export type CreateTournamentState = {
   error?: string;
@@ -34,6 +41,8 @@ export async function createTournament(
     description: formData.get("description"),
     format: formData.get("format"),
     sportType: formData.get("sportType"),
+    startDate: formData.get("startDate"),
+    endDate: formData.get("endDate"),
   });
 
   if (!parsed.success) {
@@ -54,6 +63,8 @@ export async function createTournament(
       description: parsed.data.description || null,
       format: parsed.data.format,
       sportType: parsed.data.sportType,
+      startDate: parsed.data.startDate ? new Date(parsed.data.startDate) : null,
+      endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : null,
       slug,
       organizerId: session.user.id,
     },
@@ -84,6 +95,50 @@ export async function updateTournamentStatus(formData: FormData) {
 
   revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
   revalidatePath("/admin");
+}
+
+const updateDatesSchema = z
+  .object({
+    tournamentId: z.string().min(1),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  })
+  .refine((d) => !d.startDate || !d.endDate || d.endDate >= d.startDate, {
+    message: "A data de término não pode ser anterior à data de início.",
+    path: ["endDate"],
+  });
+
+export type UpdateDatesState = { error?: string };
+
+export async function updateTournamentDates(_prevState: UpdateDatesState, formData: FormData): Promise<UpdateDatesState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Sessão expirada. Faça login novamente." };
+
+  const parsed = updateDatesSchema.safeParse({
+    tournamentId: formData.get("tournamentId"),
+    startDate: formData.get("startDate"),
+    endDate: formData.get("endDate"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const tournament = await prisma.tournament.findUnique({ where: { id: parsed.data.tournamentId } });
+  if (!tournament || tournament.organizerId !== session.user.id) {
+    return { error: "Torneio não encontrado." };
+  }
+
+  await prisma.tournament.update({
+    where: { id: parsed.data.tournamentId },
+    data: {
+      startDate: parsed.data.startDate ? new Date(parsed.data.startDate) : null,
+      endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : null,
+    },
+  });
+
+  revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
+  revalidatePath(`/torneios/${tournament.slug}`);
+  return {};
 }
 
 export type UpdateLogoState = { error?: string };

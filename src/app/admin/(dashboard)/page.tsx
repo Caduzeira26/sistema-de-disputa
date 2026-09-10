@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SPORT_LABELS } from "@/lib/sport";
+import { formatTournamentDateRange } from "@/lib/formatDateRange";
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Rascunho",
@@ -47,6 +48,7 @@ export default async function AdminHomePage() {
                   <p className="font-medium text-slate-900">{t.name}</p>
                   <p className="text-sm text-slate-500">
                     {SPORT_LABELS[t.sportType]} · {STATUS_LABEL[t.status]} · {t._count.teams} equipe(s)
+                    {formatTournamentDateRange(t.startDate, t.endDate) && ` · ${formatTournamentDateRange(t.startDate, t.endDate)}`}
                   </p>
                 </div>
                 <span className="text-sm text-slate-400">/torneios/{t.slug}</span>

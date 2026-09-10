@@ -13,7 +13,9 @@ import { toDisplayMatches } from "@/lib/bracket-view";
 import { computeStandings } from "@/lib/bracket";
 import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
 import { TournamentLogoForm } from "@/components/admin/TournamentLogoForm";
+import { TournamentDatesForm } from "@/components/admin/TournamentDatesForm";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
+import { formatTournamentDateRange } from "@/lib/formatDateRange";
 
 const STATUS_OPTIONS = [
   { value: "DRAFT", label: "Rascunho" },
@@ -82,6 +84,11 @@ export default async function TournamentDetailPage({
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">{tournament.name}</h1>
             <p className="mt-1 text-sm text-slate-500">{SPORT_LABELS[tournament.sportType]}</p>
+            {formatTournamentDateRange(tournament.startDate, tournament.endDate) && (
+              <p className="mt-1 text-sm text-slate-500">
+                {formatTournamentDateRange(tournament.startDate, tournament.endDate)}
+              </p>
+            )}
             <p className="mt-1 text-sm text-slate-500">
               Link público:{" "}
               <Link href={`/torneios/${tournament.slug}`} className="underline" target="_blank">
@@ -129,6 +136,11 @@ export default async function TournamentDetailPage({
 
       <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
         <TournamentLogoForm tournamentId={tournament.id} logoUrl={tournament.logoUrl} />
+      </div>
+
+      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="mb-2 text-sm font-semibold text-slate-700">Datas do torneio</h2>
+        <TournamentDatesForm tournamentId={tournament.id} startDate={tournament.startDate} endDate={tournament.endDate} />
       </div>
 
       <div className="mt-8">
