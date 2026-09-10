@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSportFamily } from "@/lib/sport";
+import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 
 const CARD_LABEL: Record<string, string> = { YELLOW: "Amarelo", RED: "Vermelho" };
 const CARD_COLOR: Record<string, string> = { YELLOW: "bg-amber-100 text-amber-800", RED: "bg-red-100 text-red-800" };
@@ -35,14 +36,18 @@ export default async function PublicMatchSumulaPage({
     match.homeTeam?.players.find((p) => p.id === id)?.name ?? match.awayTeam?.players.find((p) => p.id === id)?.name ?? "?";
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
+    <main className="relative mx-auto w-full max-w-2xl flex-1 overflow-hidden px-4 py-10">
+      <TournamentWatermark logoUrl={match.tournament.logoUrl} />
       <Link href={`/torneios/${slug}`} className="text-sm text-slate-500 underline">
         ← {match.tournament.name}
       </Link>
 
-      <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-        {match.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {match.awayTeam?.name ?? "A definir"}
-      </h1>
+      <div className="mt-2 flex items-start gap-3">
+        <TournamentHeaderLogo logoUrl={match.tournament.logoUrl} tournamentName={match.tournament.name} />
+        <h1 className="text-2xl font-semibold text-slate-900">
+          {match.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {match.awayTeam?.name ?? "A definir"}
+        </h1>
+      </div>
 
       <div className="mt-3">
         {match.status === "FINISHED" ? (

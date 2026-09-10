@@ -9,6 +9,7 @@ import { TopPointScorersTable } from "@/components/stats/TopPointScorersTable";
 import { FoulRankingTable } from "@/components/stats/FoulRankingTable";
 import { GameWinRankingTable } from "@/components/stats/GameWinRankingTable";
 import { getSportFamily } from "@/lib/sport";
+import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 
 export default async function TournamentStatsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -53,11 +54,15 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
   );
 
   return (
-    <div>
+    <div className="relative overflow-hidden">
+      <TournamentWatermark logoUrl={tournament.logoUrl} />
       <Link href={`/admin/torneios/${tournament.id}`} className="text-sm text-slate-500 underline">
         ← Voltar ao torneio
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold text-slate-900">Estatísticas — {tournament.name}</h1>
+      <div className="mt-2 flex items-start gap-3">
+        <TournamentHeaderLogo logoUrl={tournament.logoUrl} tournamentName={tournament.name} />
+        <h1 className="text-2xl font-semibold text-slate-900">Estatísticas — {tournament.name}</h1>
+      </div>
 
       {tournament.championTeam && (
         <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">

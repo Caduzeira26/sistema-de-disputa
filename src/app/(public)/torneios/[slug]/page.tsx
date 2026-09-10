@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/bracket";
 import { toDisplayMatches } from "@/lib/bracket-view";
 import { SPORT_LABELS } from "@/lib/sport";
+import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
@@ -44,8 +45,12 @@ export default async function PublicTournamentPage({
   const teamNames = Object.fromEntries(tournament.teams.map((t) => [t.id, t.name]));
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
-      <h1 className="text-3xl font-semibold text-slate-900">{tournament.name}</h1>
+    <main className="relative mx-auto w-full max-w-5xl flex-1 overflow-hidden px-4 py-10">
+      <TournamentWatermark logoUrl={tournament.logoUrl} />
+      <div className="flex items-start gap-3">
+        <TournamentHeaderLogo logoUrl={tournament.logoUrl} tournamentName={tournament.name} />
+        <h1 className="text-3xl font-semibold text-slate-900">{tournament.name}</h1>
+      </div>
       <p className="mt-1 text-sm text-slate-500">{SPORT_LABELS[tournament.sportType]}</p>
       {tournament.description && <p className="mt-2 text-slate-600">{tournament.description}</p>}
       <p className="mt-3 inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">

@@ -77,6 +77,7 @@ model Tournament {
   slug        String           @unique
   name        String
   description String?
+  logoUrl     String?
   format      TournamentFormat
   status      TournamentStatus @default(DRAFT)
   sportType   SportType        @default(FUTEBOL_CAMPO)

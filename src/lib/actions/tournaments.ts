@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
 import { SPORT_TYPES } from "@/lib/sport";
+import { saveTournamentLogo } from "@/lib/storage";
 
 const createTournamentSchema = z.object({
   name: z.string().min(2, "Informe o nome do torneio"),
@@ -83,4 +84,48 @@ export async function updateTournamentStatus(formData: FormData) {
 
   revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
   revalidatePath("/admin");
+}
+
+export type UpdateLogoState = { error?: string };
+
+export async function updateTournamentLogo(_prevState: UpdateLogoState, formData: FormData): Promise<UpdateLogoState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Sessão expirada. Faça login novamente." };
+
+  const tournamentId = formData.get("tournamentId") as string;
+  const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+  if (!tournament || tournament.organizerId !== session.user.id) {
+    return { error: "Torneio não encontrado." };
+  }
+
+  const logoFile = formData.get("logo");
+  if (!(logoFile instanceof File) || logoFile.size === 0) {
+    return { error: "Selecione um arquivo de imagem." };
+  }
+  if (!logoFile.type.startsWith("image/")) {
+    return { error: "A logo deve ser um arquivo de imagem." };
+  }
+  if (logoFile.size > 5 * 1024 * 1024) {
+    return { error: "A imagem deve ter no máximo 5MB." };
+  }
+
+  const logoUrl = await saveTournamentLogo(logoFile);
+  await prisma.tournament.update({ where: { id: tournamentId }, data: { logoUrl } });
+
+  revalidatePath(`/admin/torneios/${tournamentId}`);
+  revalidatePath(`/torneios/${tournament.slug}`);
+  return {};
+}
+
+export async function removeTournamentLogo(formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user) return;
+
+  const tournamentId = formData.get("tournamentId") as string;
+  const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+  if (!tournament || tournament.organizerId !== session.user.id) return;
+
+  await prisma.tournament.update({ where: { id: tournamentId }, data: { logoUrl: null } });
+  revalidatePath(`/admin/torneios/${tournamentId}`);
+  revalidatePath(`/torneios/${tournament.slug}`);
 }

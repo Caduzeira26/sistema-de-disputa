@@ -12,6 +12,8 @@ import { StandingsTable } from "@/components/bracket/StandingsTable";
 import { toDisplayMatches } from "@/lib/bracket-view";
 import { computeStandings } from "@/lib/bracket";
 import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
+import { TournamentLogoForm } from "@/components/admin/TournamentLogoForm";
+import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 
 const STATUS_OPTIONS = [
   { value: "DRAFT", label: "Rascunho" },
@@ -72,24 +74,28 @@ export default async function TournamentDetailPage({
   const quickResultEntry = family === "GOALS_CARDS";
 
   return (
-    <div>
+    <div className="relative overflow-hidden">
+      <TournamentWatermark logoUrl={tournament.logoUrl} />
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">{tournament.name}</h1>
-          <p className="mt-1 text-sm text-slate-500">{SPORT_LABELS[tournament.sportType]}</p>
-          <p className="mt-1 text-sm text-slate-500">
-            Link público:{" "}
-            <Link href={`/torneios/${tournament.slug}`} className="underline" target="_blank">
-              /torneios/{tournament.slug}
-            </Link>
-          </p>
-          <div className="mt-1 flex gap-3">
-            <Link href={`/admin/torneios/${tournament.id}/agenda`} className="text-sm text-slate-600 underline">
-              Gerenciar agenda e locais
-            </Link>
-            <Link href={`/admin/torneios/${tournament.id}/estatisticas`} className="text-sm text-slate-600 underline">
-              Estatísticas
-            </Link>
+        <div className="flex items-start gap-3">
+          <TournamentHeaderLogo logoUrl={tournament.logoUrl} tournamentName={tournament.name} />
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">{tournament.name}</h1>
+            <p className="mt-1 text-sm text-slate-500">{SPORT_LABELS[tournament.sportType]}</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Link público:{" "}
+              <Link href={`/torneios/${tournament.slug}`} className="underline" target="_blank">
+                /torneios/{tournament.slug}
+              </Link>
+            </p>
+            <div className="mt-1 flex gap-3">
+              <Link href={`/admin/torneios/${tournament.id}/agenda`} className="text-sm text-slate-600 underline">
+                Gerenciar agenda e locais
+              </Link>
+              <Link href={`/admin/torneios/${tournament.id}/estatisticas`} className="text-sm text-slate-600 underline">
+                Estatísticas
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -120,6 +126,10 @@ export default async function TournamentDetailPage({
           🏆 Campeão: {tournament.championTeam.name}
         </div>
       )}
+
+      <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <TournamentLogoForm tournamentId={tournament.id} logoUrl={tournament.logoUrl} />
+      </div>
 
       <div className="mt-8">
         <h2 className="text-lg font-semibold text-slate-900">

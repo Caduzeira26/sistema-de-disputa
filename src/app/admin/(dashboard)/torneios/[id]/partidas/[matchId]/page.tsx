@@ -27,6 +27,7 @@ import { getSportFamily } from "@/lib/sport";
 import { countSetsWon } from "@/lib/sets";
 import { sumPointsByTeam } from "@/lib/points";
 import { countGamesWon } from "@/lib/tableTennis";
+import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 
 const CARD_LABEL: Record<string, string> = { YELLOW: "Amarelo", RED: "Vermelho" };
 const CARD_COLOR: Record<string, string> = { YELLOW: "bg-amber-100 text-amber-800", RED: "bg-red-100 text-red-800" };
@@ -68,14 +69,18 @@ export default async function MatchSumulaPage({
     match.homeTeam?.players.find((p) => p.id === id)?.name ?? match.awayTeam?.players.find((p) => p.id === id)?.name ?? "?";
 
   return (
-    <div>
+    <div className="relative overflow-hidden">
+      <TournamentWatermark logoUrl={match.tournament.logoUrl} />
       <Link href={`/admin/torneios/${match.tournamentId}`} className="text-sm text-slate-500 underline">
         ← Voltar ao torneio
       </Link>
 
-      <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-        {match.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {match.awayTeam?.name ?? "A definir"}
-      </h1>
+      <div className="mt-2 flex items-start gap-3">
+        <TournamentHeaderLogo logoUrl={match.tournament.logoUrl} tournamentName={match.tournament.name} />
+        <h1 className="text-2xl font-semibold text-slate-900">
+          {match.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {match.awayTeam?.name ?? "A definir"}
+        </h1>
+      </div>
 
       <div className="mt-3 flex items-center gap-3">
         {match.status === "FINISHED" ? (
