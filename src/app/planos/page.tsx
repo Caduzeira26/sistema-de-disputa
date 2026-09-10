@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { BrandFooter } from "@/components/BrandFooter";
+import { AssistantWidget } from "@/components/AssistantWidget";
 import { CheckoutButton } from "@/components/CheckoutButton";
 import { PromoCountdown } from "@/components/PromoCountdown";
 import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents, isPromoActive } from "@/lib/plans";
@@ -172,6 +173,7 @@ export default async function PlansPage() {
         </div>
       </main>
       <BrandFooter />
+      <AssistantWidget />
     </div>
   );
 }

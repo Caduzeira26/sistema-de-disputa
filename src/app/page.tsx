@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandFooter } from "@/components/BrandFooter";
+import { AssistantWidget } from "@/components/AssistantWidget";
 
 export default function HomePage() {
   return (
@@ -25,6 +26,7 @@ export default function HomePage() {
         </div>
       </main>
       <BrandFooter />
+      <AssistantWidget />
     </div>
   );
 }
