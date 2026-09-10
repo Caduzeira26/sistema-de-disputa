@@ -52,6 +52,16 @@ enum CardType {
   RED
 }
 
+enum SportType {
+  FUTEBOL_CAMPO
+  FUTSAL
+  FUTEBOL_7
+  HANDEBOL
+  VOLEIBOL
+  BASQUETE
+  TENIS_DE_MESA
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -69,6 +79,7 @@ model Tournament {
   description String?
   format      TournamentFormat
   status      TournamentStatus @default(DRAFT)
+  sportType   SportType        @default(FUTEBOL_CAMPO)
 
   pointsWin  Int @default(3)
   pointsDraw Int @default(1)
@@ -124,6 +135,8 @@ model Team {
   awayMatches Match[]     @relation("AwayTeam")
   goals       Goal[]
   cards       Card[]
+  baskets     Basket[]
+  fouls       Foul[]
   championOf  Tournament? @relation("Champion")
 
   createdAt DateTime @default(now())
@@ -141,8 +154,10 @@ model Player {
   position    String?
   birthDate   DateTime?
 
-  goals Goal[]
-  cards Card[]
+  goals   Goal[]
+  cards   Card[]
+  baskets Basket[]
+  fouls   Foul[]
 }
 
 model Group {
@@ -193,8 +208,12 @@ model Match {
   incomingAsWinner Match[] @relation("WinnerAdvance")
   incomingAsLoser  Match[] @relation("LoserAdvance")
 
-  goals Goal[]
-  cards Card[]
+  goals            Goal[]
+  cards            Card[]
+  sets             MatchSet[]
+  baskets          Basket[]
+  fouls            Foul[]
+  tableTennisGames TableTennisGame[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -213,14 +232,84 @@ model Goal {
   minute   Int
 }
 
+/// Used by the GOALS_CARDS family (minute) and by vôlei (setNumber) — exactly
+/// one of the two is set, depending on the tournament's sport family.
 model Card {
-  id       String   @id @default(cuid())
+  id        String   @id @default(cuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  type      CardType
+  minute    Int?
+  setNumber Int?
+}
+
+/// Vôlei: one row per set played in a match. Match.homeScore/awayScore for a
+/// vôlei match is the count of sets won by each side, derived from these.
+model MatchSet {
+  id         String @id @default(cuid())
+  matchId    String
+  match      Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  setNumber  Int
+  homePoints Int
+  awayPoints Int
+
+  @@unique([matchId, setNumber])
+}
+
+/// Basquete: one row per basket scored. Match.homeScore/awayScore is the sum
+/// of `points` per side — this is what "artilharia" ranks by for basquete.
+model Basket {
+  id       String @id @default(cuid())
   matchId  String
-  match    Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  match    Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
   playerId String
-  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
   teamId   String
-  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  type     CardType
-  minute   Int
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  points   Int
+  period   Int
+}
+
+/// Basquete: personal fouls, tracked per player instead of cards.
+model Foul {
+  id       String @id @default(cuid())
+  matchId  String
+  match    Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId   String
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  period   Int
+}
+
+/// Tênis de mesa: a match ("confronto") is a tie of individual games, each
+/// between one player per side (simples) or two (duplas). Match.homeScore/
+/// awayScore is the count of games won by each side.
+model TableTennisGame {
+  id            String     @id @default(cuid())
+  matchId       String
+  match         Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  gameNumber    Int
+  homePlayerIds String[]
+  awayPlayerIds String[]
+  winnerSide    MatchSlot?
+
+  sets TableTennisSet[]
+
+  @@unique([matchId, gameNumber])
+}
+
+model TableTennisSet {
+  id         String          @id @default(cuid())
+  gameId     String
+  game       TableTennisGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  setNumber  Int
+  homePoints Int
+  awayPoints Int
+
+  @@unique([gameId, setNumber])
 }

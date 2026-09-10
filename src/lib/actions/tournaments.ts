@@ -6,11 +6,13 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
+import { SPORT_TYPES } from "@/lib/sport";
 
 const createTournamentSchema = z.object({
   name: z.string().min(2, "Informe o nome do torneio"),
   description: z.string().optional(),
   format: z.enum(["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION", "GROUPS_SINGLE_ELIM", "GROUPS_DOUBLE_ELIM"]),
+  sportType: z.enum(SPORT_TYPES),
 });
 
 export type CreateTournamentState = {
@@ -30,6 +32,7 @@ export async function createTournament(
     name: formData.get("name"),
     description: formData.get("description"),
     format: formData.get("format"),
+    sportType: formData.get("sportType"),
   });
 
   if (!parsed.success) {
@@ -49,6 +52,7 @@ export async function createTournament(
       name: parsed.data.name,
       description: parsed.data.description || null,
       format: parsed.data.format,
+      sportType: parsed.data.sportType,
       slug,
       organizerId: session.user.id,
     },

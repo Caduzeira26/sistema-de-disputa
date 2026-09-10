@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/bracket";
 import { toDisplayMatches } from "@/lib/bracket-view";
+import { SPORT_LABELS } from "@/lib/sport";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
@@ -45,6 +46,7 @@ export default async function PublicTournamentPage({
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">{tournament.name}</h1>
+      <p className="mt-1 text-sm text-slate-500">{SPORT_LABELS[tournament.sportType]}</p>
       {tournament.description && <p className="mt-2 text-slate-600">{tournament.description}</p>}
       <p className="mt-3 inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
         {STATUS_LABEL[tournament.status]}

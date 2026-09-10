@@ -11,12 +11,14 @@ function BracketSection({
   title,
   matches,
   editable,
+  quickResultEntry,
   tournamentId,
   publicSlug,
 }: {
   title: string;
   matches: DisplayMatch[];
   editable: boolean;
+  quickResultEntry: boolean;
   tournamentId?: string;
   publicSlug?: string;
 }) {
@@ -34,7 +36,14 @@ function BracketSection({
                 .filter((m) => m.round === round)
                 .sort((a, b) => a.position - b.position)
                 .map((m) => (
-                  <MatchCard key={m.id} match={m} editable={editable} tournamentId={tournamentId} publicSlug={publicSlug} />
+                  <MatchCard
+                    key={m.id}
+                    match={m}
+                    editable={editable}
+                    quickResultEntry={quickResultEntry}
+                    tournamentId={tournamentId}
+                    publicSlug={publicSlug}
+                  />
                 ))}
             </div>
           </div>
@@ -47,11 +56,13 @@ function BracketSection({
 export function BracketBoard({
   matches,
   editable = false,
+  quickResultEntry = true,
   tournamentId,
   publicSlug,
 }: {
   matches: DisplayMatch[];
   editable?: boolean;
+  quickResultEntry?: boolean;
   tournamentId?: string;
   publicSlug?: string;
 }) {
@@ -74,6 +85,7 @@ export function BracketBoard({
               title={BRACKET_LABEL[key]}
               matches={byBracket[key]}
               editable={editable}
+              quickResultEntry={quickResultEntry}
               tournamentId={tournamentId}
               publicSlug={publicSlug}
             />

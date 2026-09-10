@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { createTournament, type CreateTournamentState } from "@/lib/actions/tournaments";
+import { SPORT_TYPES, SPORT_LABELS } from "@/lib/sport";
 
 const initialState: CreateTournamentState = {};
 
@@ -39,6 +40,24 @@ export function CreateTournamentForm() {
           rows={3}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
         />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="sportType" className="text-sm font-medium text-slate-700">
+          Modalidade
+        </label>
+        <select
+          id="sportType"
+          name="sportType"
+          defaultValue="FUTEBOL_CAMPO"
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        >
+          {SPORT_TYPES.map((sport) => (
+            <option key={sport} value={sport}>
+              {SPORT_LABELS[sport]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex flex-col gap-1">

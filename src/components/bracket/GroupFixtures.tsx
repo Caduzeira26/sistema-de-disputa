@@ -5,12 +5,14 @@ export function GroupFixtures({
   title,
   matches,
   editable = false,
+  quickResultEntry = true,
   tournamentId,
   publicSlug,
 }: {
   title: string;
   matches: DisplayMatch[];
   editable?: boolean;
+  quickResultEntry?: boolean;
   tournamentId?: string;
   publicSlug?: string;
 }) {
@@ -27,7 +29,14 @@ export function GroupFixtures({
               {matches
                 .filter((m) => m.round === round)
                 .map((m) => (
-                  <MatchCard key={m.id} match={m} editable={editable} tournamentId={tournamentId} publicSlug={publicSlug} />
+                  <MatchCard
+                    key={m.id}
+                    match={m}
+                    editable={editable}
+                    quickResultEntry={quickResultEntry}
+                    tournamentId={tournamentId}
+                    publicSlug={publicSlug}
+                  />
                 ))}
             </div>
           </div>

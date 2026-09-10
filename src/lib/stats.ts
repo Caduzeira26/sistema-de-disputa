@@ -57,3 +57,92 @@ export function computeCardRanking(cards: CardRecord[]): CardStanding[] {
     (a, b) => b.red - a.red || b.yellow - a.yellow || a.playerName.localeCompare(b.playerName)
   );
 }
+
+export interface BasketRecord {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  points: number;
+}
+
+export interface PointsStanding {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  points: number;
+}
+
+/** Basquete's "artilharia": total points scored, not basket count. */
+export function computeTopPointScorers(baskets: BasketRecord[]): PointsStanding[] {
+  const table = new Map<string, PointsStanding>();
+  for (const b of baskets) {
+    const existing = table.get(b.playerId);
+    if (existing) existing.points += b.points;
+    else table.set(b.playerId, { playerId: b.playerId, playerName: b.playerName, teamId: b.teamId, teamName: b.teamName, points: b.points });
+  }
+  return [...table.values()].sort((a, b) => b.points - a.points || a.playerName.localeCompare(b.playerName));
+}
+
+export interface FoulRecord {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+}
+
+export interface FoulStanding {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  fouls: number;
+}
+
+/** Basquete: personal fouls per player, most first. */
+export function computeFoulRanking(fouls: FoulRecord[]): FoulStanding[] {
+  const table = new Map<string, FoulStanding>();
+  for (const f of fouls) {
+    const existing = table.get(f.playerId);
+    if (existing) existing.fouls += 1;
+    else table.set(f.playerId, { playerId: f.playerId, playerName: f.playerName, teamId: f.teamId, teamName: f.teamName, fouls: 1 });
+  }
+  return [...table.values()].sort((a, b) => b.fouls - a.fouls || a.playerName.localeCompare(b.playerName));
+}
+
+export interface TableTennisPlayer {
+  id: string;
+  name: string;
+  teamId: string;
+  teamName: string;
+}
+
+export interface GameResultRecord {
+  winnerSide: "HOME" | "AWAY" | null;
+  homePlayers: TableTennisPlayer[];
+  awayPlayers: TableTennisPlayer[];
+}
+
+export interface GameWinStanding {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  wins: number;
+}
+
+/** Tênis de mesa: individual games won, per athlete (both players of a doubles win are credited). */
+export function computeGameWinRanking(games: GameResultRecord[]): GameWinStanding[] {
+  const table = new Map<string, GameWinStanding>();
+  for (const g of games) {
+    if (!g.winnerSide) continue;
+    const winners = g.winnerSide === "HOME" ? g.homePlayers : g.awayPlayers;
+    for (const p of winners) {
+      const existing = table.get(p.id);
+      if (existing) existing.wins += 1;
+      else table.set(p.id, { playerId: p.id, playerName: p.name, teamId: p.teamId, teamName: p.teamName, wins: 1 });
+    }
+  }
+  return [...table.values()].sort((a, b) => b.wins - a.wins || a.playerName.localeCompare(b.playerName));
+}

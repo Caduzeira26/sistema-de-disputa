@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { computeTopScorers, computeCardRanking } from "@/lib/stats";
+import { computeTopScorers, computeCardRanking, computeTopPointScorers, computeFoulRanking, computeGameWinRanking } from "@/lib/stats";
 import { TopScorersTable } from "@/components/stats/TopScorersTable";
 import { CardRankingTable } from "@/components/stats/CardRankingTable";
+import { TopPointScorersTable } from "@/components/stats/TopPointScorersTable";
+import { FoulRankingTable } from "@/components/stats/FoulRankingTable";
+import { GameWinRankingTable } from "@/components/stats/GameWinRankingTable";
+import { getSportFamily } from "@/lib/sport";
 
 export default async function PublicStatsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -14,9 +18,13 @@ export default async function PublicStatsPage({ params }: { params: Promise<{ sl
   });
   if (!tournament) notFound();
 
-  const [goals, cards] = await Promise.all([
+  const family = getSportFamily(tournament.sportType);
+
+  const [goals, cards, baskets, fouls] = await Promise.all([
     prisma.goal.findMany({ where: { match: { tournamentId: tournament.id } }, include: { player: true, team: true } }),
     prisma.card.findMany({ where: { match: { tournamentId: tournament.id } }, include: { player: true, team: true } }),
+    prisma.basket.findMany({ where: { match: { tournamentId: tournament.id } }, include: { player: true, team: true } }),
+    prisma.foul.findMany({ where: { match: { tournamentId: tournament.id } }, include: { player: true, team: true } }),
   ]);
 
   const scorers = computeTopScorers(
@@ -24,6 +32,24 @@ export default async function PublicStatsPage({ params }: { params: Promise<{ sl
   );
   const cardRanking = computeCardRanking(
     cards.map((c) => ({ playerId: c.playerId, playerName: c.player.name, teamId: c.teamId, teamName: c.team.name, type: c.type }))
+  );
+  const pointScorers = computeTopPointScorers(
+    baskets.map((b) => ({ playerId: b.playerId, playerName: b.player.name, teamId: b.teamId, teamName: b.team.name, points: b.points }))
+  );
+  const foulRanking = computeFoulRanking(
+    fouls.map((f) => ({ playerId: f.playerId, playerName: f.player.name, teamId: f.teamId, teamName: f.team.name }))
+  );
+
+  const games = await prisma.tableTennisGame.findMany({ where: { match: { tournamentId: tournament.id } } });
+  const gamePlayerIds = [...new Set(games.flatMap((g) => [...g.homePlayerIds, ...g.awayPlayerIds]))];
+  const gamePlayers = await prisma.player.findMany({ where: { id: { in: gamePlayerIds } }, include: { team: true } });
+  const gamePlayerById = new Map(gamePlayers.map((p) => [p.id, { id: p.id, name: p.name, teamId: p.teamId, teamName: p.team.name }]));
+  const gameWinRanking = computeGameWinRanking(
+    games.map((g) => ({
+      winnerSide: g.winnerSide,
+      homePlayers: g.homePlayerIds.map((id) => gamePlayerById.get(id)).filter((p) => p !== undefined),
+      awayPlayers: g.awayPlayerIds.map((id) => gamePlayerById.get(id)).filter((p) => p !== undefined),
+    }))
   );
 
   return (
@@ -40,15 +66,40 @@ export default async function PublicStatsPage({ params }: { params: Promise<{ sl
       )}
 
       <div className="mt-8 flex flex-col gap-8">
-        <section>
-          <h2 className="mb-2 text-lg font-semibold text-slate-900">Artilharia</h2>
-          <TopScorersTable scorers={scorers} />
-        </section>
+        {family === "GOALS_CARDS" && (
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Artilharia</h2>
+            <TopScorersTable scorers={scorers} />
+          </section>
+        )}
 
-        <section>
-          <h2 className="mb-2 text-lg font-semibold text-slate-900">Cartões</h2>
-          <CardRankingTable cards={cardRanking} />
-        </section>
+        {family === "PERIODS_FOULS" && (
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Cestinhas</h2>
+            <TopPointScorersTable scorers={pointScorers} />
+          </section>
+        )}
+
+        {family === "PERIODS_FOULS" && (
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Faltas</h2>
+            <FoulRankingTable fouls={foulRanking} />
+          </section>
+        )}
+
+        {family === "TABLE_TENNIS_TIES" && (
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Jogos vencidos</h2>
+            <GameWinRankingTable standings={gameWinRanking} />
+          </section>
+        )}
+
+        {(family === "GOALS_CARDS" || family === "SETS_CARDS") && (
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Cartões</h2>
+            <CardRankingTable cards={cardRanking} />
+          </section>
+        )}
       </div>
     </main>
   );

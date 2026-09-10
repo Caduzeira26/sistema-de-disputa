@@ -1,24 +1,14 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { addCardAction, type ActionState } from "@/lib/actions/sumula";
+import { addFoulAction, type ActionState } from "@/lib/actions/sumula";
 
 const initialState: ActionState = {};
 
 type TeamWithPlayers = { id: string; name: string; players: { id: string; name: string }[] };
 
-export function CardForm({
-  matchId,
-  homeTeam,
-  awayTeam,
-  mode = "minute",
-}: {
-  matchId: string;
-  homeTeam: TeamWithPlayers;
-  awayTeam: TeamWithPlayers;
-  mode?: "minute" | "set";
-}) {
-  const [state, formAction, pending] = useActionState(addCardAction, initialState);
+export function FoulForm({ matchId, homeTeam, awayTeam }: { matchId: string; homeTeam: TeamWithPlayers; awayTeam: TeamWithPlayers }) {
+  const [state, formAction, pending] = useActionState(addFoulAction, initialState);
   const [teamId, setTeamId] = useState(homeTeam.id);
   const players = teamId === homeTeam.id ? homeTeam.players : awayTeam.players;
 
@@ -55,31 +45,16 @@ export function CardForm({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-600">Cartão</label>
-        <select name="type" className="rounded-md border border-slate-300 px-2 py-1.5 text-sm">
-          <option value="YELLOW">Amarelo</option>
-          <option value="RED">Vermelho</option>
-        </select>
+        <label className="text-xs font-medium text-slate-600">Período</label>
+        <input type="number" name="period" min={1} max={10} defaultValue={1} required className="w-16 rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
       </div>
-
-      {mode === "set" ? (
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">Set</label>
-          <input type="number" name="setNumber" min={1} max={10} required className="w-16 rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">Minuto</label>
-          <input type="number" name="minute" min={0} max={200} required className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
-        </div>
-      )}
 
       <button
         type="submit"
         disabled={pending || players.length === 0}
         className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
       >
-        {pending ? "Adicionando..." : "Adicionar cartão"}
+        {pending ? "Adicionando..." : "Adicionar falta"}
       </button>
       {state.error && <p className="w-full text-xs text-red-600">{state.error}</p>}
     </form>

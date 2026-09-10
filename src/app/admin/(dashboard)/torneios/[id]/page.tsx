@@ -11,6 +11,7 @@ import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
 import { toDisplayMatches } from "@/lib/bracket-view";
 import { computeStandings } from "@/lib/bracket";
+import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
 
 const STATUS_OPTIONS = [
   { value: "DRAFT", label: "Rascunho" },
@@ -67,12 +68,15 @@ export default async function TournamentDetailPage({
   const canGenerateElimination = hasGroups && allGroupMatchesFinished && eliminationMatches.length === 0;
 
   const teamNames = Object.fromEntries(tournament.teams.map((t) => [t.id, t.name]));
+  const family = getSportFamily(tournament.sportType);
+  const quickResultEntry = family === "GOALS_CARDS";
 
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">{tournament.name}</h1>
+          <p className="mt-1 text-sm text-slate-500">{SPORT_LABELS[tournament.sportType]}</p>
           <p className="mt-1 text-sm text-slate-500">
             Link público:{" "}
             <Link href={`/torneios/${tournament.slug}`} className="underline" target="_blank">
@@ -229,6 +233,7 @@ export default async function TournamentDetailPage({
                     title="Partidas"
                     matches={groupMatches.filter((m) => m.groupId === group.id)}
                     editable
+                    quickResultEntry={quickResultEntry}
                     tournamentId={tournament.id}
                   />
                 </div>
@@ -245,7 +250,12 @@ export default async function TournamentDetailPage({
 
         {eliminationMatches.length > 0 && (
           <div className="mt-6">
-            <BracketBoard matches={eliminationMatches} editable tournamentId={tournament.id} />
+            <BracketBoard
+            matches={eliminationMatches}
+            editable
+            quickResultEntry={quickResultEntry}
+            tournamentId={tournament.id}
+          />
           </div>
         )}
       </div>
