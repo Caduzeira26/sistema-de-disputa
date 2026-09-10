@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
+import { prisma } from "@/lib/db";
 import { AssistantNotConfiguredError, buildSystemPrompt } from "@/lib/assistant";
 
 export const runtime = "nodejs";
@@ -14,6 +15,7 @@ const messageSchema = z.object({
 // unbounded API bill — this isn't full rate limiting, just a sane ceiling.
 const chatSchema = z.object({
   messages: z.array(messageSchema).min(1).max(20),
+  conversationId: z.string().min(1).nullable().optional(),
 });
 
 export async function POST(request: Request) {
@@ -29,10 +31,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Mensagem inválida." }, { status: 400 });
   }
 
+  // The client always sends the full history; only the newest message is new to us.
+  const latestUserMessage = parsed.data.messages[parsed.data.messages.length - 1];
+
+  const conversation = parsed.data.conversationId
+    ? await prisma.assistantConversation.findUnique({ where: { id: parsed.data.conversationId } })
+    : null;
+  const conversationId =
+    conversation?.id ?? (await prisma.assistantConversation.create({ data: {} })).id;
+
+  await prisma.assistantMessage.create({
+    data: { conversationId, role: latestUserMessage.role, content: latestUserMessage.content },
+  });
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Assistente indisponível no momento. Fale com a gente pelo WhatsApp ou e-mail." },
+      { error: "Assistente indisponível no momento. Fale com a gente pelo WhatsApp ou e-mail.", conversationId },
       { status: 200 }
     );
   }
@@ -48,15 +63,28 @@ export async function POST(request: Request) {
 
     const reply = response.content.find((block) => block.type === "text");
     if (!reply || reply.type !== "text") {
-      return NextResponse.json({ error: "Não consegui gerar uma resposta agora. Tente de novo." }, { status: 200 });
+      return NextResponse.json(
+        { error: "Não consegui gerar uma resposta agora. Tente de novo.", conversationId },
+        { status: 200 }
+      );
     }
 
-    return NextResponse.json({ reply: reply.text });
+    await prisma.assistantMessage.create({
+      data: { conversationId, role: "assistant", content: reply.text },
+    });
+
+    return NextResponse.json({ reply: reply.text, conversationId });
   } catch (err) {
     if (err instanceof AssistantNotConfiguredError) {
-      return NextResponse.json({ error: "Assistente indisponível no momento." }, { status: 200 });
+      return NextResponse.json(
+        { error: "Assistente indisponível no momento.", conversationId },
+        { status: 200 }
+      );
     }
     console.error("[assistant] failed to generate a reply", err);
-    return NextResponse.json({ error: "Não consegui responder agora. Tente novamente em instantes." }, { status: 200 });
+    return NextResponse.json(
+      { error: "Não consegui responder agora. Tente novamente em instantes.", conversationId },
+      { status: 200 }
+    );
   }
 }

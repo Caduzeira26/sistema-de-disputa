@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { buildSystemPrompt } from "./assistant";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { buildSystemPrompt, isPlatformOwner } from "./assistant";
 import { formatBRL } from "./plans";
 
 describe("buildSystemPrompt", () => {
@@ -28,5 +28,35 @@ describe("buildSystemPrompt", () => {
   it("includes the Start avulso one-off pricing", () => {
     const prompt = buildSystemPrompt();
     expect(prompt).toContain(`Também vendido avulso por ${formatBRL(2500)}`);
+  });
+});
+
+describe("isPlatformOwner", () => {
+  const original = process.env.PLATFORM_OWNER_EMAIL;
+
+  beforeEach(() => {
+    process.env.PLATFORM_OWNER_EMAIL = "dono@digitalmoney.com";
+  });
+
+  afterEach(() => {
+    process.env.PLATFORM_OWNER_EMAIL = original;
+  });
+
+  it("matches the configured owner email case-insensitively", () => {
+    expect(isPlatformOwner("Dono@DigitalMoney.com")).toBe(true);
+  });
+
+  it("rejects any other organizer's email", () => {
+    expect(isPlatformOwner("organizador@exemplo.com")).toBe(false);
+  });
+
+  it("rejects when no email is given", () => {
+    expect(isPlatformOwner(null)).toBe(false);
+    expect(isPlatformOwner(undefined)).toBe(false);
+  });
+
+  it("never matches anyone if PLATFORM_OWNER_EMAIL isn't configured", () => {
+    delete process.env.PLATFORM_OWNER_EMAIL;
+    expect(isPlatformOwner("dono@digitalmoney.com")).toBe(false);
   });
 });

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { SignOutButton } from "@/components/admin/SignOutButton";
+import { isPlatformOwner } from "@/lib/assistant";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -16,6 +17,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/planos" className="hover:text-slate-900">
               Planos
             </Link>
+            {isPlatformOwner(session?.user?.email) && (
+              <Link href="/admin/assistente" className="hover:text-slate-900">
+                Assistente
+              </Link>
+            )}
           </nav>
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <span>{session?.user?.name ?? session?.user?.email}</span>

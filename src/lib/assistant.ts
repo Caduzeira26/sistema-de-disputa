@@ -1,6 +1,17 @@
 import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents, isPromoActive } from "@/lib/plans";
 import { SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
 
+/**
+ * Assistant conversations are leads for the platform (Digita Money), not
+ * for whichever organizer happens to be logged in — this app is
+ * multi-tenant since self-serve signup shipped, so this must never be a
+ * plain "is logged in" check.
+ */
+export function isPlatformOwner(email: string | null | undefined): boolean {
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL;
+  return Boolean(ownerEmail && email && email.toLowerCase() === ownerEmail.toLowerCase());
+}
+
 export class AssistantNotConfiguredError extends Error {
   constructor() {
     super("Assistente não está configurado (ANTHROPIC_API_KEY ausente).");

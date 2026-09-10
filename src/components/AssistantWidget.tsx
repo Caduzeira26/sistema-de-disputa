@@ -12,6 +12,7 @@ export function AssistantWidget() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -28,9 +29,10 @@ export function AssistantWidget() {
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages }),
+        body: JSON.stringify({ messages: nextMessages, conversationId }),
       });
       const data = await res.json();
+      if (data.conversationId) setConversationId(data.conversationId);
       if (data.error) {
         setError(data.error);
       } else {
