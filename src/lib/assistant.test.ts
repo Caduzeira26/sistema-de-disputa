@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildRegistrationSystemPrompt, buildSystemPrompt, isPlatformOwner } from "./assistant";
+import { buildRegistrationSystemPrompt, buildRosterCompletionSystemPrompt, buildSystemPrompt, isPlatformOwner } from "./assistant";
 import { formatBRL } from "./plans";
 
 describe("buildSystemPrompt", () => {
@@ -80,6 +80,73 @@ describe("buildRegistrationSystemPrompt", () => {
       { canManageAthleteRegistry: false }
     );
     expect(prompt).not.toContain("exige no mínimo");
+  });
+});
+
+describe("buildRosterCompletionSystemPrompt", () => {
+  const team = { name: "Time A", status: "APPROVED" as const };
+  const baseTournament = {
+    name: "Copa Teste",
+    sportType: "FUTSAL" as const,
+    status: "REGISTRATION_CLOSED" as const,
+    startDate: new Date("2026-09-20T00:00:00Z"),
+  };
+
+  it("states the deadline as one day before the start date when the window is open", () => {
+    const prompt = buildRosterCompletionSystemPrompt(
+      team,
+      baseTournament,
+      { canManageAthleteRegistry: false },
+      new Date("2026-09-10T00:00:00Z")
+    );
+    expect(prompt).toContain("vai até 19/09/2026");
+  });
+
+  it("says the deadline already passed once the window is closed by date", () => {
+    const prompt = buildRosterCompletionSystemPrompt(
+      team,
+      baseTournament,
+      { canManageAthleteRegistry: false },
+      new Date("2026-09-19T12:00:00Z")
+    );
+    expect(prompt).toContain("já passou");
+  });
+
+  it("says the tournament already started when status is IN_PROGRESS, regardless of the date", () => {
+    const prompt = buildRosterCompletionSystemPrompt(
+      team,
+      { ...baseTournament, status: "IN_PROGRESS", startDate: new Date("2099-01-01T00:00:00Z") },
+      { canManageAthleteRegistry: false }
+    );
+    expect(prompt).toContain("já começou ou terminou");
+  });
+
+  it("says the team was rejected and can't be completed", () => {
+    const prompt = buildRosterCompletionSystemPrompt(
+      { ...team, status: "REJECTED" },
+      baseTournament,
+      { canManageAthleteRegistry: false }
+    );
+    expect(prompt).toContain("REJEITADA");
+  });
+
+  it("requires CPF for new players only when the organizer's plan has the athlete registry", () => {
+    const withRegistry = buildRosterCompletionSystemPrompt(team, baseTournament, { canManageAthleteRegistry: true });
+    expect(withRegistry).toContain("também precisa de CPF");
+
+    const withoutRegistry = buildRosterCompletionSystemPrompt(team, baseTournament, { canManageAthleteRegistry: false });
+    expect(withoutRegistry).toContain("não pede CPF");
+  });
+
+  it("makes clear this page only adds players, never edits or removes them", () => {
+    const prompt = buildRosterCompletionSystemPrompt(team, baseTournament, { canManageAthleteRegistry: false });
+    expect(prompt).toContain("não edita nem remove nenhum jogador já cadastrado");
+  });
+
+  it("never lists subscription plan pricing (that's the sales assistant's job)", () => {
+    const prompt = buildRosterCompletionSystemPrompt(team, baseTournament, { canManageAthleteRegistry: false });
+    expect(prompt).not.toContain("/mês");
+    expect(prompt).toContain("NÃO é o assistente de vendas");
   });
 });
 

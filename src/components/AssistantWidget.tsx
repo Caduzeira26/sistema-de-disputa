@@ -10,12 +10,14 @@ const DEFAULT_GREETING =
 export function AssistantWidget({
   context = "SALES",
   tournamentId,
+  teamId,
   greeting = DEFAULT_GREETING,
   title = "Assistente Sistema de Disputa",
   label = "Abrir assistente virtual",
 }: {
-  context?: "SALES" | "REGISTRATION";
+  context?: "SALES" | "REGISTRATION" | "ROSTER_COMPLETION";
   tournamentId?: string;
+  teamId?: string;
   greeting?: string;
   title?: string;
   label?: string;
@@ -42,7 +44,7 @@ export function AssistantWidget({
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages, conversationId, context, tournamentId }),
+        body: JSON.stringify({ messages: nextMessages, conversationId, context, tournamentId, teamId }),
       });
       const data = await res.json();
       if (data.conversationId) setConversationId(data.conversationId);

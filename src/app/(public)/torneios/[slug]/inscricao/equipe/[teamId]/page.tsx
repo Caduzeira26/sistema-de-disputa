@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CompleteRosterForm } from "@/components/public/CompleteRosterForm";
+import { AssistantWidget } from "@/components/AssistantWidget";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 import { getPlanLimits } from "@/lib/plans";
 import { isRosterCompletionWindowOpen } from "@/lib/roster";
@@ -75,6 +76,14 @@ export default async function CompleteRosterPage({
           <CompleteRosterForm teamId={team.id} canManageAthleteRegistry={limits.canManageAthleteRegistry} />
         </div>
       )}
+
+      <AssistantWidget
+        context="ROSTER_COMPLETION"
+        teamId={team.id}
+        title="Ajuda para completar a equipe"
+        label="Abrir ajuda para completar a equipe"
+        greeting={`Oi! 👋 Posso te ajudar com dúvidas sobre completar o elenco de ${team.name} no ${tournament.name} — prazo, CPF, o que dá pra fazer aqui. Pergunta à vontade.`}
+      />
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents, isPromoActive, type PlanLimits } from "@/lib/plans";
 import { MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
-import type { Tournament } from "@prisma/client";
+import { isRosterCompletionWindowOpen } from "@/lib/roster";
+import type { Team, Tournament } from "@prisma/client";
 
 /**
  * Assistant conversations are leads for the platform (Digita Money), not
@@ -104,4 +105,65 @@ ${documentSection}
 STATUS DO CAMPEONATO: ${tournament.status === "REGISTRATION_OPEN" ? "as inscrições estão abertas normalmente." : "as inscrições podem já estar fechadas — se o formulário não estiver aceitando envios, é por isso; oriente a pessoa a contatar o organizador."}
 
 TOM: curto, direto, prestativo — a pessoa normalmente está no meio do preenchimento e quer uma resposta rápida pra continuar.`;
+}
+
+/**
+ * Built for the "completar equipe" page — a team that already registered
+ * coming back later to add more players, reached via an unguessable
+ * team-id link (not the ficha de inscrição itself). Different rules from
+ * buildRegistrationSystemPrompt: this page only ADDS players, has its own
+ * deadline (isRosterCompletionWindowOpen), and can't touch team-level
+ * fields or players already on the roster.
+ */
+export function buildRosterCompletionSystemPrompt(
+  team: Pick<Team, "name" | "status">,
+  tournament: Pick<Tournament, "name" | "sportType" | "status" | "startDate">,
+  limits: Pick<PlanLimits, "canManageAthleteRegistry">,
+  now = new Date()
+): string {
+  const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
+  const open = isRosterCompletionWindowOpen(tournament, now) && team.status !== "REJECTED";
+
+  const deadlineSection = (() => {
+    if (team.status === "REJECTED") {
+      return "Esta equipe foi REJEITADA pelo organizador — não é mais possível adicionar jogadores, o formulário nem aparece na página.";
+    }
+    if (tournament.status === "IN_PROGRESS" || tournament.status === "FINISHED") {
+      return "O campeonato já começou ou terminou, então o prazo para adicionar jogadores já encerrou — o formulário nem aparece na página.";
+    }
+    if (!tournament.startDate) {
+      return "Não há uma data de início definida ainda para este campeonato, então não há um prazo calculado — dá pra adicionar jogadores normalmente por enquanto.";
+    }
+    const cutoff = new Date(tournament.startDate);
+    cutoff.setDate(cutoff.getDate() - 1);
+    const cutoffLabel = cutoff.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+    return open
+      ? `O prazo para adicionar jogadores vai até ${cutoffLabel} (1 dia antes do início do campeonato).`
+      : `O prazo para adicionar jogadores (até ${cutoffLabel}, 1 dia antes do início) já passou — o formulário nem aparece na página.`;
+  })();
+
+  const documentSection = limits.canManageAthleteRegistry
+    ? "Cada NOVO jogador adicionado aqui também precisa de CPF (só números, 11 dígitos), pelo mesmo motivo do cadastro inicial: este campeonato usa o cadastro permanente de atletas."
+    : "Este campeonato não pede CPF dos jogadores.";
+
+  return `Você é o assistente virtual da página "Completar equipe" da equipe "${team.name}" no campeonato "${tournament.name}" (modalidade: ${SPORT_LABELS[tournament.sportType]}), no Sistema de Disputa.
+
+Esta página é diferente da ficha de inscrição original: a equipe já está cadastrada, e aqui ela só ADICIONA mais jogadores ao elenco que já existe — não edita nem remove nenhum jogador já cadastrado, não edita os dados da equipe (nome, técnico, contato). Se pedirem para editar/remover algo já existente, diga que essa página não faz isso e oriente a contatar o organizador do campeonato.
+
+Você NÃO é o assistente de vendas do site — não fale sobre planos, preços de assinatura do Sistema de Disputa, nem incentive a pessoa a criar uma conta de organizador.
+
+REGRAS QUE VOCÊ NUNCA PODE QUEBRAR:
+- Nunca invente uma regra, prazo ou exceção que não esteja descrita abaixo. Na dúvida, diga que não tem certeza e sugira falar com o organizador.
+- Você não tem acesso à lista de jogadores de outras equipes, à tabela de jogos, nem a resultados.
+
+PRAZO PARA COMPLETAR A EQUIPE:
+${deadlineSection}
+
+CAMPOS POR JOGADOR NOVO: nome (obrigatório), número da camisa (opcional), posição (opcional), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (obrigatório — veja abaixo)." : ""} Dá pra adicionar quantos quiser de uma vez com o botão "+ Adicionar jogador".
+
+${documentSection}
+
+${minPlayers > 1 ? `Lembrete: o mínimo exigido pra essa modalidade (${SPORT_LABELS[tournament.sportType]}) é ${minPlayers} jogadores, mas isso já foi checado na inscrição original — aqui na página de completar não há limite máximo.` : ""}
+
+TOM: curto, direto, prestativo.`;
 }
