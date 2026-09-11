@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildSystemPrompt, isPlatformOwner } from "./assistant";
+import { buildRegistrationSystemPrompt, buildSystemPrompt, isPlatformOwner } from "./assistant";
 import { formatBRL } from "./plans";
 
 describe("buildSystemPrompt", () => {
@@ -28,6 +28,44 @@ describe("buildSystemPrompt", () => {
   it("includes the Start avulso one-off pricing", () => {
     const prompt = buildSystemPrompt();
     expect(prompt).toContain(`Também vendido avulso por ${formatBRL(2500)}`);
+  });
+});
+
+describe("buildRegistrationSystemPrompt", () => {
+  const baseTournament = {
+    name: "Copa Teste",
+    sportType: "FUTSAL" as const,
+    registrationFeeCents: null,
+    status: "REGISTRATION_OPEN" as const,
+  };
+
+  it("describes a free tournament as pending manual approval", () => {
+    const prompt = buildRegistrationSystemPrompt(baseTournament, { canManageAthleteRegistry: false });
+    expect(prompt).toContain("GRATUITA");
+    expect(prompt).toContain("status \"Pendente\"");
+  });
+
+  it("describes a paid tournament with the real fee and auto-approval on payment", () => {
+    const prompt = buildRegistrationSystemPrompt(
+      { ...baseTournament, registrationFeeCents: 3000 },
+      { canManageAthleteRegistry: false }
+    );
+    expect(prompt).toContain(`PAGA: ${formatBRL(3000)}`);
+    expect(prompt).toContain("aprovada automaticamente");
+  });
+
+  it("requires CPF only when the organizer's plan has the athlete registry", () => {
+    const withRegistry = buildRegistrationSystemPrompt(baseTournament, { canManageAthleteRegistry: true });
+    expect(withRegistry).toContain("precisa informar o CPF");
+
+    const withoutRegistry = buildRegistrationSystemPrompt(baseTournament, { canManageAthleteRegistry: false });
+    expect(withoutRegistry).toContain("não pede CPF");
+  });
+
+  it("never lists subscription plan pricing (that's the sales assistant's job)", () => {
+    const prompt = buildRegistrationSystemPrompt(baseTournament, { canManageAthleteRegistry: false });
+    expect(prompt).not.toContain("/mês");
+    expect(prompt).toContain("NÃO é o assistente de vendas");
   });
 });
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { TeamRegistrationForm } from "@/components/public/TeamRegistrationForm";
+import { AssistantWidget } from "@/components/AssistantWidget";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 import { formatBRL, getPlanLimits } from "@/lib/plans";
 
@@ -46,6 +47,14 @@ export default async function TeamRegistrationPage({
           />
         </div>
       )}
+
+      <AssistantWidget
+        context="REGISTRATION"
+        tournamentId={tournament.id}
+        title="Ajuda com a inscrição"
+        label="Abrir ajuda com a inscrição"
+        greeting={`Oi! 👋 Posso te ajudar com dúvidas sobre esta ficha de inscrição do ${tournament.name} — o que cada campo significa, se tem taxa, o que acontece depois de enviar. Pergunta à vontade.`}
+      />
     </main>
   );
 }

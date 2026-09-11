@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db";
-import { AssistantNotConfiguredError, buildSystemPrompt } from "@/lib/assistant";
+import { AssistantNotConfiguredError, buildRegistrationSystemPrompt, buildSystemPrompt } from "@/lib/assistant";
+import { getPlanLimits } from "@/lib/plans";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,11 @@ const messageSchema = z.object({
 const chatSchema = z.object({
   messages: z.array(messageSchema).min(1).max(20),
   conversationId: z.string().min(1).nullable().optional(),
+  context: z.enum(["SALES", "REGISTRATION"]).optional().default("SALES"),
+  // Only meaningful (and required) for REGISTRATION — which tournament's
+  // form is being filled. Facts about it are looked up server-side below,
+  // never trusted from the client.
+  tournamentId: z.string().min(1).nullable().optional(),
 });
 
 export async function POST(request: Request) {
@@ -34,11 +40,23 @@ export async function POST(request: Request) {
   // The client always sends the full history; only the newest message is new to us.
   const latestUserMessage = parsed.data.messages[parsed.data.messages.length - 1];
 
-  const conversation = parsed.data.conversationId
+  const existingConversation = parsed.data.conversationId
     ? await prisma.assistantConversation.findUnique({ where: { id: parsed.data.conversationId } })
     : null;
-  const conversationId =
-    conversation?.id ?? (await prisma.assistantConversation.create({ data: {} })).id;
+  // Context/tournament are pinned at conversation creation — an existing
+  // conversation keeps its own, ignoring whatever the client sends on
+  // later turns, so a chat can't be redirected mid-stream.
+  const context = existingConversation?.context ?? parsed.data.context;
+  const tournamentId = existingConversation ? existingConversation.tournamentId : parsed.data.tournamentId || null;
+
+  if (context === "REGISTRATION" && !tournamentId) {
+    return NextResponse.json({ error: "Campeonato não identificado." }, { status: 400 });
+  }
+
+  const conversation =
+    existingConversation ??
+    (await prisma.assistantConversation.create({ data: { context, tournamentId } }));
+  const conversationId = conversation.id;
 
   await prisma.assistantMessage.create({
     data: { conversationId, role: latestUserMessage.role, content: latestUserMessage.content },
@@ -52,12 +70,24 @@ export async function POST(request: Request) {
     );
   }
 
+  let systemPrompt: string;
+  if (context === "REGISTRATION") {
+    const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId! } });
+    if (!tournament) {
+      return NextResponse.json({ error: "Campeonato não encontrado.", conversationId }, { status: 200 });
+    }
+    const limits = await getPlanLimits(tournament.organizerId);
+    systemPrompt = buildRegistrationSystemPrompt(tournament, limits);
+  } else {
+    systemPrompt = buildSystemPrompt();
+  }
+
   try {
     const anthropic = new Anthropic({ apiKey });
     const response = await anthropic.messages.create({
       model: "claude-sonnet-5",
       max_tokens: 1024,
-      system: buildSystemPrompt(),
+      system: systemPrompt,
       messages: parsed.data.messages,
     });
 
