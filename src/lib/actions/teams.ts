@@ -10,6 +10,7 @@ import { createTeamRegistrationCharge } from "@/lib/pix";
 import { EfiNotConfiguredError } from "@/lib/efi";
 import { findOrCreateAthlete, isValidDocumentFormat, normalizeDocument } from "@/lib/athletes";
 import { MIN_PLAYERS_PER_TEAM, SPORT_LABELS } from "@/lib/sport";
+import { isRosterCompletionWindowOpen } from "@/lib/roster";
 
 const playerSchema = z.object({
   name: z.string().min(1, "Nome do jogador é obrigatório"),
@@ -34,6 +35,8 @@ export type RegisterTeamState = {
   success?: boolean;
   /** Set when the tournament charges a registration fee — the form should redirect to the PIX payment page. */
   paymentTxid?: string;
+  /** The created team's id, so the success screen can link to its "complete roster" page. */
+  teamId?: string;
 };
 
 export async function registerTeam(
@@ -136,7 +139,7 @@ export async function registerTeam(
   if (tournament.registrationFeeCents && tournament.registrationFeeCents > 0) {
     try {
       const charge = await createTeamRegistrationCharge(team.id);
-      return { success: true, paymentTxid: charge.txid };
+      return { success: true, paymentTxid: charge.txid, teamId: team.id };
     } catch (err) {
       // Team already exists PENDING; the organizer can still approve it manually if PIX is unavailable.
       const message = err instanceof EfiNotConfiguredError ? "Pagamento por PIX indisponível no momento." : "Não foi possível gerar a cobrança PIX. Tente novamente.";
@@ -144,7 +147,7 @@ export async function registerTeam(
     }
   }
 
-  return { success: true };
+  return { success: true, teamId: team.id };
 }
 
 async function requireOrganizerForTeam(teamId: string) {
@@ -216,5 +219,82 @@ export async function updateTeam(
   });
 
   revalidatePath(`/admin/torneios/${team.tournamentId}`);
+  return { success: true };
+}
+
+const addPlayersSchema = z.object({
+  teamId: z.string().min(1),
+  players: z.array(playerSchema).min(1, "Adicione ao menos um jogador"),
+});
+
+export type AddPlayersState = { error?: string; success?: boolean };
+
+/**
+ * Public, unauthenticated (like registerTeam itself) — a team completes its
+ * own roster later via the unguessable team-id link shown after
+ * registration, the same trust model already used for the PIX payment
+ * link. Only adds players; never touches or removes existing ones.
+ */
+export async function addPlayersToTeam(
+  _prevState: AddPlayersState,
+  formData: FormData
+): Promise<AddPlayersState> {
+  let players: unknown;
+  try {
+    players = JSON.parse((formData.get("playersJson") as string) || "[]");
+  } catch {
+    return { error: "Lista de jogadores inválida." };
+  }
+
+  const parsed = addPlayersSchema.safeParse({ teamId: formData.get("teamId"), players });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const team = await prisma.team.findUnique({
+    where: { id: parsed.data.teamId },
+    include: { tournament: true },
+  });
+  if (!team) {
+    return { error: "Equipe não encontrada." };
+  }
+  if (team.status === "REJECTED") {
+    return { error: "Esta equipe foi rejeitada pelo organizador e não pode mais ser completada." };
+  }
+  if (!isRosterCompletionWindowOpen(team.tournament)) {
+    return { error: "O prazo para completar a equipe já encerrou." };
+  }
+
+  const limits = await getPlanLimits(team.tournament.organizerId);
+  if (limits.canManageAthleteRegistry) {
+    const invalidPlayer = parsed.data.players.find((p) => !p.document || !isValidDocumentFormat(p.document));
+    if (invalidPlayer) {
+      return { error: `Informe o CPF (11 dígitos) de ${invalidPlayer.name}.` };
+    }
+  }
+
+  const playersWithAthletes = await Promise.all(
+    parsed.data.players.map(async (p) => {
+      const birthDate = p.birthDate ? new Date(p.birthDate) : null;
+      const athlete = await findOrCreateAthlete({
+        name: p.name,
+        document: p.document ? normalizeDocument(p.document) : null,
+        birthDate,
+      });
+      return {
+        teamId: team.id,
+        name: p.name,
+        shirtNumber: p.shirtNumber ?? null,
+        position: p.position || null,
+        birthDate,
+        athleteId: athlete.id,
+      };
+    })
+  );
+
+  await prisma.player.createMany({ data: playersWithAthletes });
+
+  revalidatePath(`/admin/torneios/${team.tournamentId}`);
+  revalidatePath(`/torneios/${team.tournament.slug}/inscricao/equipe/${team.id}`);
   return { success: true };
 }

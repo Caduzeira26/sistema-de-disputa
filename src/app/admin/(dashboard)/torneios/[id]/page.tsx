@@ -262,6 +262,13 @@ export default async function TournamentDetailPage({
                         >
                           Editar
                         </Link>
+                        <Link
+                          href={`/torneios/${tournament.slug}/inscricao/equipe/${team.id}`}
+                          className="text-sm text-slate-600 hover:text-slate-900"
+                          target="_blank"
+                        >
+                          Completar equipe
+                        </Link>
                         <DeleteTeamButton teamId={team.id} />
                       </div>
                     </td>

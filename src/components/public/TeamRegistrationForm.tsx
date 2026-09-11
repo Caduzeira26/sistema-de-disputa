@@ -62,6 +62,17 @@ export function TeamRegistrationForm({
         <p className="mt-1 text-sm">
           O organizador vai analisar os dados da equipe. Você pode ser contatado para confirmar detalhes.
         </p>
+        {state.teamId && (
+          <p className="mt-3 text-sm">
+            Precisa completar o time com mais jogadores depois? Guarde este link:{" "}
+            <a
+              href={`/torneios/${tournamentSlug}/inscricao/equipe/${state.teamId}`}
+              className="font-medium underline"
+            >
+              /torneios/{tournamentSlug}/inscricao/equipe/{state.teamId}
+            </a>
+          </p>
+        )}
       </div>
     );
   }

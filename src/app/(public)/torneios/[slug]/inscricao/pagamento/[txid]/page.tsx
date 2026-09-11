@@ -37,6 +37,13 @@ export default async function TeamRegistrationPaymentPage({
           paidMessage="A equipe já está confirmada no campeonato."
         />
       </div>
+
+      <p className="mt-6 text-sm text-slate-500">
+        Precisa completar o time com mais jogadores depois? Guarde este link:{" "}
+        <Link href={`/torneios/${slug}/inscricao/equipe/${transaction.team.id}`} className="font-medium underline">
+          /torneios/{slug}/inscricao/equipe/{transaction.team.id}
+        </Link>
+      </p>
     </main>
   );
 }
