@@ -19,6 +19,7 @@ const startLimits: PlanLimits = {
   allowedSports: ["FUTEBOL_CAMPO", "FUTSAL"],
   canChargeRegistration: false,
   canWhiteLabel: false,
+  canManageAthleteRegistry: false,
 };
 
 const unlimitedLimits: PlanLimits = {
@@ -87,6 +88,7 @@ const proWithPromo: PlanCatalogEntry = {
   allowedSports: [],
   canChargeRegistration: true,
   canWhiteLabel: false,
+  canManageAthleteRegistry: false,
   features: [],
 };
 

@@ -207,6 +207,47 @@ export async function updateTournamentFee(_prevState: UpdateFeeState, formData: 
   return {};
 }
 
+const updateTransferDeadlineSchema = z.object({
+  tournamentId: z.string().min(1),
+  transferDeadline: z.string().optional(),
+});
+
+export type UpdateTransferDeadlineState = { error?: string };
+
+export async function updateTournamentTransferDeadline(
+  _prevState: UpdateTransferDeadlineState,
+  formData: FormData
+): Promise<UpdateTransferDeadlineState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Sessão expirada. Faça login novamente." };
+
+  const parsed = updateTransferDeadlineSchema.safeParse({
+    tournamentId: formData.get("tournamentId"),
+    transferDeadline: formData.get("transferDeadline"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const tournament = await prisma.tournament.findUnique({ where: { id: parsed.data.tournamentId } });
+  if (!tournament || tournament.organizerId !== session.user.id) {
+    return { error: "Torneio não encontrado." };
+  }
+
+  const limits = await getPlanLimits(session.user.id);
+  if (!limits.canManageAthleteRegistry) {
+    return { error: "Cadastro de atletas não está disponível no seu plano atual. Faça upgrade em /planos." };
+  }
+
+  await prisma.tournament.update({
+    where: { id: parsed.data.tournamentId },
+    data: { transferDeadline: parsed.data.transferDeadline ? new Date(parsed.data.transferDeadline) : null },
+  });
+
+  revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
+  return {};
+}
+
 export type UpdateLogoState = { error?: string };
 
 export async function updateTournamentLogo(_prevState: UpdateLogoState, formData: FormData): Promise<UpdateLogoState> {

@@ -165,6 +165,10 @@ model Tournament {
   /// Only settable when the organizer's plan allows charging (Pro/Liga).
   registrationFeeCents Int?
 
+  /// Deadline for athlete transfer requests (Liga plan only). Null = no
+  /// automatic cutoff — the organizer decides case by case.
+  transferDeadline DateTime?
+
   pointsWin  Int @default(3)
   pointsDraw Int @default(1)
   pointsLoss Int @default(0)
@@ -179,11 +183,12 @@ model Tournament {
   organizerId String
   organizer   User   @relation(fields: [organizerId], references: [id])
 
-  venues          Venue[]
-  teams           Team[]           @relation("TournamentTeams")
-  groups          Group[]
-  matches         Match[]
-  pixTransactions PixTransaction[]
+  venues           Venue[]
+  teams            Team[]            @relation("TournamentTeams")
+  groups           Group[]
+  matches          Match[]
+  pixTransactions  PixTransaction[]
+  transferRequests TransferRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -216,34 +221,86 @@ model Team {
   seed    Int?
 
   players        Player[]
-  homeMatches    Match[]         @relation("HomeTeam")
-  awayMatches    Match[]         @relation("AwayTeam")
+  homeMatches    Match[]           @relation("HomeTeam")
+  awayMatches    Match[]           @relation("AwayTeam")
   goals          Goal[]
   cards          Card[]
   baskets        Basket[]
   fouls          Foul[]
-  championOf     Tournament?     @relation("Champion")
+  championOf     Tournament?       @relation("Champion")
   pixTransaction PixTransaction?
+  transfersFrom  TransferRequest[] @relation("TransferFrom")
+  transfersTo    TransferRequest[] @relation("TransferTo")
 
   createdAt DateTime @default(now())
 
   @@index([tournamentId, status])
 }
 
+/// A permanent, cross-tournament person record. Reused across different
+/// teams/tournaments when the same CPF ("document") registers again —
+/// this is what a transfer moves between teams, not the Player row itself.
+model Athlete {
+  id        String    @id @default(cuid())
+  name      String
+  document  String?   @unique
+  birthDate DateTime?
+  createdAt DateTime  @default(now())
+
+  players          Player[]
+  transferRequests TransferRequest[]
+}
+
+/// A roster slot: one athlete's participation on one team within one
+/// tournament. Goals/cards/etc. stay attached to this row even after the
+/// athlete transfers out — `active` marks whether it's the athlete's
+/// current team for súmula "select player" purposes.
 model Player {
-  id     String @id @default(cuid())
-  teamId String
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  teamId    String
+  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   Athlete @relation(fields: [athleteId], references: [id])
 
   name        String
   shirtNumber Int?
   position    String?
   birthDate   DateTime?
+  active      Boolean   @default(true)
 
   goals   Goal[]
   cards   Card[]
   baskets Basket[]
   fouls   Foul[]
+}
+
+enum TransferRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// A team-initiated, organizer-approved request to move an athlete to a
+/// different team within the same tournament, before `Tournament.transferDeadline`.
+model TransferRequest {
+  id           String                @id @default(cuid())
+  tournamentId String
+  tournament   Tournament            @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  athleteId    String
+  athlete      Athlete               @relation(fields: [athleteId], references: [id])
+  fromTeamId   String?
+  fromTeam     Team?                 @relation("TransferFrom", fields: [fromTeamId], references: [id])
+  toTeamId     String
+  toTeam       Team                  @relation("TransferTo", fields: [toTeamId], references: [id])
+  status       TransferRequestStatus @default(PENDING)
+
+  requestedByName    String
+  requestedByContact String?
+
+  createdAt DateTime  @default(now())
+  decidedAt DateTime?
+
+  @@index([tournamentId, status])
 }
 
 model Group {

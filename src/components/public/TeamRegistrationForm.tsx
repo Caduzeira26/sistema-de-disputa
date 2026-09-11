@@ -11,13 +11,22 @@ type PlayerDraft = {
   shirtNumber: string;
   position: string;
   birthDate: string;
+  document: string;
 };
 
 function emptyPlayer(): PlayerDraft {
-  return { name: "", shirtNumber: "", position: "", birthDate: "" };
+  return { name: "", shirtNumber: "", position: "", birthDate: "", document: "" };
 }
 
-export function TeamRegistrationForm({ tournamentId, tournamentSlug }: { tournamentId: string; tournamentSlug: string }) {
+export function TeamRegistrationForm({
+  tournamentId,
+  tournamentSlug,
+  canManageAthleteRegistry,
+}: {
+  tournamentId: string;
+  tournamentSlug: string;
+  canManageAthleteRegistry?: boolean;
+}) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(registerTeam, initialState);
   const [players, setPlayers] = useState<PlayerDraft[]>([emptyPlayer()]);
@@ -163,6 +172,17 @@ export function TeamRegistrationForm({ tournamentId, tournamentSlug }: { tournam
                   onChange={(e) => updatePlayer(index, "birthDate", e.target.value)}
                   className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
                 />
+                {canManageAthleteRegistry && (
+                  <input
+                    placeholder="CPF (só números)"
+                    required
+                    inputMode="numeric"
+                    maxLength={14}
+                    value={player.document}
+                    onChange={(e) => updatePlayer(index, "document", e.target.value)}
+                    className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                  />
+                )}
               </div>
             </div>
           ))}

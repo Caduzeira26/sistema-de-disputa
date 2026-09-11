@@ -8,12 +8,15 @@ import { saveTeamLogo } from "@/lib/storage";
 import { countTeamsForLimit, getPlanLimits, isWithinTeamLimit } from "@/lib/plans";
 import { createTeamRegistrationCharge } from "@/lib/pix";
 import { EfiNotConfiguredError } from "@/lib/efi";
+import { findOrCreateAthlete, isValidDocumentFormat, normalizeDocument } from "@/lib/athletes";
 
 const playerSchema = z.object({
   name: z.string().min(1, "Nome do jogador é obrigatório"),
   shirtNumber: z.coerce.number().int().min(0).max(999).nullish(),
   position: z.string().nullish(),
   birthDate: z.string().nullish(),
+  /** CPF — only collected/validated when the tournament's plan allows the athlete registry. */
+  document: z.string().nullish(),
 });
 
 const registerTeamSchema = z.object({
@@ -69,6 +72,13 @@ export async function registerTeam(
     return { error: "Este campeonato atingiu o limite de equipes permitido pelo plano do organizador." };
   }
 
+  if (limits.canManageAthleteRegistry) {
+    const invalidPlayer = parsed.data.players.find((p) => !p.document || !isValidDocumentFormat(p.document));
+    if (invalidPlayer) {
+      return { error: `Informe o CPF (11 dígitos) de ${invalidPlayer.name}.` };
+    }
+  }
+
   const logoFile = formData.get("logo");
   let logoUrl: string | undefined;
   if (logoFile instanceof File && logoFile.size > 0) {
@@ -81,6 +91,24 @@ export async function registerTeam(
     logoUrl = await saveTeamLogo(logoFile);
   }
 
+  const playersWithAthletes = await Promise.all(
+    parsed.data.players.map(async (p) => {
+      const birthDate = p.birthDate ? new Date(p.birthDate) : null;
+      const athlete = await findOrCreateAthlete({
+        name: p.name,
+        document: p.document ? normalizeDocument(p.document) : null,
+        birthDate,
+      });
+      return {
+        name: p.name,
+        shirtNumber: p.shirtNumber ?? null,
+        position: p.position || null,
+        birthDate,
+        athleteId: athlete.id,
+      };
+    })
+  );
+
   const team = await prisma.team.create({
     data: {
       tournamentId: parsed.data.tournamentId,
@@ -90,12 +118,7 @@ export async function registerTeam(
       contactEmail: parsed.data.contactEmail || null,
       logoUrl,
       players: {
-        create: parsed.data.players.map((p) => ({
-          name: p.name,
-          shirtNumber: p.shirtNumber ?? null,
-          position: p.position || null,
-          birthDate: p.birthDate ? new Date(p.birthDate) : null,
-        })),
+        create: playersWithAthletes,
       },
     },
   });

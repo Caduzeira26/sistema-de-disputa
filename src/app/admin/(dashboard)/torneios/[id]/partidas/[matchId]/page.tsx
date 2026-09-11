@@ -68,6 +68,15 @@ export default async function MatchSumulaPage({
   const playerName = (id: string) =>
     match.homeTeam?.players.find((p) => p.id === id)?.name ?? match.awayTeam?.players.find((p) => p.id === id)?.name ?? "?";
 
+  // Súmula selectors only offer each team's current roster — a transferred-out
+  // athlete's historical events (above) still resolve via the unfiltered lookups.
+  const homeTeamActive = match.homeTeam
+    ? { ...match.homeTeam, players: match.homeTeam.players.filter((p) => p.active) }
+    : null;
+  const awayTeamActive = match.awayTeam
+    ? { ...match.awayTeam, players: match.awayTeam.players.filter((p) => p.active) }
+    : null;
+
   return (
     <div className="relative overflow-hidden">
       <TournamentWatermark logoUrl={match.tournament.logoUrl} />
@@ -111,7 +120,7 @@ export default async function MatchSumulaPage({
             <section>
               <h2 className="mb-2 text-lg font-semibold text-slate-900">Gols</h2>
               <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <GoalForm matchId={match.id} homeTeam={match.homeTeam!} awayTeam={match.awayTeam!} />
+                <GoalForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} />
               </div>
               {match.goals.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">Nenhum gol registrado.</p>
@@ -137,7 +146,7 @@ export default async function MatchSumulaPage({
             <section>
               <h2 className="mb-2 text-lg font-semibold text-slate-900">Cartões</h2>
               <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <CardForm matchId={match.id} homeTeam={match.homeTeam!} awayTeam={match.awayTeam!} />
+                <CardForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} />
               </div>
               {match.cards.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">Nenhum cartão registrado.</p>
@@ -203,7 +212,7 @@ export default async function MatchSumulaPage({
             <section>
               <h2 className="mb-2 text-lg font-semibold text-slate-900">Cartões</h2>
               <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <CardForm matchId={match.id} homeTeam={match.homeTeam!} awayTeam={match.awayTeam!} mode="set" />
+                <CardForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} mode="set" />
               </div>
               {match.cards.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">Nenhum cartão registrado.</p>
@@ -247,7 +256,7 @@ export default async function MatchSumulaPage({
             <section>
               <h2 className="mb-2 text-lg font-semibold text-slate-900">Cestas</h2>
               <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <BasketForm matchId={match.id} homeTeam={match.homeTeam!} awayTeam={match.awayTeam!} />
+                <BasketForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} />
               </div>
               {match.baskets.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">Nenhuma cesta registrada.</p>
@@ -273,7 +282,7 @@ export default async function MatchSumulaPage({
             <section>
               <h2 className="mb-2 text-lg font-semibold text-slate-900">Faltas</h2>
               <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <FoulForm matchId={match.id} homeTeam={match.homeTeam!} awayTeam={match.awayTeam!} />
+                <FoulForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} />
               </div>
               {match.fouls.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">Nenhuma falta registrada.</p>
@@ -307,7 +316,7 @@ export default async function MatchSumulaPage({
                 <h2 className="mb-2 text-sm font-semibold text-slate-700">
                   Jogos · {homeGamesWon} x {awayGamesWon}
                 </h2>
-                <GameForm matchId={match.id} homeTeam={match.homeTeam!} awayTeam={match.awayTeam!} />
+                <GameForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} />
                 <FinishTableTennisMatchButton matchId={match.id} />
               </div>
             )}

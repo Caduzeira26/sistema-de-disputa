@@ -17,6 +17,8 @@ export type PlanCatalogEntry = {
   allowedSports: readonly SportType[];
   canChargeRegistration: boolean;
   canWhiteLabel: boolean;
+  /** Cross-tournament athlete registry (by CPF) + team-transfer requests. */
+  canManageAthleteRegistry: boolean;
   features: string[];
 };
 
@@ -34,6 +36,7 @@ export const PLAN_CATALOG: Record<PlanTier, PlanCatalogEntry> = {
     allowedSports: ["FUTEBOL_CAMPO", "FUTSAL"],
     canChargeRegistration: false,
     canWhiteLabel: false,
+    canManageAthleteRegistry: false,
     features: [
       "Até 16 equipes por campeonato",
       "Máximo 2 campeonatos ativos",
@@ -53,6 +56,7 @@ export const PLAN_CATALOG: Record<PlanTier, PlanCatalogEntry> = {
     allowedSports: SPORT_TYPES,
     canChargeRegistration: true,
     canWhiteLabel: false,
+    canManageAthleteRegistry: false,
     features: [
       "Equipes ilimitadas",
       "Campeonatos ilimitados",
@@ -71,11 +75,13 @@ export const PLAN_CATALOG: Record<PlanTier, PlanCatalogEntry> = {
     allowedSports: SPORT_TYPES,
     canChargeRegistration: true,
     canWhiteLabel: true,
+    canManageAthleteRegistry: true,
     features: [
       "Tudo do Pro",
       "White label: logo própria e domínio personalizado",
       "Financeiro completo",
       "Suporte prioritário",
+      "Cadastro de atletas entre campeonatos, com transferência entre equipes",
     ],
   },
 };
@@ -98,6 +104,7 @@ export type PlanLimits = {
   allowedSports: readonly SportType[];
   canChargeRegistration: boolean;
   canWhiteLabel: boolean;
+  canManageAthleteRegistry: boolean;
 };
 
 const TRIAL_LIMITS: Omit<PlanLimits, "tournamentCountSince"> = {
@@ -108,6 +115,7 @@ const TRIAL_LIMITS: Omit<PlanLimits, "tournamentCountSince"> = {
   allowedSports: PLAN_CATALOG.START.allowedSports,
   canChargeRegistration: false,
   canWhiteLabel: false,
+  canManageAthleteRegistry: false,
 };
 
 function isSubscriptionCurrentlyActive(sub: Subscription, now: Date): boolean {
@@ -144,6 +152,7 @@ export async function getPlanLimits(userId: string, now = new Date()): Promise<P
     allowedSports: entry.allowedSports,
     canChargeRegistration: entry.canChargeRegistration,
     canWhiteLabel: entry.canWhiteLabel,
+    canManageAthleteRegistry: entry.canManageAthleteRegistry,
   };
 }
 

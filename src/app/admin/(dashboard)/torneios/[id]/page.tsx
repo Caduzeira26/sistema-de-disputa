@@ -15,6 +15,8 @@ import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
 import { TournamentLogoForm } from "@/components/admin/TournamentLogoForm";
 import { TournamentDatesForm } from "@/components/admin/TournamentDatesForm";
 import { TournamentFeeForm } from "@/components/admin/TournamentFeeForm";
+import { TournamentTransferDeadlineForm } from "@/components/admin/TournamentTransferDeadlineForm";
+import { TransferRequestsList } from "@/components/admin/TransferRequestsList";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 import { formatTournamentDateRange } from "@/lib/formatDateRange";
 import { getPlanLimits } from "@/lib/plans";
@@ -63,6 +65,13 @@ export default async function TournamentDetailPage({
   if (!tournament || tournament.organizerId !== session.user.id) notFound();
 
   const limits = await getPlanLimits(session.user.id);
+  const pendingTransferRequests = limits.canManageAthleteRegistry
+    ? await prisma.transferRequest.findMany({
+        where: { tournamentId: tournament.id, status: "PENDING" },
+        include: { athlete: true, fromTeam: true, toTeam: true },
+        orderBy: { createdAt: "asc" },
+      })
+    : [];
 
   const approvedTeams = tournament.teams.filter((t) => t.status === "APPROVED");
   const displayMatches = toDisplayMatches(tournament.matches, tournament.teams);
@@ -166,6 +175,31 @@ export default async function TournamentDetailPage({
           </Link>
           .
         </div>
+      )}
+
+      {limits.canManageAthleteRegistry && (
+        <>
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+            <h2 className="mb-2 text-sm font-semibold text-slate-700">Prazo de transferências</h2>
+            <TournamentTransferDeadlineForm
+              tournamentId={tournament.id}
+              transferDeadline={tournament.transferDeadline}
+            />
+            <p className="mt-2 text-sm text-slate-500">
+              Página pública de solicitação:{" "}
+              <Link href={`/torneios/${tournament.slug}/transferencias`} className="underline" target="_blank">
+                /torneios/{tournament.slug}/transferencias
+              </Link>
+            </p>
+          </div>
+
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+            <h2 className="mb-2 text-sm font-semibold text-slate-700">
+              Solicitações de transferência pendentes ({pendingTransferRequests.length})
+            </h2>
+            <TransferRequestsList requests={pendingTransferRequests} />
+          </div>
+        </>
       )}
 
       <div className="mt-8">
