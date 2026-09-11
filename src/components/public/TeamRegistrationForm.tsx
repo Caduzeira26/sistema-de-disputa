@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerTeam, type RegisterTeamState } from "@/lib/actions/teams";
+import { MIN_PLAYERS_PER_TEAM, SPORT_LABELS, type SportType } from "@/lib/sport";
 
 const initialState: RegisterTeamState = {};
 
@@ -21,15 +22,19 @@ function emptyPlayer(): PlayerDraft {
 export function TeamRegistrationForm({
   tournamentId,
   tournamentSlug,
+  sportType,
   canManageAthleteRegistry,
 }: {
   tournamentId: string;
   tournamentSlug: string;
+  sportType: SportType;
   canManageAthleteRegistry?: boolean;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(registerTeam, initialState);
   const [players, setPlayers] = useState<PlayerDraft[]>([emptyPlayer()]);
+  const minPlayers = MIN_PLAYERS_PER_TEAM[sportType];
+  const belowMinimum = players.length < minPlayers;
 
   useEffect(() => {
     if (state.paymentTxid) {
@@ -127,6 +132,11 @@ export function TeamRegistrationForm({
 
       <fieldset className="flex flex-col gap-4">
         <legend className="text-base font-semibold text-slate-900">Jogadores</legend>
+        {minPlayers > 1 && (
+          <p className={`text-sm ${belowMinimum ? "text-amber-700" : "text-slate-500"}`}>
+            Mínimo de {minPlayers} jogadores para {SPORT_LABELS[sportType]} ({players.length}/{minPlayers}).
+          </p>
+        )}
 
         <div className="flex flex-col gap-4">
           {players.map((player, index) => (
@@ -201,10 +211,10 @@ export function TeamRegistrationForm({
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || belowMinimum}
         className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
       >
-        {pending ? "Enviando..." : "Enviar inscrição"}
+        {pending ? "Enviando..." : belowMinimum ? `Faltam ${minPlayers - players.length} jogador(es)` : "Enviar inscrição"}
       </button>
     </form>
   );

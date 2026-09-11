@@ -67,6 +67,20 @@ describe("buildRegistrationSystemPrompt", () => {
     expect(prompt).not.toContain("/mês");
     expect(prompt).toContain("NÃO é o assistente de vendas");
   });
+
+  it("mentions the sport's minimum roster size and that submission is blocked below it", () => {
+    const prompt = buildRegistrationSystemPrompt(baseTournament, { canManageAthleteRegistry: false });
+    expect(prompt).toContain("no mínimo 5 jogadores");
+    expect(prompt).toContain("fica bloqueado");
+  });
+
+  it("says nothing about a minimum for a sport whose minimum is 1", () => {
+    const prompt = buildRegistrationSystemPrompt(
+      { ...baseTournament, sportType: "TENIS_DE_MESA" },
+      { canManageAthleteRegistry: false }
+    );
+    expect(prompt).not.toContain("exige no mínimo");
+  });
 });
 
 describe("isPlatformOwner", () => {

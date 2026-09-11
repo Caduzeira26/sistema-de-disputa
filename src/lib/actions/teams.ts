@@ -9,6 +9,7 @@ import { countTeamsForLimit, getPlanLimits, isWithinTeamLimit } from "@/lib/plan
 import { createTeamRegistrationCharge } from "@/lib/pix";
 import { EfiNotConfiguredError } from "@/lib/efi";
 import { findOrCreateAthlete, isValidDocumentFormat, normalizeDocument } from "@/lib/athletes";
+import { MIN_PLAYERS_PER_TEAM, SPORT_LABELS } from "@/lib/sport";
 
 const playerSchema = z.object({
   name: z.string().min(1, "Nome do jogador é obrigatório"),
@@ -64,6 +65,13 @@ export async function registerTeam(
   });
   if (!tournament || tournament.status !== "REGISTRATION_OPEN") {
     return { error: "As inscrições para este torneio não estão abertas." };
+  }
+
+  const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
+  if (parsed.data.players.length < minPlayers) {
+    return {
+      error: `Este campeonato exige pelo menos ${minPlayers} jogador(es) por equipe (${SPORT_LABELS[tournament.sportType]}).`,
+    };
   }
 
   const limits = await getPlanLimits(tournament.organizerId);

@@ -1,5 +1,5 @@
 import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents, isPromoActive, type PlanLimits } from "@/lib/plans";
-import { SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
+import { MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
 import type { Tournament } from "@prisma/client";
 
 /**
@@ -76,6 +76,8 @@ export function buildRegistrationSystemPrompt(
     ? `Esta inscrição é PAGA: ${formatBRL(tournament.registrationFeeCents)} por equipe, cobrado via PIX logo após o envio do formulário. Assim que o pagamento é confirmado, a equipe é aprovada automaticamente — não precisa esperar o organizador revisar.`
     : "Esta inscrição é GRATUITA. Depois de enviada, a equipe fica com status \"Pendente\" até o organizador do campeonato revisar e aprovar manualmente — pode levar um tempo, não é instantâneo.";
 
+  const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
+
   const documentSection = limits.canManageAthleteRegistry
     ? `Cada jogador precisa informar o CPF (só números, 11 dígitos) no formulário. Isso é porque este campeonato usa o cadastro permanente de atletas: o mesmo CPF é reconhecido em outros campeonatos no futuro, e é o que permite pedir transferência de um atleta entre equipes depois (em outra página, "/transferencias", se o organizador configurar isso).`
     : "Este campeonato não pede CPF dos jogadores no formulário — só nome é obrigatório.";
@@ -93,6 +95,7 @@ CAMPOS DO FORMULÁRIO:
 - Dados da equipe: nome da equipe (obrigatório), responsável/técnico (obrigatório), telefone e e-mail de contato (opcionais, mas ajudam o organizador a falar com a equipe), escudo/logo (opcional, imagem até 5MB).
 - Por jogador: nome (obrigatório), número da camisa (opcional), posição (opcional, texto livre), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (obrigatório neste campeonato — veja abaixo)." : ""}
 - É possível adicionar quantos jogadores forem necessários com o botão "+ Adicionar jogador", e remover um jogador adicionado por engano.
+${minPlayers > 1 ? `- Este campeonato exige no mínimo ${minPlayers} jogadores cadastrados na equipe (número mínimo pra formar o time em quadra/campo no ${SPORT_LABELS[tournament.sportType]}). O botão de enviar fica bloqueado até chegar nesse número — não é possível enviar com menos.` : ""}
 
 ${feeSection}
 

@@ -43,6 +43,7 @@ export default async function TeamRegistrationPage({
           <TeamRegistrationForm
             tournamentId={tournament.id}
             tournamentSlug={tournament.slug}
+            sportType={tournament.sportType}
             canManageAthleteRegistry={limits.canManageAthleteRegistry}
           />
         </div>

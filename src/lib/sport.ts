@@ -41,3 +41,20 @@ const SPORT_FAMILY: Record<SportType, SportFamily> = {
 export function getSportFamily(sportType: SportType): SportFamily {
   return SPORT_FAMILY[sportType];
 }
+
+/**
+ * Minimum roster size to field a starting lineup in each modality — not a
+ * squad-size cap, just enough players to actually take the court/field.
+ * Tênis de mesa is confronto por jogos individuais/duplas, not a fixed
+ * on-court lineup, so its minimum is 1 (already implied by "at least one
+ * player" — kept here for a uniform lookup and an explicit number to show).
+ */
+export const MIN_PLAYERS_PER_TEAM: Record<SportType, number> = {
+  FUTEBOL_CAMPO: 11,
+  FUTSAL: 5,
+  FUTEBOL_7: 7,
+  HANDEBOL: 7,
+  VOLEIBOL: 6,
+  BASQUETE: 5,
+  TENIS_DE_MESA: 1,
+};
