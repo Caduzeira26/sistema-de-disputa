@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { updateTournamentStatus } from "@/lib/actions/tournaments";
 import { setTeamStatus } from "@/lib/actions/teams";
 import { DeleteTeamButton } from "@/components/admin/DeleteTeamButton";
-import { GenerateBracketButton, GenerateEliminationButton } from "@/components/admin/GenerateBracketButton";
+import { GenerateBracketButton, GenerateEliminationButton, ResetBracketButton } from "@/components/admin/GenerateBracketButton";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
@@ -298,6 +298,12 @@ export default async function TournamentDetailPage({
           <p className="mt-3 text-sm text-slate-500">
             É preciso pelo menos 2 equipes aprovadas para gerar o chaveamento.
           </p>
+        )}
+
+        {tournament.matches.length > 0 && (
+          <div className="mt-3">
+            <ResetBracketButton tournamentId={tournament.id} />
+          </div>
         )}
 
         {hasGroups && groupMatches.length > 0 && (

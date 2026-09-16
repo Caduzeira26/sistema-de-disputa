@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { generateBracket, generateEliminationFromStandings, recordMatchResult } from "@/lib/services/bracket";
+import { generateBracket, generateEliminationFromStandings, recordMatchResult, resetBracket } from "@/lib/services/bracket";
 
 async function requireOwnedTournament(tournamentId: string) {
   const session = await auth();
@@ -28,6 +28,22 @@ export async function generateBracketAction(
     await generateBracket(tournamentId);
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Não foi possível gerar o chaveamento." };
+  }
+  revalidatePath(`/admin/torneios/${tournamentId}`);
+  revalidatePath(`/torneios`);
+  return {};
+}
+
+export async function resetBracketAction(
+  _prevState: BracketActionState,
+  formData: FormData
+): Promise<BracketActionState> {
+  const tournamentId = formData.get("tournamentId") as string;
+  try {
+    await requireOwnedTournament(tournamentId);
+    await resetBracket(tournamentId);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Não foi possível apagar o chaveamento." };
   }
   revalidatePath(`/admin/torneios/${tournamentId}`);
   revalidatePath(`/torneios`);

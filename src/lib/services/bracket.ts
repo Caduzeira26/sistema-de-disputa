@@ -106,6 +106,31 @@ export async function generateBracket(tournamentId: string): Promise<void> {
   });
 }
 
+/**
+ * Wipes a generated bracket — matches, groups, seeds, group assignments,
+ * and the recorded champion — so the organizer can regenerate it from
+ * scratch (e.g. it was generated before every team had registered).
+ * Deletes unconditionally, including any results already recorded; the
+ * caller is expected to confirm with the organizer before calling this.
+ */
+export async function resetBracket(tournamentId: string): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    // Clear self-referencing pointers first so the FK constraints on
+    // winnerNextMatchId/loserNextMatchId don't block the delete below.
+    await tx.match.updateMany({
+      where: { tournamentId },
+      data: { winnerNextMatchId: null, loserNextMatchId: null },
+    });
+    await tx.match.deleteMany({ where: { tournamentId } });
+    await tx.team.updateMany({ where: { tournamentId }, data: { groupId: null, seed: null } });
+    await tx.group.deleteMany({ where: { tournamentId } });
+    await tx.tournament.update({
+      where: { id: tournamentId },
+      data: { status: "REGISTRATION_OPEN", championTeamId: null },
+    });
+  });
+}
+
 export async function generateEliminationFromStandings(tournamentId: string): Promise<void> {
   const tournament = await prisma.tournament.findUniqueOrThrow({
     where: { id: tournamentId },
