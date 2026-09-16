@@ -313,3 +313,59 @@ export async function addPlayersToTeam(
   revalidatePath(`/torneios/${team.tournament.slug}/inscricao/equipe/${team.id}`);
   return { success: true };
 }
+
+export type RemovePlayerState = { error?: string; success?: boolean };
+
+/**
+ * Public, unauthenticated — same trust model as addPlayersToTeam (the
+ * unguessable team-id link). Hard-deletes the roster row: safe within the
+ * roster-completion window since the tournament hasn't started yet, so no
+ * goal/card/basket/foul can reference this player. The Athlete record
+ * itself is untouched, so it stays reusable in other registrations.
+ */
+export async function removePlayerFromTeam(
+  _prevState: RemovePlayerState,
+  formData: FormData
+): Promise<RemovePlayerState> {
+  const teamId = formData.get("teamId") as string;
+  const playerId = formData.get("playerId") as string;
+  if (!teamId || !playerId) {
+    return { error: "Dados inválidos." };
+  }
+
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: { tournament: true, players: { where: { active: true } } },
+  });
+  if (!team) {
+    return { error: "Equipe não encontrada." };
+  }
+  if (team.status === "REJECTED") {
+    return { error: "Esta equipe foi rejeitada pelo organizador e não pode mais ser alterada." };
+  }
+  if (!isRosterCompletionWindowOpen(team.tournament)) {
+    return { error: "O prazo para alterar a equipe já encerrou." };
+  }
+
+  const player = team.players.find((p) => p.id === playerId);
+  if (!player) {
+    return { error: "Jogador não encontrado nesta equipe." };
+  }
+
+  const minPlayers = MIN_PLAYERS_PER_TEAM[team.tournament.sportType];
+  if (team.players.length - 1 < minPlayers) {
+    return {
+      error: `Este campeonato exige pelo menos ${minPlayers} jogador(es) por equipe — remova outro jogador ou adicione um novo antes de tirar este.`,
+    };
+  }
+
+  try {
+    await prisma.player.delete({ where: { id: playerId } });
+  } catch {
+    return { error: "Não foi possível remover este jogador — ele já tem estatísticas registradas em alguma partida. Fale com o organizador." };
+  }
+
+  revalidatePath(`/admin/torneios/${team.tournamentId}`);
+  revalidatePath(`/torneios/${team.tournament.slug}/inscricao/equipe/${team.id}`);
+  return { success: true };
+}

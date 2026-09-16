@@ -111,11 +111,11 @@ TOM: curto, direto, prestativo — a pessoa normalmente está no meio do preench
 
 /**
  * Built for the "completar equipe" page — a team that already registered
- * coming back later to add more players, reached via an unguessable
+ * coming back later to add or remove players, reached via an unguessable
  * team-id link (not the ficha de inscrição itself). Different rules from
- * buildRegistrationSystemPrompt: this page only ADDS players, has its own
- * deadline (isRosterCompletionWindowOpen), and can't touch team-level
- * fields or players already on the roster.
+ * buildRegistrationSystemPrompt: this page can add and remove roster
+ * entries, has its own deadline (isRosterCompletionWindowOpen), and can't
+ * edit team-level fields or an existing player's own data.
  */
 export function buildRosterCompletionSystemPrompt(
   team: Pick<Team, "name" | "status">,
@@ -151,7 +151,7 @@ export function buildRosterCompletionSystemPrompt(
 
   return `Você é o assistente virtual da página "Completar equipe" da equipe "${team.name}" no campeonato "${tournament.name}" (modalidade: ${SPORT_LABELS[tournament.sportType]}), no Sistema de Disputa.
 
-Esta página é diferente da ficha de inscrição original: a equipe já está cadastrada, e aqui ela só ADICIONA mais jogadores ao elenco que já existe — não edita nem remove nenhum jogador já cadastrado, não edita os dados da equipe (nome, técnico, contato). Se pedirem para editar/remover algo já existente, diga que essa página não faz isso e oriente a contatar o organizador do campeonato.
+Esta página é diferente da ficha de inscrição original: a equipe já está cadastrada, e aqui ela pode ADICIONAR novos jogadores ao elenco e REMOVER um jogador já cadastrado (botão "×" ao lado do nome, com confirmação) — mas não edita os dados de um jogador já cadastrado (nome, número, posição, data de nascimento) nem os dados da equipe (nome, técnico, contato). Se pedirem pra editar algo já existente em vez de remover e recadastrar, diga que essa página não faz isso e oriente a contatar o organizador do campeonato.
 
 Você NÃO é o assistente de vendas do site — não fale sobre planos, preços de assinatura do Sistema de Disputa, nem incentive a pessoa a criar uma conta de organizador.
 
@@ -163,6 +163,8 @@ PRAZO PARA COMPLETAR A EQUIPE:
 ${deadlineSection}
 
 CAMPOS POR JOGADOR NOVO: nome (obrigatório), número da camisa (opcional), posição (opcional), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (opcional — veja abaixo)." : ""} Dá pra adicionar quantos quiser de uma vez com o botão "+ Adicionar jogador".${maxPlayers ? ` Este campeonato permite no máximo ${maxPlayers} jogadores por equipe NO TOTAL (contando os já cadastrados) — a página mostra quantas vagas ainda restam e bloqueia o envio ao atingir o limite.` : ""}
+
+REMOÇÃO DE JOGADOR: cada jogador já cadastrado tem um "×" ao lado do nome, na lista "Jogadores já cadastrados" no topo da página — clicar pede confirmação antes de remover de vez. Só funciona dentro do mesmo prazo de completar a equipe (acima) e a equipe não pode ficar com menos jogadores que o mínimo exigido pelo campeonato (${minPlayers}) — nesse caso a remoção é bloqueada e é preciso adicionar outro antes de tirar mais alguém.
 
 ${documentSection}
 

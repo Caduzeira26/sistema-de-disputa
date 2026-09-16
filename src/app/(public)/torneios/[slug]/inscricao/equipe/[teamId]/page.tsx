@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CompleteRosterForm } from "@/components/public/CompleteRosterForm";
+import { TeamRosterList } from "@/components/public/TeamRosterList";
 import { AssistantWidget } from "@/components/AssistantWidget";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 import { getPlanLimits } from "@/lib/plans";
@@ -44,18 +45,7 @@ export default async function CompleteRosterPage({
 
       <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="mb-2 text-sm font-semibold text-slate-700">Jogadores já cadastrados ({team.players.length})</h2>
-        {team.players.length === 0 ? (
-          <p className="text-sm text-slate-500">Nenhum jogador cadastrado ainda.</p>
-        ) : (
-          <ul className="flex flex-wrap gap-2">
-            {team.players.map((p) => (
-              <li key={p.id} className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700">
-                {p.name}
-                {p.shirtNumber !== null ? ` (${p.shirtNumber})` : ""}
-              </li>
-            ))}
-          </ul>
-        )}
+        <TeamRosterList teamId={team.id} players={team.players} canRemove={open} />
       </div>
 
       {!open ? (
@@ -63,15 +53,15 @@ export default async function CompleteRosterPage({
           {team.status === "REJECTED"
             ? "Esta equipe foi rejeitada pelo organizador e não pode mais ser completada."
             : tournament.status === "IN_PROGRESS" || tournament.status === "FINISHED"
-              ? "O campeonato já começou — não é mais possível adicionar jogadores."
-              : "O prazo para adicionar jogadores a esta equipe já encerrou."}
+              ? "O campeonato já começou — não é mais possível adicionar ou remover jogadores."
+              : "O prazo para alterar os jogadores desta equipe já encerrou."}
         </p>
       ) : (
         <div className="mt-6">
           <p className="mb-4 text-sm text-slate-500">
             {tournament.startDate
-              ? `Você pode adicionar jogadores até ${formatCutoff(tournament.startDate)} (1 dia antes do início do campeonato).`
-              : "Você pode adicionar jogadores até o início do campeonato."}
+              ? `Você pode adicionar ou remover jogadores até ${formatCutoff(tournament.startDate)} (1 dia antes do início do campeonato).`
+              : "Você pode adicionar ou remover jogadores até o início do campeonato."}
           </p>
           <CompleteRosterForm
             teamId={team.id}

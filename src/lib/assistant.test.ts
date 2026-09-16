@@ -138,9 +138,10 @@ describe("buildRosterCompletionSystemPrompt", () => {
     expect(withoutRegistry).toContain("não pede CPF");
   });
 
-  it("makes clear this page only adds players, never edits or removes them", () => {
+  it("makes clear this page can add or remove players but not edit an existing one", () => {
     const prompt = buildRosterCompletionSystemPrompt(team, baseTournament, { canManageAthleteRegistry: false });
-    expect(prompt).toContain("não edita nem remove nenhum jogador já cadastrado");
+    expect(prompt).toContain("REMOVER um jogador já cadastrado");
+    expect(prompt).toContain("não edita os dados de um jogador já cadastrado");
   });
 
   it("never lists subscription plan pricing (that's the sales assistant's job)", () => {
