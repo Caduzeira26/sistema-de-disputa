@@ -15,6 +15,8 @@ interface RawMatch {
   isReset: boolean;
   scheduledAt?: Date | null;
   venue?: { name: string } | null;
+  winnerNextMatchId?: string | null;
+  winnerNextSlot?: string | null;
 }
 
 interface RawTeam {
@@ -41,5 +43,7 @@ export function toDisplayMatches(matches: RawMatch[], teams: RawTeam[]): Display
     scheduledAt: m.scheduledAt ?? null,
     venueName: m.venue?.name ?? null,
     gameNumber: gameNumbers.get(m.id) ?? null,
+    winnerNextMatchId: m.winnerNextMatchId ?? null,
+    winnerNextSlot: (m.winnerNextSlot as DisplayMatch["winnerNextSlot"]) ?? null,
   }));
 }
