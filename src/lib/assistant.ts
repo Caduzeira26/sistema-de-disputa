@@ -1,5 +1,5 @@
 import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents, isPromoActive, type PlanLimits } from "@/lib/plans";
-import { MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
+import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
 import { isRosterCompletionWindowOpen } from "@/lib/roster";
 import type { Team, Tournament } from "@prisma/client";
 
@@ -78,9 +78,10 @@ export function buildRegistrationSystemPrompt(
     : "Esta inscrição é GRATUITA. Depois de enviada, a equipe fica com status \"Pendente\" até o organizador do campeonato revisar e aprovar manualmente — pode levar um tempo, não é instantâneo.";
 
   const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
+  const maxPlayers = MAX_PLAYERS_PER_TEAM[tournament.sportType];
 
   const documentSection = limits.canManageAthleteRegistry
-    ? `Cada jogador precisa informar o CPF (só números, 11 dígitos) no formulário. Isso é porque este campeonato usa o cadastro permanente de atletas: o mesmo CPF é reconhecido em outros campeonatos no futuro, e é o que permite pedir transferência de um atleta entre equipes depois (em outra página, "/transferencias", se o organizador configurar isso).`
+    ? `O formulário tem um campo de CPF (só números, 11 dígitos) por jogador, mas ele é OPCIONAL — não é preciso preencher pra enviar a inscrição. Se for preenchido, precisa ter 11 dígitos válidos. Isso existe porque este campeonato usa o cadastro permanente de atletas: quando o CPF é informado, o mesmo atleta é reconhecido em outros campeonatos no futuro, e é o que permite pedir transferência dele entre equipes depois (em outra página, "/transferencias", se o organizador configurar isso). Sem CPF, o jogador é cadastrado normalmente, só não entra nesse cadastro entre campeonatos.`
     : "Este campeonato não pede CPF dos jogadores no formulário — só nome é obrigatório.";
 
   return `Você é o assistente virtual da ficha de inscrição de equipes do campeonato "${tournament.name}" (modalidade: ${SPORT_LABELS[tournament.sportType]}), no Sistema de Disputa.
@@ -94,9 +95,10 @@ REGRAS QUE VOCÊ NUNCA PODE QUEBRAR:
 
 CAMPOS DO FORMULÁRIO:
 - Dados da equipe: nome da equipe (obrigatório), responsável/técnico (obrigatório), telefone e e-mail de contato (opcionais, mas ajudam o organizador a falar com a equipe), escudo/logo (opcional, imagem até 5MB).
-- Por jogador: nome (obrigatório), número da camisa (opcional), posição (opcional, texto livre), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (obrigatório neste campeonato — veja abaixo)." : ""}
+- Por jogador: nome (obrigatório), número da camisa (opcional), posição (opcional, texto livre), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (opcional neste campeonato — veja abaixo)." : ""}
 - É possível adicionar quantos jogadores forem necessários com o botão "+ Adicionar jogador", e remover um jogador adicionado por engano.
 ${minPlayers > 1 ? `- Este campeonato exige no mínimo ${minPlayers} jogadores cadastrados na equipe (número mínimo pra formar o time em quadra/campo no ${SPORT_LABELS[tournament.sportType]}). O botão de enviar fica bloqueado até chegar nesse número — não é possível enviar com menos.` : ""}
+${maxPlayers ? `- Este campeonato permite no máximo ${maxPlayers} jogadores por equipe. O botão "+ Adicionar jogador" fica desabilitado ao atingir esse número — não dá pra cadastrar mais que isso.` : ""}
 
 ${feeSection}
 
@@ -122,6 +124,7 @@ export function buildRosterCompletionSystemPrompt(
   now = new Date()
 ): string {
   const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
+  const maxPlayers = MAX_PLAYERS_PER_TEAM[tournament.sportType];
   const open = isRosterCompletionWindowOpen(tournament, now) && team.status !== "REJECTED";
 
   const deadlineSection = (() => {
@@ -143,7 +146,7 @@ export function buildRosterCompletionSystemPrompt(
   })();
 
   const documentSection = limits.canManageAthleteRegistry
-    ? "Cada NOVO jogador adicionado aqui também precisa de CPF (só números, 11 dígitos), pelo mesmo motivo do cadastro inicial: este campeonato usa o cadastro permanente de atletas."
+    ? "Cada NOVO jogador adicionado aqui também tem um campo de CPF (só números, 11 dígitos), mas é OPCIONAL, pelo mesmo motivo do cadastro inicial: este campeonato usa o cadastro permanente de atletas, e o CPF só é necessário pra esse jogador ser reconhecido em outros campeonatos ou transferido depois."
     : "Este campeonato não pede CPF dos jogadores.";
 
   return `Você é o assistente virtual da página "Completar equipe" da equipe "${team.name}" no campeonato "${tournament.name}" (modalidade: ${SPORT_LABELS[tournament.sportType]}), no Sistema de Disputa.
@@ -159,7 +162,7 @@ REGRAS QUE VOCÊ NUNCA PODE QUEBRAR:
 PRAZO PARA COMPLETAR A EQUIPE:
 ${deadlineSection}
 
-CAMPOS POR JOGADOR NOVO: nome (obrigatório), número da camisa (opcional), posição (opcional), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (obrigatório — veja abaixo)." : ""} Dá pra adicionar quantos quiser de uma vez com o botão "+ Adicionar jogador".
+CAMPOS POR JOGADOR NOVO: nome (obrigatório), número da camisa (opcional), posição (opcional), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (opcional — veja abaixo)." : ""} Dá pra adicionar quantos quiser de uma vez com o botão "+ Adicionar jogador".${maxPlayers ? ` Este campeonato permite no máximo ${maxPlayers} jogadores por equipe NO TOTAL (contando os já cadastrados) — a página mostra quantas vagas ainda restam e bloqueia o envio ao atingir o limite.` : ""}
 
 ${documentSection}
 

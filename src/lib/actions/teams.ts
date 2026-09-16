@@ -9,7 +9,7 @@ import { countTeamsForLimit, getPlanLimits, isWithinTeamLimit } from "@/lib/plan
 import { createTeamRegistrationCharge } from "@/lib/pix";
 import { EfiNotConfiguredError } from "@/lib/efi";
 import { findOrCreateAthlete, isValidDocumentFormat, normalizeDocument } from "@/lib/athletes";
-import { MIN_PLAYERS_PER_TEAM, SPORT_LABELS } from "@/lib/sport";
+import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS } from "@/lib/sport";
 import { isRosterCompletionWindowOpen } from "@/lib/roster";
 
 const playerSchema = z.object({
@@ -77,6 +77,13 @@ export async function registerTeam(
     };
   }
 
+  const maxPlayers = MAX_PLAYERS_PER_TEAM[tournament.sportType];
+  if (maxPlayers && parsed.data.players.length > maxPlayers) {
+    return {
+      error: `Este campeonato permite no máximo ${maxPlayers} jogadores por equipe (${SPORT_LABELS[tournament.sportType]}).`,
+    };
+  }
+
   const limits = await getPlanLimits(tournament.organizerId);
   const teamCount = await countTeamsForLimit(tournament.id);
   if (!isWithinTeamLimit(limits, teamCount)) {
@@ -84,9 +91,9 @@ export async function registerTeam(
   }
 
   if (limits.canManageAthleteRegistry) {
-    const invalidPlayer = parsed.data.players.find((p) => !p.document || !isValidDocumentFormat(p.document));
+    const invalidPlayer = parsed.data.players.find((p) => p.document && !isValidDocumentFormat(p.document));
     if (invalidPlayer) {
-      return { error: `Informe o CPF (11 dígitos) de ${invalidPlayer.name}.` };
+      return { error: `CPF inválido para ${invalidPlayer.name} — informe 11 dígitos ou deixe em branco.` };
     }
   }
 
@@ -253,7 +260,7 @@ export async function addPlayersToTeam(
 
   const team = await prisma.team.findUnique({
     where: { id: parsed.data.teamId },
-    include: { tournament: true },
+    include: { tournament: true, players: { where: { active: true } } },
   });
   if (!team) {
     return { error: "Equipe não encontrada." };
@@ -265,11 +272,19 @@ export async function addPlayersToTeam(
     return { error: "O prazo para completar a equipe já encerrou." };
   }
 
+  const maxPlayers = MAX_PLAYERS_PER_TEAM[team.tournament.sportType];
+  if (maxPlayers && team.players.length + parsed.data.players.length > maxPlayers) {
+    const remaining = Math.max(0, maxPlayers - team.players.length);
+    return {
+      error: `Este campeonato permite no máximo ${maxPlayers} jogadores por equipe — restam ${remaining} vaga(s).`,
+    };
+  }
+
   const limits = await getPlanLimits(team.tournament.organizerId);
   if (limits.canManageAthleteRegistry) {
-    const invalidPlayer = parsed.data.players.find((p) => !p.document || !isValidDocumentFormat(p.document));
+    const invalidPlayer = parsed.data.players.find((p) => p.document && !isValidDocumentFormat(p.document));
     if (invalidPlayer) {
-      return { error: `Informe o CPF (11 dígitos) de ${invalidPlayer.name}.` };
+      return { error: `CPF inválido para ${invalidPlayer.name} — informe 11 dígitos ou deixe em branco.` };
     }
   }
 

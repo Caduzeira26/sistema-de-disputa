@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { addPlayersToTeam, type AddPlayersState } from "@/lib/actions/teams";
+import { MAX_PLAYERS_PER_TEAM, SPORT_LABELS, type SportType } from "@/lib/sport";
 
 const initialState: AddPlayersState = {};
 
@@ -19,13 +20,20 @@ function emptyPlayer(): PlayerDraft {
 
 export function CompleteRosterForm({
   teamId,
+  sportType,
+  existingPlayerCount,
   canManageAthleteRegistry,
 }: {
   teamId: string;
+  sportType: SportType;
+  existingPlayerCount: number;
   canManageAthleteRegistry?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(addPlayersToTeam, initialState);
   const [players, setPlayers] = useState<PlayerDraft[]>([emptyPlayer()]);
+  const maxPlayers = MAX_PLAYERS_PER_TEAM[sportType];
+  const remainingSlots = maxPlayers !== undefined ? Math.max(0, maxPlayers - existingPlayerCount) : undefined;
+  const atMaximum = remainingSlots !== undefined && players.length >= remainingSlots;
 
   function updatePlayer(index: number, field: keyof PlayerDraft, value: string) {
     setPlayers((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)));
@@ -52,6 +60,13 @@ export function CompleteRosterForm({
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="teamId" value={teamId} />
       <input type="hidden" name="playersJson" value={JSON.stringify(players)} />
+
+      {remainingSlots !== undefined && (
+        <p className={`text-sm ${atMaximum ? "text-amber-700" : "text-slate-500"}`}>
+          Máximo de {maxPlayers} jogadores para {SPORT_LABELS[sportType]} — restam {remainingSlots} vaga(s) (já
+          cadastrados: {existingPlayerCount}).
+        </p>
+      )}
 
       <div className="flex flex-col gap-4">
         {players.map((player, index) => (
@@ -99,8 +114,7 @@ export function CompleteRosterForm({
               />
               {canManageAthleteRegistry && (
                 <input
-                  placeholder="CPF (só números)"
-                  required
+                  placeholder="CPF (só números, opcional)"
                   inputMode="numeric"
                   maxLength={14}
                   value={player.document}
@@ -116,7 +130,8 @@ export function CompleteRosterForm({
       <button
         type="button"
         onClick={addPlayer}
-        className="self-start rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        disabled={atMaximum}
+        className="self-start rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
       >
         + Adicionar jogador
       </button>
@@ -125,7 +140,7 @@ export function CompleteRosterForm({
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || remainingSlots === 0}
         className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
       >
         {pending ? "Enviando..." : "Adicionar à equipe"}

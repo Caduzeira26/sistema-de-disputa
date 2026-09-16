@@ -73,7 +73,12 @@ export default async function CompleteRosterPage({
               ? `Você pode adicionar jogadores até ${formatCutoff(tournament.startDate)} (1 dia antes do início do campeonato).`
               : "Você pode adicionar jogadores até o início do campeonato."}
           </p>
-          <CompleteRosterForm teamId={team.id} canManageAthleteRegistry={limits.canManageAthleteRegistry} />
+          <CompleteRosterForm
+            teamId={team.id}
+            sportType={tournament.sportType}
+            existingPlayerCount={team.players.length}
+            canManageAthleteRegistry={limits.canManageAthleteRegistry}
+          />
         </div>
       )}
 

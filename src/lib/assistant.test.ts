@@ -54,9 +54,9 @@ describe("buildRegistrationSystemPrompt", () => {
     expect(prompt).toContain("aprovada automaticamente");
   });
 
-  it("requires CPF only when the organizer's plan has the athlete registry", () => {
+  it("offers CPF as optional when the organizer's plan has the athlete registry", () => {
     const withRegistry = buildRegistrationSystemPrompt(baseTournament, { canManageAthleteRegistry: true });
-    expect(withRegistry).toContain("precisa informar o CPF");
+    expect(withRegistry).toContain("OPCIONAL");
 
     const withoutRegistry = buildRegistrationSystemPrompt(baseTournament, { canManageAthleteRegistry: false });
     expect(withoutRegistry).toContain("não pede CPF");
@@ -130,9 +130,9 @@ describe("buildRosterCompletionSystemPrompt", () => {
     expect(prompt).toContain("REJEITADA");
   });
 
-  it("requires CPF for new players only when the organizer's plan has the athlete registry", () => {
+  it("offers CPF as optional for new players when the organizer's plan has the athlete registry", () => {
     const withRegistry = buildRosterCompletionSystemPrompt(team, baseTournament, { canManageAthleteRegistry: true });
-    expect(withRegistry).toContain("também precisa de CPF");
+    expect(withRegistry).toContain("OPCIONAL");
 
     const withoutRegistry = buildRosterCompletionSystemPrompt(team, baseTournament, { canManageAthleteRegistry: false });
     expect(withoutRegistry).toContain("não pede CPF");

@@ -58,3 +58,11 @@ export const MIN_PLAYERS_PER_TEAM: Record<SportType, number> = {
   BASQUETE: 5,
   TENIS_DE_MESA: 1,
 };
+
+/**
+ * Maximum roster size per team, where the organizer wants one. Undefined =
+ * no cap. Currently only futsal has one.
+ */
+export const MAX_PLAYERS_PER_TEAM: Partial<Record<SportType, number>> = {
+  FUTSAL: 15,
+};

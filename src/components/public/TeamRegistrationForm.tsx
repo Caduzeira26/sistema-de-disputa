@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerTeam, type RegisterTeamState } from "@/lib/actions/teams";
-import { MIN_PLAYERS_PER_TEAM, SPORT_LABELS, type SportType } from "@/lib/sport";
+import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, type SportType } from "@/lib/sport";
 
 const initialState: RegisterTeamState = {};
 
@@ -34,7 +34,9 @@ export function TeamRegistrationForm({
   const [state, formAction, pending] = useActionState(registerTeam, initialState);
   const [players, setPlayers] = useState<PlayerDraft[]>([emptyPlayer()]);
   const minPlayers = MIN_PLAYERS_PER_TEAM[sportType];
+  const maxPlayers = MAX_PLAYERS_PER_TEAM[sportType];
   const belowMinimum = players.length < minPlayers;
+  const atMaximum = maxPlayers !== undefined && players.length >= maxPlayers;
 
   useEffect(() => {
     if (state.paymentTxid) {
@@ -148,6 +150,11 @@ export function TeamRegistrationForm({
             Mínimo de {minPlayers} jogadores para {SPORT_LABELS[sportType]} ({players.length}/{minPlayers}).
           </p>
         )}
+        {maxPlayers !== undefined && (
+          <p className={`text-sm ${atMaximum ? "text-amber-700" : "text-slate-500"}`}>
+            Máximo de {maxPlayers} jogadores para {SPORT_LABELS[sportType]} ({players.length}/{maxPlayers}).
+          </p>
+        )}
 
         <div className="flex flex-col gap-4">
           {players.map((player, index) => (
@@ -195,8 +202,7 @@ export function TeamRegistrationForm({
                 />
                 {canManageAthleteRegistry && (
                   <input
-                    placeholder="CPF (só números)"
-                    required
+                    placeholder="CPF (só números, opcional)"
                     inputMode="numeric"
                     maxLength={14}
                     value={player.document}
@@ -212,7 +218,8 @@ export function TeamRegistrationForm({
         <button
           type="button"
           onClick={addPlayer}
-          className="self-start rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          disabled={atMaximum}
+          className="self-start rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
           + Adicionar jogador
         </button>
