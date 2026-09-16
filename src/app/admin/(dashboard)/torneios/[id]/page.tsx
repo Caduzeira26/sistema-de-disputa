@@ -289,6 +289,15 @@ export default async function TournamentDetailPage({
       <div className="mt-10">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">Chaveamento</h2>
+          {tournament.matches.length > 0 && (
+            <Link
+              href={`/admin/torneios/${tournament.id}/chaveamento`}
+              target="_blank"
+              className="text-sm text-slate-500 underline hover:text-slate-700"
+            >
+              Imprimir chaveamento
+            </Link>
+          )}
         </div>
 
         {canGenerateBracket && (
