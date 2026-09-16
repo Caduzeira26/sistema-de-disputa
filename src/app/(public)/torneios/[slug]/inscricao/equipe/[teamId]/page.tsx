@@ -8,9 +8,7 @@ import { getPlanLimits } from "@/lib/plans";
 import { isRosterCompletionWindowOpen } from "@/lib/roster";
 
 function formatCutoff(startDate: Date): string {
-  const cutoff = new Date(startDate);
-  cutoff.setDate(cutoff.getDate() - 1);
-  return cutoff.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  return startDate.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
 export default async function CompleteRosterPage({
@@ -60,7 +58,7 @@ export default async function CompleteRosterPage({
         <div className="mt-6">
           <p className="mb-4 text-sm text-slate-500">
             {tournament.startDate
-              ? `Você pode adicionar ou remover jogadores até ${formatCutoff(tournament.startDate)} (1 dia antes do início do campeonato).`
+              ? `Você pode adicionar ou remover jogadores até o início do campeonato, em ${formatCutoff(tournament.startDate)}.`
               : "Você pode adicionar ou remover jogadores até o início do campeonato."}
           </p>
           <CompleteRosterForm

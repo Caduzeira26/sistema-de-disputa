@@ -6,14 +6,15 @@ describe("isRosterCompletionWindowOpen", () => {
     expect(isRosterCompletionWindowOpen({ status: "REGISTRATION_OPEN", startDate: null })).toBe(true);
   });
 
-  it("is open strictly before one day prior to the start date", () => {
+  it("is open strictly before the start date, including the day before", () => {
     const tournament = { status: "REGISTRATION_CLOSED" as const, startDate: new Date("2026-09-20T00:00:00Z") };
     expect(isRosterCompletionWindowOpen(tournament, new Date("2026-09-18T00:00:00Z"))).toBe(true);
+    expect(isRosterCompletionWindowOpen(tournament, new Date("2026-09-19T23:59:59Z"))).toBe(true);
   });
 
-  it("is closed at or after one day prior to the start date", () => {
+  it("is closed at or after the start date", () => {
     const tournament = { status: "REGISTRATION_CLOSED" as const, startDate: new Date("2026-09-20T00:00:00Z") };
-    expect(isRosterCompletionWindowOpen(tournament, new Date("2026-09-19T00:00:00Z"))).toBe(false);
+    expect(isRosterCompletionWindowOpen(tournament, new Date("2026-09-20T00:00:00Z"))).toBe(false);
     expect(isRosterCompletionWindowOpen(tournament, new Date("2026-09-21T00:00:00Z"))).toBe(false);
   });
 

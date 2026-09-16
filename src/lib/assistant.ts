@@ -137,12 +137,10 @@ export function buildRosterCompletionSystemPrompt(
     if (!tournament.startDate) {
       return "Não há uma data de início definida ainda para este campeonato, então não há um prazo calculado — dá pra adicionar jogadores normalmente por enquanto.";
     }
-    const cutoff = new Date(tournament.startDate);
-    cutoff.setDate(cutoff.getDate() - 1);
-    const cutoffLabel = cutoff.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+    const cutoffLabel = tournament.startDate.toLocaleDateString("pt-BR", { timeZone: "UTC" });
     return open
-      ? `O prazo para adicionar jogadores vai até ${cutoffLabel} (1 dia antes do início do campeonato).`
-      : `O prazo para adicionar jogadores (até ${cutoffLabel}, 1 dia antes do início) já passou — o formulário nem aparece na página.`;
+      ? `O prazo para adicionar ou remover jogadores vai até o início do campeonato, em ${cutoffLabel}.`
+      : `O prazo para adicionar ou remover jogadores (até o início do campeonato, em ${cutoffLabel}) já passou — o formulário nem aparece na página.`;
   })();
 
   const documentSection = limits.canManageAthleteRegistry

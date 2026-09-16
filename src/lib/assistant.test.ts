@@ -92,14 +92,14 @@ describe("buildRosterCompletionSystemPrompt", () => {
     startDate: new Date("2026-09-20T00:00:00Z"),
   };
 
-  it("states the deadline as one day before the start date when the window is open", () => {
+  it("states the deadline as the tournament's start date when the window is open", () => {
     const prompt = buildRosterCompletionSystemPrompt(
       team,
       baseTournament,
       { canManageAthleteRegistry: false },
       new Date("2026-09-10T00:00:00Z")
     );
-    expect(prompt).toContain("vai até 19/09/2026");
+    expect(prompt).toContain("vai até o início do campeonato, em 20/09/2026");
   });
 
   it("says the deadline already passed once the window is closed by date", () => {
@@ -107,7 +107,7 @@ describe("buildRosterCompletionSystemPrompt", () => {
       team,
       baseTournament,
       { canManageAthleteRegistry: false },
-      new Date("2026-09-19T12:00:00Z")
+      new Date("2026-09-20T12:00:00Z")
     );
     expect(prompt).toContain("já passou");
   });
