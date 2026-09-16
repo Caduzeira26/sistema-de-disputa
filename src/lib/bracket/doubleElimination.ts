@@ -14,11 +14,12 @@ export const GRAND_FINAL_RESET_ID = "GF-2";
  * pre-created here but only populated with teams once the grand final is
  * decided — see `applyMatchResult`) decides the tournament.
  *
- * Byes only ever occur in winners-bracket round 1 (see `buildEliminationTree`),
- * so a bye there simply means round 1 sends fewer than usual losers into the
- * losers bracket. The losers-bracket pairing below carries any resulting
- * odd-one-out forward until it finds a partner, which keeps every round's
- * structure valid without ever losing or duplicating a team.
+ * A team that sits out an early winners-bracket round (see the minimal-byes
+ * convention in `buildEliminationTree`) simply means that round sends fewer
+ * losers into the losers bracket than a full round would. The losers-bracket
+ * pairing below carries any resulting odd-one-out forward until it finds a
+ * partner, which keeps every round's structure valid without ever losing or
+ * duplicating a team.
  */
 export function generateDoubleElimination(teams: TeamInput[]): GeneratedBracket {
   const wb = buildEliminationTree(teams, "WB");

@@ -127,18 +127,19 @@ describe("generateDoubleElimination — grand final reset, explicit 4-team walkt
     };
 
     const wb1 = matches.filter((m) => m.bracket === "WINNERS" && m.round === 1);
-    // Round-1 pairing for 4 teams (seed order [1,4,2,3]) is (T1,T4) and (T2,T3).
-    play(wb1[0].id, "T1"); // T1 beats T4
-    play(wb1[1].id, "T2"); // T2 beats T3
+    // Round-1 pairing for 4 teams (minimal-byes convention, no byes needed
+    // since 4 is already a power of two) is (T1,T2) and (T3,T4).
+    play(wb1[0].id, "T1"); // T1 beats T2
+    play(wb1[1].id, "T3"); // T3 beats T4
 
     const wbFinal = matches.find((m) => m.bracket === "WINNERS" && m.round === 2)!;
-    play(wbFinal.id, "T1"); // T1 wins the winners bracket outright, T2 drops to losers
+    play(wbFinal.id, "T1"); // T1 wins the winners bracket outright, T3 drops to losers
 
     const lb1 = matches.find((m) => m.bracket === "LOSERS" && m.round === 1)!;
-    play(lb1.id, "T4"); // T4 (lost to T1) beats T3 (lost to T2) — T3 eliminated with 2 losses
+    play(lb1.id, "T4"); // T4 (lost to T3) beats T2 (lost to T1) — T2 eliminated with 2 losses
 
     const lb2 = matches.find((m) => m.bracket === "LOSERS" && m.round === 2)!;
-    play(lb2.id, "T2"); // T2 (the WB-final loser) beats T4 — T4 eliminated with 2 losses, T2 is LB champion
+    play(lb2.id, "T3"); // T3 (the WB-final loser) beats T4 — T4 eliminated with 2 losses, T3 is LB champion
 
     return { byId, gf: byId.get(GRAND_FINAL_ID)!, reset: byId.get(GRAND_FINAL_RESET_ID)! };
   }
@@ -146,7 +147,7 @@ describe("generateDoubleElimination — grand final reset, explicit 4-team walkt
   it("no reset needed when the winners-bracket finalist wins the grand final outright", () => {
     const { byId, gf } = buildAndReachGrandFinal();
     expect(gf.homeTeamId).toBe("T1");
-    expect(gf.awayTeamId).toBe("T2");
+    expect(gf.awayTeamId).toBe("T3");
 
     const outcome = applyMatchResult(asRecord(byId.get(GRAND_FINAL_ID)!), 1, 0, [...byId.values()]);
     expect(outcome.championTeamId).toBe("T1");
@@ -173,11 +174,11 @@ describe("generateDoubleElimination — grand final reset, explicit 4-team walkt
       else reset.awayTeamId = u.teamId;
     }
     expect(reset.homeTeamId).toBe("T1");
-    expect(reset.awayTeamId).toBe("T2");
+    expect(reset.awayTeamId).toBe("T3");
 
-    // T2 (the reset winner) takes the title even though T1 never lost twice
+    // T3 (the reset winner) takes the title even though T1 never lost twice
     // before the reset — that's the whole point of the reset match.
     const resetOutcome = applyMatchResult(asRecord(reset), 0, 1, [...byId.values()]);
-    expect(resetOutcome.championTeamId).toBe("T2");
+    expect(resetOutcome.championTeamId).toBe("T3");
   });
 });
