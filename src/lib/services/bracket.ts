@@ -56,19 +56,28 @@ async function persistGeneratedBracket(
     })),
   });
 
-  for (const m of matches) {
-    if (!m.winnerNextMatchId && !m.loserNextMatchId) continue;
-    await tx.match.update({
-      where: { id: idMap.get(m.id)! },
-      data: {
-        winnerNextMatchId: m.winnerNextMatchId ? idMap.get(m.winnerNextMatchId)! : null,
-        winnerNextSlot: m.winnerNextSlot,
-        loserNextMatchId: m.loserNextMatchId ? idMap.get(m.loserNextMatchId)! : null,
-        loserNextSlot: m.loserNextSlot,
-      },
-    });
-  }
+  await Promise.all(
+    matches
+      .filter((m) => m.winnerNextMatchId || m.loserNextMatchId)
+      .map((m) =>
+        tx.match.update({
+          where: { id: idMap.get(m.id)! },
+          data: {
+            winnerNextMatchId: m.winnerNextMatchId ? idMap.get(m.winnerNextMatchId)! : null,
+            winnerNextSlot: m.winnerNextSlot,
+            loserNextMatchId: m.loserNextMatchId ? idMap.get(m.loserNextMatchId)! : null,
+            loserNextSlot: m.loserNextSlot,
+          },
+        })
+      )
+  );
 }
+
+/** Bracket generation can touch dozens of rows one-by-one over a pooled
+ *  connection — comfortably past Prisma's 5s default interactive-transaction
+ *  timeout for a large field of teams. This is a rare, admin-triggered
+ *  action, so a longer budget is a safe tradeoff. */
+const BRACKET_TRANSACTION_OPTIONS = { timeout: 30_000, maxWait: 10_000 };
 
 export async function generateBracket(tournamentId: string): Promise<void> {
   const tournament = await prisma.tournament.findUniqueOrThrow({
@@ -103,7 +112,7 @@ export async function generateBracket(tournamentId: string): Promise<void> {
     }
 
     await tx.tournament.update({ where: { id: tournamentId }, data: { status: "IN_PROGRESS" } });
-  });
+  }, BRACKET_TRANSACTION_OPTIONS);
 }
 
 /**
@@ -128,7 +137,7 @@ export async function resetBracket(tournamentId: string): Promise<void> {
       where: { id: tournamentId },
       data: { status: "REGISTRATION_OPEN", championTeamId: null },
     });
-  });
+  }, BRACKET_TRANSACTION_OPTIONS);
 }
 
 export async function generateEliminationFromStandings(tournamentId: string): Promise<void> {
@@ -180,7 +189,7 @@ export async function generateEliminationFromStandings(tournamentId: string): Pr
   await prisma.$transaction(async (tx) => {
     await Promise.all(teamInputs.map((t) => tx.team.update({ where: { id: t.id }, data: { seed: t.seed } })));
     await persistGeneratedBracket(tx, tournamentId, [], matches);
-  });
+  }, BRACKET_TRANSACTION_OPTIONS);
 }
 
 export async function recordMatchResult(matchId: string, homeScore: number, awayScore: number): Promise<void> {

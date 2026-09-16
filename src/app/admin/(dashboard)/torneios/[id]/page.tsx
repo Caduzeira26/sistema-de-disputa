@@ -21,6 +21,12 @@ import { TournamentHeaderLogo, TournamentWatermark } from "@/components/Tourname
 import { formatTournamentDateRange } from "@/lib/formatDateRange";
 import { getPlanLimits } from "@/lib/plans";
 
+/** Bracket generation for a large field of teams can take longer than the
+ *  platform's default function timeout — raises it for every Server Action
+ *  on this page (see BRACKET_TRANSACTION_OPTIONS in lib/services/bracket.ts
+ *  for the matching Prisma transaction timeout). */
+export const maxDuration = 40;
+
 const STATUS_OPTIONS = [
   { value: "DRAFT", label: "Rascunho" },
   { value: "REGISTRATION_OPEN", label: "Inscrições abertas" },
