@@ -18,4 +18,7 @@ export interface DisplayMatch {
   isReset: boolean;
   scheduledAt: Date | null;
   venueName: string | null;
+  /** Sequential "Jogo N" label in bracket-dependency order, matching the
+   *  classic paper-bracket convention. Null for byes, which never play. */
+  gameNumber: number | null;
 }

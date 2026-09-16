@@ -6,6 +6,7 @@ import { VenueManager } from "@/components/admin/VenueManager";
 import { AutoScheduleForm } from "@/components/admin/AutoScheduleForm";
 import { MatchScheduleRow } from "@/components/admin/MatchScheduleRow";
 import { BrandFooter } from "@/components/BrandFooter";
+import { assignGameNumbers, compareBracketOrder } from "@/lib/bracket/gameOrder";
 
 const BRACKET_LABEL: Record<string, string> = {
   GROUP: "Grupo",
@@ -38,6 +39,8 @@ export default async function TournamentAgendaPage({
   if (!tournament || tournament.organizerId !== session.user.id) notFound();
 
   const groupNameById = Object.fromEntries(tournament.groups.map((g) => [g.id, g.name]));
+  const gameNumbers = assignGameNumbers(tournament.matches);
+  const orderedMatches = [...tournament.matches].sort(compareBracketOrder);
 
   return (
     <div>
@@ -71,18 +74,20 @@ export default async function TournamentAgendaPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {tournament.matches.map((m) => {
+                  {orderedMatches.map((m) => {
                     const bracketLabel =
                       m.bracket === "GROUP" && m.groupId
                         ? (groupNameById[m.groupId] ?? "Grupo")
                         : BRACKET_LABEL[m.bracket];
                     const home = m.homeTeam?.name ?? "A definir";
                     const away = m.awayTeam?.name ?? "A definir";
+                    const gameNumber = gameNumbers.get(m.id);
+                    const gamePrefix = gameNumber ? `Jogo ${gameNumber} · ` : "";
                     return (
                       <MatchScheduleRow
                         key={m.id}
                         matchId={m.id}
-                        label={`${bracketLabel} · R${m.round} · ${home} x ${away}`}
+                        label={`${gamePrefix}${bracketLabel} · R${m.round} · ${home} x ${away}`}
                         scheduledAt={m.scheduledAt}
                         venueId={m.venueId}
                         venues={tournament.venues}

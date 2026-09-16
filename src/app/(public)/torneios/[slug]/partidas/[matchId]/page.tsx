@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSportFamily } from "@/lib/sport";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
+import { assignGameNumbers } from "@/lib/bracket/gameOrder";
 
 const CARD_LABEL: Record<string, string> = { YELLOW: "Amarelo", RED: "Vermelho" };
 const CARD_COLOR: Record<string, string> = { YELLOW: "bg-amber-100 text-amber-800", RED: "bg-red-100 text-red-800" };
@@ -31,6 +32,12 @@ export default async function PublicMatchSumulaPage({
 
   if (!match || match.tournament.slug !== slug) notFound();
 
+  const siblingMatches = await prisma.match.findMany({
+    where: { tournamentId: match.tournamentId },
+    select: { id: true, bracket: true, round: true, position: true, status: true, homeTeamId: true, awayTeamId: true },
+  });
+  const gameNumber = assignGameNumbers(siblingMatches).get(match.id) ?? null;
+
   const family = getSportFamily(match.tournament.sportType);
   const playerName = (id: string) =>
     match.homeTeam?.players.find((p) => p.id === id)?.name ?? match.awayTeam?.players.find((p) => p.id === id)?.name ?? "?";
@@ -44,9 +51,14 @@ export default async function PublicMatchSumulaPage({
 
       <div className="mt-2 flex items-start gap-3">
         <TournamentHeaderLogo logoUrl={match.tournament.logoUrl} tournamentName={match.tournament.name} />
-        <h1 className="text-2xl font-semibold text-slate-900">
-          {match.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {match.awayTeam?.name ?? "A definir"}
-        </h1>
+        <div>
+          {gameNumber !== null && (
+            <p className="text-sm font-medium uppercase tracking-wide text-slate-400">Jogo {gameNumber}</p>
+          )}
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {match.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {match.awayTeam?.name ?? "A definir"}
+          </h1>
+        </div>
       </div>
 
       <div className="mt-3">

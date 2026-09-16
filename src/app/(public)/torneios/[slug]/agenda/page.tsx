@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { BrandFooter } from "@/components/BrandFooter";
+import { assignGameNumbers } from "@/lib/bracket/gameOrder";
 
 const BRACKET_LABEL: Record<string, string> = {
   GROUP: "Grupo",
@@ -35,6 +36,7 @@ export default async function PublicAgendaPage({ params }: { params: Promise<{ s
   if (!tournament) notFound();
 
   const groupNameById = Object.fromEntries(tournament.groups.map((g) => [g.id, g.name]));
+  const gameNumbers = assignGameNumbers(tournament.matches);
   const scheduled = tournament.matches.filter((m) => m.scheduledAt);
   const unscheduled = tournament.matches.filter((m) => !m.scheduledAt);
 
@@ -68,7 +70,10 @@ export default async function PublicAgendaPage({ params }: { params: Promise<{ s
                         <p className="text-sm font-medium text-slate-900">
                           {m.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {m.awayTeam?.name ?? "A definir"}
                         </p>
-                        <p className="text-xs text-slate-500">{bracketLabel}</p>
+                        <p className="text-xs text-slate-500">
+                          {gameNumbers.has(m.id) && <span className="font-medium text-slate-600">Jogo {gameNumbers.get(m.id)} · </span>}
+                          {bracketLabel}
+                        </p>
                       </div>
                       <div className="text-right text-sm text-slate-600">
                         <p className="font-medium">{formatTime(m.scheduledAt!)}</p>

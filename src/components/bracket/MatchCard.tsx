@@ -52,6 +52,11 @@ export function MatchCard({
 
   return (
     <div className="w-56 rounded-md border border-slate-200 bg-white shadow-sm">
+      {match.gameNumber !== null && (
+        <div className="border-b border-slate-100 px-2 pt-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+          Jogo {match.gameNumber}
+        </div>
+      )}
       {match.isReset && (
         <div className="border-b border-slate-100 px-2 pt-1 text-[10px] font-medium uppercase tracking-wide text-amber-600">
           Reset da grande final

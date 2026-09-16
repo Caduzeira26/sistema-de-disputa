@@ -1,4 +1,5 @@
 import type { DisplayMatch } from "@/components/bracket/types";
+import { assignGameNumbers } from "@/lib/bracket/gameOrder";
 
 interface RawMatch {
   id: string;
@@ -24,6 +25,7 @@ interface RawTeam {
 
 export function toDisplayMatches(matches: RawMatch[], teams: RawTeam[]): DisplayMatch[] {
   const teamById = new Map(teams.map((t) => [t.id, t]));
+  const gameNumbers = assignGameNumbers(matches);
   return matches.map((m) => ({
     id: m.id,
     bracket: m.bracket as DisplayMatch["bracket"],
@@ -38,5 +40,6 @@ export function toDisplayMatches(matches: RawMatch[], teams: RawTeam[]): Display
     isReset: m.isReset,
     scheduledAt: m.scheduledAt ?? null,
     venueName: m.venue?.name ?? null,
+    gameNumber: gameNumbers.get(m.id) ?? null,
   }));
 }

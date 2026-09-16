@@ -5,3 +5,4 @@ export * from "./doubleElimination";
 export * from "./groups";
 export * from "./standings";
 export * from "./advance";
+export * from "./gameOrder";
