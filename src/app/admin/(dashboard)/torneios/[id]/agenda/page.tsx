@@ -51,6 +51,12 @@ export default async function TournamentAgendaPage({
             Voltar ao torneio
           </Link>
         </div>
+        <Link
+          href={`/admin/torneios/${tournament.id}/agenda-impressao`}
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+        >
+          Imprimir agenda
+        </Link>
       </div>
 
       <div className="mt-6 flex flex-col gap-6">
