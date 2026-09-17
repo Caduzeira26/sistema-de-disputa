@@ -18,8 +18,10 @@ describe("isRosterCompletionWindowOpen", () => {
     expect(isRosterCompletionWindowOpen(tournament, new Date("2026-09-21T00:00:00Z"))).toBe(false);
   });
 
-  it("is closed once the tournament is in progress, even with no start date", () => {
-    expect(isRosterCompletionWindowOpen({ status: "IN_PROGRESS", startDate: null })).toBe(false);
+  it("stays open while the tournament is in progress, even past the start date", () => {
+    const tournament = { status: "IN_PROGRESS" as const, startDate: new Date("2020-01-01T00:00:00Z") };
+    expect(isRosterCompletionWindowOpen(tournament)).toBe(true);
+    expect(isRosterCompletionWindowOpen({ status: "IN_PROGRESS", startDate: null })).toBe(true);
   });
 
   it("is closed once the tournament is finished, even before the computed cutoff", () => {

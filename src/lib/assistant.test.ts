@@ -112,13 +112,13 @@ describe("buildRosterCompletionSystemPrompt", () => {
     expect(prompt).toContain("já passou");
   });
 
-  it("says the tournament already started when status is IN_PROGRESS, regardless of the date", () => {
+  it("says the roster stays open when status is IN_PROGRESS, regardless of the date", () => {
     const prompt = buildRosterCompletionSystemPrompt(
       team,
       { ...baseTournament, status: "IN_PROGRESS", startDate: new Date("2099-01-01T00:00:00Z") },
       { canManageAthleteRegistry: false }
     );
-    expect(prompt).toContain("já começou ou terminou");
+    expect(prompt).toContain("elenco continua aberto");
   });
 
   it("says the team was rejected and can't be completed", () => {

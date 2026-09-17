@@ -50,16 +50,18 @@ export default async function CompleteRosterPage({
         <p className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           {team.status === "REJECTED"
             ? "Esta equipe foi rejeitada pelo organizador e não pode mais ser completada."
-            : tournament.status === "IN_PROGRESS" || tournament.status === "FINISHED"
-              ? "O campeonato já começou — não é mais possível adicionar ou remover jogadores."
+            : tournament.status === "FINISHED"
+              ? "O campeonato já terminou — não é mais possível adicionar ou remover jogadores."
               : "O prazo para alterar os jogadores desta equipe já encerrou."}
         </p>
       ) : (
         <div className="mt-6">
           <p className="mb-4 text-sm text-slate-500">
-            {tournament.startDate
-              ? `Você pode adicionar ou remover jogadores até o início do campeonato, em ${formatCutoff(tournament.startDate)}.`
-              : "Você pode adicionar ou remover jogadores até o início do campeonato."}
+            {tournament.status === "IN_PROGRESS"
+              ? "O campeonato já começou, mas você ainda pode adicionar ou remover jogadores até ele terminar."
+              : tournament.startDate
+                ? `Você pode adicionar ou remover jogadores até o início do campeonato, em ${formatCutoff(tournament.startDate)}.`
+                : "Você pode adicionar ou remover jogadores até o início do campeonato."}
           </p>
           <CompleteRosterForm
             teamId={team.id}

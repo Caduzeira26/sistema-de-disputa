@@ -131,15 +131,18 @@ export function buildRosterCompletionSystemPrompt(
     if (team.status === "REJECTED") {
       return "Esta equipe foi REJEITADA pelo organizador — não é mais possível adicionar jogadores, o formulário nem aparece na página.";
     }
-    if (tournament.status === "IN_PROGRESS" || tournament.status === "FINISHED") {
-      return "O campeonato já começou ou terminou, então o prazo para adicionar jogadores já encerrou — o formulário nem aparece na página.";
+    if (tournament.status === "FINISHED") {
+      return "O campeonato já terminou, então o prazo para adicionar jogadores já encerrou — o formulário nem aparece na página.";
+    }
+    if (tournament.status === "IN_PROGRESS") {
+      return "O campeonato já começou, mas o elenco continua aberto — dá pra adicionar ou remover jogadores normalmente até o campeonato terminar.";
     }
     if (!tournament.startDate) {
       return "Não há uma data de início definida ainda para este campeonato, então não há um prazo calculado — dá pra adicionar jogadores normalmente por enquanto.";
     }
     const cutoffLabel = tournament.startDate.toLocaleDateString("pt-BR", { timeZone: "UTC" });
     return open
-      ? `O prazo para adicionar ou remover jogadores vai até o início do campeonato, em ${cutoffLabel}.`
+      ? `O prazo para adicionar ou remover jogadores vai até o início do campeonato, em ${cutoffLabel} (depois disso o elenco continua aberto até o campeonato terminar).`
       : `O prazo para adicionar ou remover jogadores (até o início do campeonato, em ${cutoffLabel}) já passou — o formulário nem aparece na página.`;
   })();
 
