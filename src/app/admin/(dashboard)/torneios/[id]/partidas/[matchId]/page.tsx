@@ -61,7 +61,17 @@ export default async function MatchSumulaPage({
 
   const siblingMatches = await prisma.match.findMany({
     where: { tournamentId: match.tournamentId },
-    select: { id: true, bracket: true, round: true, position: true, status: true, homeTeamId: true, awayTeamId: true },
+    select: {
+      id: true,
+      bracket: true,
+      round: true,
+      position: true,
+      status: true,
+      homeTeamId: true,
+      awayTeamId: true,
+      winnerNextMatchId: true,
+      loserNextMatchId: true,
+    },
   });
   const gameNumber = assignGameNumbers(siblingMatches).get(match.id) ?? null;
 

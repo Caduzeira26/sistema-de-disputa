@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { distributeSchedule, type ScheduleConfig } from "@/lib/schedule";
-import { compareBracketOrder, isByeMatch } from "@/lib/bracket/gameOrder";
+import { isByeMatch, topologicalMatchOrder } from "@/lib/bracket/gameOrder";
 
 export async function autoDistributeSchedule(
   tournamentId: string,
@@ -12,7 +12,7 @@ export async function autoDistributeSchedule(
   }
   const matches = allMatches.filter((m) => !isByeMatch(m));
 
-  const ordered = [...matches].sort(compareBracketOrder);
+  const ordered = topologicalMatchOrder(matches);
 
   const venueIds = config.venueIds ?? [];
   const assignments = distributeSchedule(

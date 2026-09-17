@@ -6,7 +6,7 @@ import { VenueManager } from "@/components/admin/VenueManager";
 import { AutoScheduleForm } from "@/components/admin/AutoScheduleForm";
 import { MatchScheduleRow } from "@/components/admin/MatchScheduleRow";
 import { BrandFooter } from "@/components/BrandFooter";
-import { assignGameNumbers, compareBracketOrder } from "@/lib/bracket/gameOrder";
+import { assignGameNumbers, topologicalMatchOrder } from "@/lib/bracket/gameOrder";
 
 const BRACKET_LABEL: Record<string, string> = {
   GROUP: "Grupo",
@@ -40,7 +40,7 @@ export default async function TournamentAgendaPage({
 
   const groupNameById = Object.fromEntries(tournament.groups.map((g) => [g.id, g.name]));
   const gameNumbers = assignGameNumbers(tournament.matches);
-  const orderedMatches = [...tournament.matches].sort(compareBracketOrder);
+  const orderedMatches = topologicalMatchOrder(tournament.matches);
 
   return (
     <div>

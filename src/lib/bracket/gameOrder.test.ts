@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assignGameNumbers, isByeMatch } from "./gameOrder";
+import { assignGameNumbers, isByeMatch, topologicalMatchOrder } from "./gameOrder";
 import { generateDoubleElimination } from "./doubleElimination";
 import type { TeamInput } from "./types";
 
@@ -37,12 +37,8 @@ describe("assignGameNumbers", () => {
 });
 
 describe("assignGameNumbers — against the current bracket generator", () => {
-  it("numbers every real match sequentially in bracket-dependency order (the current generator no longer produces bye matches at all)", () => {
-    const { matches } = generateDoubleElimination(teams(10));
-    const byeCount = matches.filter((m) => m.autoWinnerTeamId !== null).length;
-    expect(byeCount).toBe(0);
-
-    const persisted = matches.map((m) => ({
+  function toPersisted(matches: ReturnType<typeof generateDoubleElimination>["matches"]) {
+    return matches.map((m) => ({
       id: m.id,
       bracket: m.bracket,
       round: m.round,
@@ -50,9 +46,17 @@ describe("assignGameNumbers — against the current bracket generator", () => {
       status: m.autoWinnerTeamId ? "FINISHED" : "SCHEDULED",
       homeTeamId: m.homeTeamId,
       awayTeamId: m.awayTeamId,
+      winnerNextMatchId: m.winnerNextMatchId,
+      loserNextMatchId: m.loserNextMatchId,
     }));
+  }
 
-    const numbers = assignGameNumbers(persisted);
+  it("numbers every real match sequentially in bracket-dependency order (the current generator no longer produces bye matches at all)", () => {
+    const { matches } = generateDoubleElimination(teams(10));
+    const byeCount = matches.filter((m) => m.autoWinnerTeamId !== null).length;
+    expect(byeCount).toBe(0);
+
+    const numbers = assignGameNumbers(toPersisted(matches));
 
     // Standard formula: J = (n-1)*2 + 1 reset match = 19 real games for n=10.
     expect(numbers.size).toBe(19);
@@ -63,20 +67,63 @@ describe("assignGameNumbers — against the current bracket generator", () => {
 
   it("numbers a full power-of-two bracket with no gaps (no byes to skip)", () => {
     const { matches } = generateDoubleElimination(teams(8));
-    const persisted = matches.map((m) => ({
-      id: m.id,
-      bracket: m.bracket,
-      round: m.round,
-      position: m.position,
-      status: m.autoWinnerTeamId ? "FINISHED" : "SCHEDULED",
-      homeTeamId: m.homeTeamId,
-      awayTeamId: m.awayTeamId,
-    }));
-    const numbers = assignGameNumbers(persisted);
+    const numbers = assignGameNumbers(toPersisted(matches));
     // J = (8-1)*2 + 1 reset = 15.
     expect(numbers.size).toBe(15);
     expect([...numbers.values()].sort((a, b) => a - b)).toEqual(
       Array.from({ length: 15 }, (_, i) => i + 1)
     );
+  });
+
+  it.each([9, 10, 11, 13, 16, 17])(
+    "%i teams: every match's number comes before both its winner-next and loser-next targets' numbers",
+    (n) => {
+      const { matches } = generateDoubleElimination(teams(n));
+      const numbers = assignGameNumbers(toPersisted(matches));
+      for (const m of matches) {
+        if (m.winnerNextMatchId && numbers.has(m.winnerNextMatchId)) {
+          expect(numbers.get(m.id)!).toBeLessThan(numbers.get(m.winnerNextMatchId)!);
+        }
+        if (m.loserNextMatchId && numbers.has(m.loserNextMatchId)) {
+          expect(numbers.get(m.id)!).toBeLessThan(numbers.get(m.loserNextMatchId)!);
+        }
+      }
+    }
+  );
+});
+
+describe("topologicalMatchOrder — regression: a losers-bracket round is not simultaneous with a winners round of the same number", () => {
+  it("orders a winners-bracket match before the losers-bracket match its loser drops into, even when the losers match's own round number is lower", () => {
+    // Minimal reproduction of the real bug: WB round 1's loser feeds a LB
+    // match that (because losers-bracket rounds are numbered independently)
+    // happens to carry round 1 too — a naive (bracket, round, position)
+    // sort can't tell these apart and may place the LB match first.
+    const matches = [
+      {
+        id: "wb1",
+        bracket: "WINNERS",
+        round: 1,
+        position: 0,
+        status: "SCHEDULED",
+        homeTeamId: "T1",
+        awayTeamId: "T2",
+        winnerNextMatchId: null,
+        loserNextMatchId: "lb1",
+      },
+      {
+        id: "lb1",
+        bracket: "LOSERS",
+        round: 1,
+        position: 0,
+        status: "SCHEDULED",
+        homeTeamId: null,
+        awayTeamId: null,
+        winnerNextMatchId: null,
+        loserNextMatchId: null,
+      },
+    ];
+
+    const ordered = topologicalMatchOrder(matches);
+    expect(ordered.map((m) => m.id)).toEqual(["wb1", "lb1"]);
   });
 });
