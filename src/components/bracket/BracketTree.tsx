@@ -62,27 +62,29 @@ export function BracketTree({
   }
 
   return (
-    <div className="relative overflow-x-auto pb-2" style={{ width, height }}>
-      <svg width={width} height={height} className="pointer-events-none absolute inset-0">
-        {connectors.map((d, i) => (
-          <path key={i} d={d} fill="none" stroke="var(--color-slate-300, #cbd5e1)" strokeWidth={2} />
-        ))}
-      </svg>
-      {matches.map((m) => {
-        const pos = layout.get(m.id);
-        if (!pos) return null;
-        return (
-          <div key={m.id} className="absolute" style={{ left: xOf(pos.round), top: yOf(pos.y) }}>
-            <MatchCard
-              match={m}
-              editable={editable}
-              quickResultEntry={quickResultEntry}
-              tournamentId={tournamentId}
-              publicSlug={publicSlug}
-            />
-          </div>
-        );
-      })}
+    <div className="overflow-x-auto pb-2">
+      <div className="relative" style={{ width, height }}>
+        <svg width={width} height={height} className="pointer-events-none absolute inset-0">
+          {connectors.map((d, i) => (
+            <path key={i} d={d} fill="none" stroke="var(--color-slate-300, #cbd5e1)" strokeWidth={2} />
+          ))}
+        </svg>
+        {matches.map((m) => {
+          const pos = layout.get(m.id);
+          if (!pos) return null;
+          return (
+            <div key={m.id} className="absolute" style={{ left: xOf(pos.round), top: yOf(pos.y) }}>
+              <MatchCard
+                match={m}
+                editable={editable}
+                quickResultEntry={quickResultEntry}
+                tournamentId={tournamentId}
+                publicSlug={publicSlug}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
