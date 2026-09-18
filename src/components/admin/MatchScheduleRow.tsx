@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, type ReactNode } from "react";
 import { updateMatchScheduleAction, type ActionState } from "@/lib/actions/schedule";
 
 const initialState: ActionState = {};
@@ -25,7 +25,7 @@ export function MatchScheduleRow({
   venues,
 }: {
   matchId: string;
-  label: string;
+  label: ReactNode;
   scheduledAt: Date | null;
   venueId: string | null;
   venues: { id: string; name: string }[];

@@ -89,11 +89,29 @@ export default async function TournamentAgendaPage({
                     const away = m.awayTeam?.name ?? "A definir";
                     const gameNumber = gameNumbers.get(m.id);
                     const gamePrefix = gameNumber ? `Jogo ${gameNumber} · ` : "";
+                    const isFinished = m.status === "FINISHED";
+                    const homeWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.homeScore > m.awayScore;
+                    const awayWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.awayScore > m.homeScore;
                     return (
                       <MatchScheduleRow
                         key={m.id}
                         matchId={m.id}
-                        label={`${gamePrefix}${bracketLabel} · R${m.round} · ${home} x ${away}`}
+                        label={
+                          <span>
+                            {gamePrefix}
+                            {bracketLabel} · R{m.round} ·{" "}
+                            <span className={homeWon ? "font-semibold text-slate-900" : isFinished ? "text-slate-500" : ""}>
+                              {home}
+                              {isFinished && <span className="ml-1 tabular-nums">{m.homeScore}</span>}
+                            </span>{" "}
+                            <span className="text-slate-400">x</span>{" "}
+                            <span className={awayWon ? "font-semibold text-slate-900" : isFinished ? "text-slate-500" : ""}>
+                              {isFinished && <span className="mr-1 tabular-nums">{m.awayScore}</span>}
+                              {away}
+                            </span>
+                            {isFinished && <span className="ml-1 text-emerald-600">· Encerrada</span>}
+                          </span>
+                        }
                         scheduledAt={m.scheduledAt}
                         venueId={m.venueId}
                         venues={tournament.venues}

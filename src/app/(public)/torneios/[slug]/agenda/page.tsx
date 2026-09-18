@@ -64,15 +64,27 @@ export default async function PublicAgendaPage({ params }: { params: Promise<{ s
               <div className="flex flex-col gap-2">
                 {matches.map((m) => {
                   const bracketLabel = m.bracket === "GROUP" && m.groupId ? groupNameById[m.groupId] : BRACKET_LABEL[m.bracket];
+                  const isFinished = m.status === "FINISHED";
+                  const homeWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.homeScore > m.awayScore;
+                  const awayWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.awayScore > m.homeScore;
                   return (
                     <div key={m.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          {m.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {m.awayTeam?.name ?? "A definir"}
+                        <p className="text-sm">
+                          <span className={homeWon ? "font-semibold text-slate-900" : isFinished ? "text-slate-500" : "font-medium text-slate-900"}>
+                            {m.homeTeam?.name ?? "A definir"}
+                            {isFinished && <span className="ml-1 tabular-nums">{m.homeScore}</span>}
+                          </span>
+                          <span className="mx-1 text-slate-400">x</span>
+                          <span className={awayWon ? "font-semibold text-slate-900" : isFinished ? "text-slate-500" : "font-medium text-slate-900"}>
+                            {isFinished && <span className="mr-1 tabular-nums">{m.awayScore}</span>}
+                            {m.awayTeam?.name ?? "A definir"}
+                          </span>
                         </p>
                         <p className="text-xs text-slate-500">
                           {gameNumbers.has(m.id) && <span className="font-medium text-slate-600">Jogo {gameNumbers.get(m.id)} · </span>}
                           {bracketLabel}
+                          {isFinished && <span className="text-emerald-600"> · Encerrada</span>}
                         </p>
                       </div>
                       <div className="text-right text-sm text-slate-600">

@@ -80,12 +80,16 @@ export default async function PrintAgendaPage({
               <th className="py-2 pr-2 font-semibold text-slate-900">Horário</th>
               <th className="py-2 pr-2 font-semibold text-slate-900">Local</th>
               <th className="py-2 pr-2 font-semibold text-slate-900">Fase</th>
-              <th className="py-2 font-semibold text-slate-900">Confronto</th>
+              <th className="py-2 pr-2 font-semibold text-slate-900">Confronto</th>
+              <th className="py-2 font-semibold text-slate-900">Placar</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((m) => {
               const bracketLabel = m.bracket === "GROUP" && m.groupId ? (groupNameById[m.groupId] ?? "Grupo") : BRACKET_LABEL[m.bracket];
+              const isFinished = m.status === "FINISHED";
+              const homeWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.homeScore > m.awayScore;
+              const awayWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.awayScore > m.homeScore;
               return (
                 <tr key={m.id} className="border-b border-slate-200">
                   <td className="py-2 pr-2 font-medium text-slate-900">{gameNumbers.get(m.id) ?? "—"}</td>
@@ -93,8 +97,25 @@ export default async function PrintAgendaPage({
                   <td className="py-2 pr-2 text-slate-700">{m.scheduledAt ? formatTime(m.scheduledAt) : "—"}</td>
                   <td className="py-2 pr-2 text-slate-700">{m.venue?.name ?? "—"}</td>
                   <td className="py-2 pr-2 text-slate-700">{bracketLabel}</td>
+                  <td className="py-2 pr-2 text-slate-900">
+                    <span className={homeWon ? "font-semibold" : isFinished ? "text-slate-500" : ""}>
+                      {m.homeTeam?.name ?? "A definir"}
+                    </span>{" "}
+                    <span className="text-slate-400">x</span>{" "}
+                    <span className={awayWon ? "font-semibold" : isFinished ? "text-slate-500" : ""}>
+                      {m.awayTeam?.name ?? "A definir"}
+                    </span>
+                  </td>
                   <td className="py-2 text-slate-900">
-                    {m.homeTeam?.name ?? "A definir"} <span className="text-slate-400">x</span> {m.awayTeam?.name ?? "A definir"}
+                    {isFinished ? (
+                      <>
+                        <span className={homeWon ? "font-semibold" : "text-slate-500"}>{m.homeScore}</span>
+                        <span className="text-slate-400"> x </span>
+                        <span className={awayWon ? "font-semibold" : "text-slate-500"}>{m.awayScore}</span>
+                      </>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               );
