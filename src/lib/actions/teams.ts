@@ -231,6 +231,39 @@ export async function updateTeam(
   return { success: true };
 }
 
+export type UpdateGoalkeepersState = { error?: string; success?: boolean };
+
+/**
+ * Organizer-only edit: unlike addPlayersToTeam/removePlayerFromTeam, this
+ * runs regardless of the roster-completion window, since it's just marking
+ * who already plays in goal, not changing the roster itself — useful for
+ * tournaments that finished before this flag existed.
+ */
+export async function updatePlayerGoalkeepers(
+  _prevState: UpdateGoalkeepersState,
+  formData: FormData
+): Promise<UpdateGoalkeepersState> {
+  const teamId = formData.get("teamId") as string;
+  if (!teamId) return { error: "Dados inválidos." };
+
+  const team = await requireOrganizerForTeam(teamId);
+  const players = await prisma.player.findMany({ where: { teamId, active: true } });
+
+  await prisma.$transaction(
+    players.map((p) =>
+      prisma.player.update({
+        where: { id: p.id },
+        data: { isGoalkeeper: formData.get(`goalkeeper_${p.id}`) === "on" },
+      })
+    )
+  );
+
+  revalidatePath(`/admin/torneios/${team.tournamentId}/equipes/${teamId}/editar`);
+  revalidatePath(`/admin/torneios/${team.tournamentId}/estatisticas`);
+  revalidatePath(`/torneios/${team.tournament.slug}/estatisticas`);
+  return { success: true };
+}
+
 const addPlayersSchema = z.object({
   teamId: z.string().min(1),
   players: z.array(playerSchema).min(1, "Adicione ao menos um jogador"),
