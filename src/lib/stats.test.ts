@@ -5,12 +5,15 @@ import {
   computeTopPointScorers,
   computeFoulRanking,
   computeGameWinRanking,
+  computeGoalkeeperRanking,
   type GoalRecord,
   type CardRecord,
   type BasketRecord,
   type FoulRecord,
   type GameResultRecord,
   type TableTennisPlayer,
+  type GoalkeeperRecord,
+  type TeamMatchConceded,
 } from "./stats";
 
 function goal(playerId: string, playerName: string, teamId = "T1", teamName = "Time 1"): GoalRecord {
@@ -91,6 +94,52 @@ describe("computeFoulRanking", () => {
       { playerId: "p1", playerName: "Ana", teamId: "T1", teamName: "Time 1", fouls: 2 },
       { playerId: "p2", playerName: "Bia", teamId: "T1", teamName: "Time 1", fouls: 1 },
     ]);
+  });
+});
+
+function goalkeeper(playerId: string, playerName: string, teamId: string, teamName = "Time"): GoalkeeperRecord {
+  return { playerId, playerName, teamId, teamName };
+}
+
+function conceded(teamId: string, goalsConceded: number): TeamMatchConceded {
+  return { teamId, goalsConceded };
+}
+
+describe("computeGoalkeeperRanking", () => {
+  it("ranks by average goals conceded per match, lowest first", () => {
+    const goalkeepers = [goalkeeper("p1", "Ana", "T1"), goalkeeper("p2", "Bia", "T2")];
+    const teamMatches = [
+      conceded("T1", 1),
+      conceded("T1", 3), // T1: 4 conceded / 2 matches = 2.0
+      conceded("T2", 0),
+      conceded("T2", 1), // T2: 1 conceded / 2 matches = 0.5
+    ];
+    const result = computeGoalkeeperRanking(goalkeepers, teamMatches);
+    expect(result).toEqual([
+      { playerId: "p2", playerName: "Bia", teamId: "T2", teamName: "Time", matchesPlayed: 2, goalsConceded: 1, average: 0.5 },
+      { playerId: "p1", playerName: "Ana", teamId: "T1", teamName: "Time", matchesPlayed: 2, goalsConceded: 4, average: 2 },
+    ]);
+  });
+
+  it("shares a team's tally across multiple goalkeepers on that team", () => {
+    const goalkeepers = [goalkeeper("p1", "Ana", "T1"), goalkeeper("p2", "Bia", "T1")];
+    const teamMatches = [conceded("T1", 2)];
+    const result = computeGoalkeeperRanking(goalkeepers, teamMatches);
+    expect(result.map((r) => [r.playerId, r.average])).toEqual([
+      ["p1", 2],
+      ["p2", 2],
+    ]);
+  });
+
+  it("excludes goalkeepers whose team hasn't played yet", () => {
+    const goalkeepers = [goalkeeper("p1", "Ana", "T1")];
+    expect(computeGoalkeeperRanking(goalkeepers, [])).toEqual([]);
+  });
+
+  it("breaks ties alphabetically", () => {
+    const goalkeepers = [goalkeeper("p2", "Bia", "T2"), goalkeeper("p1", "Ana", "T1")];
+    const teamMatches = [conceded("T1", 1), conceded("T2", 1)];
+    expect(computeGoalkeeperRanking(goalkeepers, teamMatches).map((r) => r.playerName)).toEqual(["Ana", "Bia"]);
   });
 });
 

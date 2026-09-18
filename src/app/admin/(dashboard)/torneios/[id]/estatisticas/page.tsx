@@ -2,13 +2,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { computeTopScorers, computeCardRanking, computeTopPointScorers, computeFoulRanking, computeGameWinRanking } from "@/lib/stats";
+import {
+  computeTopScorers,
+  computeCardRanking,
+  computeTopPointScorers,
+  computeFoulRanking,
+  computeGameWinRanking,
+  computeGoalkeeperRanking,
+  type TeamMatchConceded,
+} from "@/lib/stats";
 import { TopScorersTable } from "@/components/stats/TopScorersTable";
 import { CardRankingTable } from "@/components/stats/CardRankingTable";
 import { TopPointScorersTable } from "@/components/stats/TopPointScorersTable";
 import { FoulRankingTable } from "@/components/stats/FoulRankingTable";
 import { GameWinRankingTable } from "@/components/stats/GameWinRankingTable";
+import { GoalkeeperRankingTable } from "@/components/stats/GoalkeeperRankingTable";
 import { getSportFamily } from "@/lib/sport";
+import { isByeMatch } from "@/lib/bracket/gameOrder";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 
 export default async function TournamentStatsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -40,6 +50,28 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
   const foulRanking = computeFoulRanking(
     fouls.map((f) => ({ playerId: f.playerId, playerName: f.player.name, teamId: f.teamId, teamName: f.team.name }))
   );
+
+  let goalkeeperRanking: ReturnType<typeof computeGoalkeeperRanking> = [];
+  if (family === "GOALS_CARDS") {
+    const [goalkeepers, finishedMatches] = await Promise.all([
+      prisma.player.findMany({
+        where: { isGoalkeeper: true, active: true, team: { tournamentId: tournament.id } },
+        include: { team: true },
+      }),
+      prisma.match.findMany({
+        where: { tournamentId: tournament.id, status: "FINISHED" },
+        select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, status: true },
+      }),
+    ]);
+    const teamMatches: TeamMatchConceded[] = finishedMatches.filter((m) => !isByeMatch(m)).flatMap((m) => [
+      { teamId: m.homeTeamId!, goalsConceded: m.awayScore! },
+      { teamId: m.awayTeamId!, goalsConceded: m.homeScore! },
+    ]);
+    goalkeeperRanking = computeGoalkeeperRanking(
+      goalkeepers.map((g) => ({ playerId: g.id, playerName: g.name, teamId: g.teamId, teamName: g.team.name })),
+      teamMatches
+    );
+  }
 
   const games = await prisma.tableTennisGame.findMany({ where: { match: { tournamentId: tournament.id } } });
   const gamePlayerIds = [...new Set(games.flatMap((g) => [...g.homePlayerIds, ...g.awayPlayerIds]))];
@@ -75,6 +107,14 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
           <section>
             <h2 className="mb-2 text-lg font-semibold text-slate-900">Artilharia</h2>
             <TopScorersTable scorers={scorers} />
+          </section>
+        )}
+
+        {family === "GOALS_CARDS" && (
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Melhor goleiro</h2>
+            <p className="mb-2 text-xs text-slate-400">Média de gols sofridos por partida (menor é melhor).</p>
+            <GoalkeeperRankingTable goalkeepers={goalkeeperRanking} />
           </section>
         )}
 

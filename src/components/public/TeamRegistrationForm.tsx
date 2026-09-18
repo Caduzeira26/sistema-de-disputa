@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerTeam, type RegisterTeamState } from "@/lib/actions/teams";
-import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, type SportType } from "@/lib/sport";
+import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, getSportFamily, type SportType } from "@/lib/sport";
 
 const initialState: RegisterTeamState = {};
 
@@ -11,12 +11,13 @@ type PlayerDraft = {
   name: string;
   shirtNumber: string;
   position: string;
+  isGoalkeeper: boolean;
   birthDate: string;
   document: string;
 };
 
 function emptyPlayer(): PlayerDraft {
-  return { name: "", shirtNumber: "", position: "", birthDate: "", document: "" };
+  return { name: "", shirtNumber: "", position: "", isGoalkeeper: false, birthDate: "", document: "" };
 }
 
 export function TeamRegistrationForm({
@@ -37,6 +38,7 @@ export function TeamRegistrationForm({
   const maxPlayers = MAX_PLAYERS_PER_TEAM[sportType];
   const belowMinimum = players.length < minPlayers;
   const atMaximum = maxPlayers !== undefined && players.length >= maxPlayers;
+  const hasGoalkeepers = getSportFamily(sportType) === "GOALS_CARDS";
 
   useEffect(() => {
     if (state.paymentTxid) {
@@ -47,6 +49,10 @@ export function TeamRegistrationForm({
 
   function updatePlayer(index: number, field: keyof PlayerDraft, value: string) {
     setPlayers((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)));
+  }
+
+  function toggleGoalkeeper(index: number, value: boolean) {
+    setPlayers((prev) => prev.map((p, i) => (i === index ? { ...p, isGoalkeeper: value } : p)));
   }
 
   function addPlayer() {
@@ -211,6 +217,17 @@ export function TeamRegistrationForm({
                   />
                 )}
               </div>
+              {hasGoalkeepers && (
+                <label className="mt-3 flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={player.isGoalkeeper}
+                    onChange={(e) => toggleGoalkeeper(index, e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  É goleiro
+                </label>
+              )}
             </div>
           ))}
         </div>

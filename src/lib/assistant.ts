@@ -1,5 +1,5 @@
 import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents, isPromoActive, type PlanLimits } from "@/lib/plans";
-import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
+import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES, getSportFamily } from "@/lib/sport";
 import { isRosterCompletionWindowOpen } from "@/lib/roster";
 import type { Team, Tournament } from "@prisma/client";
 
@@ -79,6 +79,7 @@ export function buildRegistrationSystemPrompt(
 
   const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
   const maxPlayers = MAX_PLAYERS_PER_TEAM[tournament.sportType];
+  const hasGoalkeepers = getSportFamily(tournament.sportType) === "GOALS_CARDS";
 
   const documentSection = limits.canManageAthleteRegistry
     ? `O formulário tem um campo de CPF (só números, 11 dígitos) por jogador, mas ele é OPCIONAL — não é preciso preencher pra enviar a inscrição. Se for preenchido, precisa ter 11 dígitos válidos. Isso existe porque este campeonato usa o cadastro permanente de atletas: quando o CPF é informado, o mesmo atleta é reconhecido em outros campeonatos no futuro, e é o que permite pedir transferência dele entre equipes depois (em outra página, "/transferencias", se o organizador configurar isso). Sem CPF, o jogador é cadastrado normalmente, só não entra nesse cadastro entre campeonatos.`
@@ -95,7 +96,7 @@ REGRAS QUE VOCÊ NUNCA PODE QUEBRAR:
 
 CAMPOS DO FORMULÁRIO:
 - Dados da equipe: nome da equipe (obrigatório), responsável/técnico (obrigatório), telefone e e-mail de contato (opcionais, mas ajudam o organizador a falar com a equipe), escudo/logo (opcional, imagem até 5MB).
-- Por jogador: nome (obrigatório), número da camisa (opcional), posição (opcional, texto livre), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (opcional neste campeonato — veja abaixo)." : ""}
+- Por jogador: nome (obrigatório), número da camisa (opcional), posição (opcional, texto livre), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (opcional neste campeonato — veja abaixo)." : ""}${hasGoalkeepers ? ' Também tem uma caixa de marcar "É goleiro" — não é obrigatório marcar, mas é o que alimenta a estatística de "melhor goleiro" (média de gols sofridos) do campeonato, então vale orientar a marcar pra quem realmente joga no gol.' : ""}
 - É possível adicionar quantos jogadores forem necessários com o botão "+ Adicionar jogador", e remover um jogador adicionado por engano.
 ${minPlayers > 1 ? `- Este campeonato exige no mínimo ${minPlayers} jogadores cadastrados na equipe (número mínimo pra formar o time em quadra/campo no ${SPORT_LABELS[tournament.sportType]}). O botão de enviar fica bloqueado até chegar nesse número — não é possível enviar com menos.` : ""}
 ${maxPlayers ? `- Este campeonato permite no máximo ${maxPlayers} jogadores por equipe. O botão "+ Adicionar jogador" fica desabilitado ao atingir esse número — não dá pra cadastrar mais que isso.` : ""}
@@ -125,6 +126,7 @@ export function buildRosterCompletionSystemPrompt(
 ): string {
   const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
   const maxPlayers = MAX_PLAYERS_PER_TEAM[tournament.sportType];
+  const hasGoalkeepers = getSportFamily(tournament.sportType) === "GOALS_CARDS";
   const open = isRosterCompletionWindowOpen(tournament, now) && team.status !== "REJECTED";
 
   const deadlineSection = (() => {
@@ -163,7 +165,7 @@ REGRAS QUE VOCÊ NUNCA PODE QUEBRAR:
 PRAZO PARA COMPLETAR A EQUIPE:
 ${deadlineSection}
 
-CAMPOS POR JOGADOR NOVO: nome (obrigatório), número da camisa (opcional), posição (opcional), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (opcional — veja abaixo)." : ""} Dá pra adicionar quantos quiser de uma vez com o botão "+ Adicionar jogador".${maxPlayers ? ` Este campeonato permite no máximo ${maxPlayers} jogadores por equipe NO TOTAL (contando os já cadastrados) — a página mostra quantas vagas ainda restam e bloqueia o envio ao atingir o limite.` : ""}
+CAMPOS POR JOGADOR NOVO: nome (obrigatório), número da camisa (opcional), posição (opcional), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (opcional — veja abaixo)." : ""}${hasGoalkeepers ? ' Também tem uma caixa "É goleiro" — alimenta a estatística de "melhor goleiro" do campeonato, vale marcar pra quem joga no gol.' : ""} Dá pra adicionar quantos quiser de uma vez com o botão "+ Adicionar jogador".${maxPlayers ? ` Este campeonato permite no máximo ${maxPlayers} jogadores por equipe NO TOTAL (contando os já cadastrados) — a página mostra quantas vagas ainda restam e bloqueia o envio ao atingir o limite.` : ""}
 
 REMOÇÃO DE JOGADOR: cada jogador já cadastrado tem um "×" ao lado do nome, na lista "Jogadores já cadastrados" no topo da página — clicar pede confirmação antes de remover de vez. Só funciona dentro do mesmo prazo de completar a equipe (acima) e a equipe não pode ficar com menos jogadores que o mínimo exigido pelo campeonato (${minPlayers}) — nesse caso a remoção é bloqueada e é preciso adicionar outro antes de tirar mais alguém.
 

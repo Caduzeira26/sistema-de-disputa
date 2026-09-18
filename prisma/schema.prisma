@@ -183,12 +183,12 @@ model Tournament {
   organizerId String
   organizer   User   @relation(fields: [organizerId], references: [id])
 
-  venues           Venue[]
-  teams            Team[]            @relation("TournamentTeams")
-  groups           Group[]
-  matches          Match[]
-  pixTransactions  PixTransaction[]
-  transferRequests TransferRequest[]
+  venues                 Venue[]
+  teams                  Team[]                  @relation("TournamentTeams")
+  groups                 Group[]
+  matches                Match[]
+  pixTransactions        PixTransaction[]
+  transferRequests       TransferRequest[]
   assistantConversations AssistantConversation[]
 
   createdAt DateTime @default(now())
@@ -263,11 +263,16 @@ model Player {
   athleteId String
   athlete   Athlete @relation(fields: [athleteId], references: [id])
 
-  name        String
-  shirtNumber Int?
-  position    String?
-  birthDate   DateTime?
-  active      Boolean   @default(true)
+  name         String
+  shirtNumber  Int?
+  position     String?
+  /// Structured goalkeeper flag — position itself stays free text, but this
+  /// one role is common to every team sport with goals and drives the
+  /// "melhor goleiro" stat, so it gets its own checkbox instead of relying
+  /// on however the team happened to spell "goleiro" in position.
+  isGoalkeeper Boolean   @default(false)
+  birthDate    DateTime?
+  active       Boolean   @default(true)
 
   goals   Goal[]
   cards   Card[]

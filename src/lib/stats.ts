@@ -111,6 +111,65 @@ export function computeFoulRanking(fouls: FoulRecord[]): FoulStanding[] {
   return [...table.values()].sort((a, b) => b.fouls - a.fouls || a.playerName.localeCompare(b.playerName));
 }
 
+export interface GoalkeeperRecord {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+}
+
+export interface TeamMatchConceded {
+  teamId: string;
+  goalsConceded: number;
+}
+
+export interface GoalkeeperStanding {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  matchesPlayed: number;
+  goalsConceded: number;
+  average: number;
+}
+
+/**
+ * Best goalkeeper: lowest average goals conceded per match. There's no
+ * record of which goalkeeper played which match, so every goalkeeper
+ * flagged on a team shares that team's full conceded/matches tally —
+ * fine for the common case of one goalkeeper per team, approximate for
+ * teams with more than one. Goalkeepers whose team hasn't played a match
+ * yet are left out rather than shown with an undefined average.
+ */
+export function computeGoalkeeperRanking(
+  goalkeepers: GoalkeeperRecord[],
+  teamMatches: TeamMatchConceded[]
+): GoalkeeperStanding[] {
+  const byTeam = new Map<string, { conceded: number; matches: number }>();
+  for (const tm of teamMatches) {
+    const existing = byTeam.get(tm.teamId) ?? { conceded: 0, matches: 0 };
+    existing.conceded += tm.goalsConceded;
+    existing.matches += 1;
+    byTeam.set(tm.teamId, existing);
+  }
+
+  return goalkeepers
+    .map((gk) => {
+      const stats = byTeam.get(gk.teamId) ?? { conceded: 0, matches: 0 };
+      return {
+        playerId: gk.playerId,
+        playerName: gk.playerName,
+        teamId: gk.teamId,
+        teamName: gk.teamName,
+        matchesPlayed: stats.matches,
+        goalsConceded: stats.conceded,
+        average: stats.matches > 0 ? stats.conceded / stats.matches : 0,
+      };
+    })
+    .filter((s) => s.matchesPlayed > 0)
+    .sort((a, b) => a.average - b.average || a.playerName.localeCompare(b.playerName));
+}
+
 export interface TableTennisPlayer {
   id: string;
   name: string;

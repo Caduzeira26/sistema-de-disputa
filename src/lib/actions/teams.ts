@@ -16,6 +16,7 @@ const playerSchema = z.object({
   name: z.string().min(1, "Nome do jogador é obrigatório"),
   shirtNumber: z.coerce.number().int().min(0).max(999).nullish(),
   position: z.string().nullish(),
+  isGoalkeeper: z.boolean().optional().default(false),
   birthDate: z.string().nullish(),
   /** CPF — only collected/validated when the tournament's plan allows the athlete registry. */
   document: z.string().nullish(),
@@ -121,6 +122,7 @@ export async function registerTeam(
         name: p.name,
         shirtNumber: p.shirtNumber ?? null,
         position: p.position || null,
+        isGoalkeeper: p.isGoalkeeper,
         birthDate,
         athleteId: athlete.id,
       };
@@ -301,6 +303,7 @@ export async function addPlayersToTeam(
         name: p.name,
         shirtNumber: p.shirtNumber ?? null,
         position: p.position || null,
+        isGoalkeeper: p.isGoalkeeper,
         birthDate,
         athleteId: athlete.id,
       };
