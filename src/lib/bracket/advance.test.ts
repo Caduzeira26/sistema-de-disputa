@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyMatchResult, type MatchRecord } from "./advance";
+import { applyMatchResult, decidesThirdPlace, type MatchRecord } from "./advance";
 
 function baseMatch(overrides: Partial<MatchRecord> = {}): MatchRecord {
   return {
@@ -45,7 +45,36 @@ describe("applyMatchResult — winners bracket", () => {
     const outcome = applyMatchResult(m, 0, 3, []);
     expect(outcome.winnerTeamId).toBe("B");
     expect(outcome.championTeamId).toBe("B");
+    expect(outcome.runnerUpTeamId).toBe("A");
     expect(outcome.slotUpdates).toEqual([]);
+  });
+});
+
+describe("applyMatchResult — third place", () => {
+  it("marks a semifinal loser as a bronze-medal contender", () => {
+    const final = baseMatch({ id: "FINAL", homeTeamId: "C", awayTeamId: "D" });
+    const semifinal = baseMatch({ id: "SF1", winnerNextMatchId: "FINAL", winnerNextSlot: "HOME" });
+    const outcome = applyMatchResult(semifinal, 1, 2, [final, semifinal]);
+    expect(outcome.thirdPlaceTeamId).toBe("A");
+  });
+
+  it("does not mark a double-elimination winners-bracket semifinal loser (they drop to the losers bracket instead)", () => {
+    const gf = baseMatch({ id: "GF-1", bracket: "GRAND_FINAL", homeTeamId: null, awayTeamId: null });
+    const wbFinal = baseMatch({ id: "WBF", winnerNextMatchId: "GF-1", winnerNextSlot: "HOME" });
+    const wbSemi = baseMatch({ id: "WBS", winnerNextMatchId: "WBF", winnerNextSlot: "HOME" });
+    const outcome = applyMatchResult(wbSemi, 3, 0, [gf, wbFinal, wbSemi]);
+    expect(outcome.thirdPlaceTeamId).toBeNull();
+  });
+
+  it("marks the losers-bracket final loser as third place", () => {
+    const gf = baseMatch({ id: "GF-1", bracket: "GRAND_FINAL", homeTeamId: null, awayTeamId: null });
+    const lbFinal = baseMatch({ id: "LBF", bracket: "LOSERS", winnerNextMatchId: "GF-1", winnerNextSlot: "AWAY" });
+    const outcome = applyMatchResult(lbFinal, 1, 3, [gf, lbFinal]);
+    expect(outcome.thirdPlaceTeamId).toBe("A");
+  });
+
+  it("decidesThirdPlace: false for a match with nowhere to advance to", () => {
+    expect(decidesThirdPlace(baseMatch(), [])).toBe(false);
   });
 });
 
@@ -80,6 +109,7 @@ describe("applyMatchResult — grand final and reset", () => {
   it("crowns the winners-bracket finalist champion outright when they win game 1", () => {
     const outcome = applyMatchResult(gf(), 2, 0, [gf(), reset()]);
     expect(outcome.championTeamId).toBe("WBC");
+    expect(outcome.runnerUpTeamId).toBe("LBC");
     expect(outcome.resetActivated).toBe(false);
     expect(outcome.slotUpdates).toEqual([]);
   });
@@ -104,5 +134,6 @@ describe("applyMatchResult — grand final and reset", () => {
     const populatedReset = baseMatch({ id: "GF-2", bracket: "GRAND_FINAL", isReset: true, homeTeamId: "WBC", awayTeamId: "LBC" });
     const outcome = applyMatchResult(populatedReset, 1, 3, []);
     expect(outcome.championTeamId).toBe("LBC");
+    expect(outcome.runnerUpTeamId).toBe("WBC");
   });
 });

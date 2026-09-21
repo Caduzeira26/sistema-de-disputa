@@ -9,6 +9,7 @@ import { formatTournamentDateRange } from "@/lib/formatDateRange";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
+import { FinalPodium } from "@/components/bracket/FinalPodium";
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Em preparação",
@@ -34,10 +35,12 @@ export default async function PublicTournamentPage({
       groups: true,
       matches: { include: { venue: true } },
       championTeam: true,
+      runnerUpTeam: true,
     },
   });
 
   if (!tournament) notFound();
+  const thirdPlaceTeams = tournament.teams.filter((t) => tournament.thirdPlaceTeamIds.includes(t.id));
 
   const displayMatches = toDisplayMatches(tournament.matches, tournament.teams);
   const groupMatches = displayMatches.filter((m) => m.bracket === "GROUP");
@@ -61,11 +64,7 @@ export default async function PublicTournamentPage({
         {STATUS_LABEL[tournament.status]}
       </p>
 
-      {tournament.championTeam && (
-        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-          🏆 Campeão: {tournament.championTeam.name}
-        </div>
-      )}
+      <FinalPodium champion={tournament.championTeam} runnerUp={tournament.runnerUpTeam} thirdPlace={thirdPlaceTeams} />
 
       <div className="mt-6 flex flex-wrap gap-3">
         {tournament.status === "REGISTRATION_OPEN" && (

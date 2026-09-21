@@ -135,7 +135,7 @@ export async function resetBracket(tournamentId: string): Promise<void> {
     await tx.group.deleteMany({ where: { tournamentId } });
     await tx.tournament.update({
       where: { id: tournamentId },
-      data: { status: "REGISTRATION_OPEN", championTeamId: null },
+      data: { status: "REGISTRATION_OPEN", championTeamId: null, runnerUpTeamId: null, thirdPlaceTeamIds: [] },
     });
   }, BRACKET_TRANSACTION_OPTIONS);
 }
@@ -235,7 +235,18 @@ export async function recordMatchResult(matchId: string, homeScore: number, away
     if (outcome.championTeamId) {
       await tx.tournament.update({
         where: { id: match.tournamentId },
-        data: { championTeamId: outcome.championTeamId, status: "FINISHED" },
+        data: {
+          championTeamId: outcome.championTeamId,
+          runnerUpTeamId: outcome.runnerUpTeamId,
+          status: "FINISHED",
+        },
+      });
+    }
+
+    if (outcome.thirdPlaceTeamId) {
+      await tx.tournament.update({
+        where: { id: match.tournamentId },
+        data: { thirdPlaceTeamIds: { push: outcome.thirdPlaceTeamId } },
       });
     }
   });

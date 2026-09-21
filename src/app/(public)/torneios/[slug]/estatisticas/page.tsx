@@ -19,15 +19,19 @@ import { GoalkeeperRankingTable } from "@/components/stats/GoalkeeperRankingTabl
 import { getSportFamily } from "@/lib/sport";
 import { isByeMatch } from "@/lib/bracket/gameOrder";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
+import { FinalPodium } from "@/components/bracket/FinalPodium";
 
 export default async function PublicStatsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   const tournament = await prisma.tournament.findUnique({
     where: { slug },
-    include: { championTeam: true },
+    include: { championTeam: true, runnerUpTeam: true },
   });
   if (!tournament) notFound();
+  const thirdPlaceTeams = tournament.thirdPlaceTeamIds.length
+    ? await prisma.team.findMany({ where: { id: { in: tournament.thirdPlaceTeamIds } } })
+    : [];
 
   const family = getSportFamily(tournament.sportType);
 
@@ -96,11 +100,7 @@ export default async function PublicStatsPage({ params }: { params: Promise<{ sl
         <h1 className="text-2xl font-semibold text-slate-900">Estatísticas</h1>
       </div>
 
-      {tournament.championTeam && (
-        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-          🏆 Campeão: {tournament.championTeam.name}
-        </div>
-      )}
+      <FinalPodium champion={tournament.championTeam} runnerUp={tournament.runnerUpTeam} thirdPlace={thirdPlaceTeams} />
 
       <div className="mt-8 flex flex-col gap-8">
         {family === "GOALS_CARDS" && (

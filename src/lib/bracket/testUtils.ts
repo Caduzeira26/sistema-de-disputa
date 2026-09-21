@@ -3,6 +3,8 @@ import { applyMatchResult, type MatchRecord } from "./advance";
 
 export interface SimResult {
   championTeamId: string | null;
+  runnerUpTeamId: string | null;
+  thirdPlaceTeamIds: string[];
   lossCount: Map<string, number>;
   playedRealMatches: number;
   finalMatches: GeneratedMatch[];
@@ -29,6 +31,8 @@ export function simulateBracket(
   const bump = (teamId: string) => lossCount.set(teamId, (lossCount.get(teamId) ?? 0) + 1);
 
   let championTeamId: string | null = null;
+  let runnerUpTeamId: string | null = null;
+  const thirdPlaceTeamIds: string[] = [];
   let playedRealMatches = 0;
   let progressed = true;
   let guard = 0;
@@ -70,11 +74,15 @@ export function simulateBracket(
         if (update.slot === "HOME") target.homeTeamId = update.teamId;
         else target.awayTeamId = update.teamId;
       }
-      if (outcome.championTeamId) championTeamId = outcome.championTeamId;
+      if (outcome.championTeamId) {
+        championTeamId = outcome.championTeamId;
+        runnerUpTeamId = outcome.runnerUpTeamId;
+      }
+      if (outcome.thirdPlaceTeamId) thirdPlaceTeamIds.push(outcome.thirdPlaceTeamId);
 
       progressed = true;
     }
   }
 
-  return { championTeamId, lossCount, playedRealMatches, finalMatches: [...byId.values()] };
+  return { championTeamId, runnerUpTeamId, thirdPlaceTeamIds, lossCount, playedRealMatches, finalMatches: [...byId.values()] };
 }

@@ -9,6 +9,7 @@ import { GenerateBracketButton, GenerateEliminationButton, ResetBracketButton } 
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
+import { FinalPodium } from "@/components/bracket/FinalPodium";
 import { toDisplayMatches } from "@/lib/bracket-view";
 import { computeStandings } from "@/lib/bracket";
 import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
@@ -65,10 +66,12 @@ export default async function TournamentDetailPage({
       groups: true,
       matches: { include: { venue: true } },
       championTeam: true,
+      runnerUpTeam: true,
     },
   });
 
   if (!tournament || tournament.organizerId !== session.user.id) notFound();
+  const thirdPlaceTeams = tournament.teams.filter((t) => tournament.thirdPlaceTeamIds.includes(t.id));
 
   const limits = await getPlanLimits(session.user.id);
   const pendingTransferRequests = limits.canManageAthleteRegistry
@@ -153,11 +156,7 @@ export default async function TournamentDetailPage({
         </form>
       </div>
 
-      {tournament.championTeam && (
-        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-          🏆 Campeão: {tournament.championTeam.name}
-        </div>
-      )}
+      <FinalPodium champion={tournament.championTeam} runnerUp={tournament.runnerUpTeam} thirdPlace={thirdPlaceTeams} />
 
       <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
         <TournamentLogoForm tournamentId={tournament.id} logoUrl={tournament.logoUrl} />

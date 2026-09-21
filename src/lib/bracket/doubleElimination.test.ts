@@ -105,6 +105,17 @@ describe("generateDoubleElimination — full simulation invariants", () => {
         for (const [, losses] of result.lossCount) {
           expect(losses).toBeLessThanOrEqual(2);
         }
+
+        // Runner-up is the grand final's other finalist; third place is the
+        // single team eliminated in the losers-bracket final (there's no
+        // such match, hence no third place, when only 2 teams ever play).
+        expect(result.runnerUpTeamId).not.toBeNull();
+        expect(result.runnerUpTeamId).not.toBe(result.championTeamId);
+        expect(result.thirdPlaceTeamIds).toHaveLength(n === 2 ? 0 : 1);
+        for (const id of result.thirdPlaceTeamIds) {
+          expect(id).not.toBe(result.championTeamId);
+          expect(id).not.toBe(result.runnerUpTeamId);
+        }
       });
     }
   }

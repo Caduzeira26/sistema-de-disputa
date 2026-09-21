@@ -192,6 +192,17 @@ describe("generateSingleElimination — full simulation", () => {
         expect(result.lossCount.get(t.id)).toBe(1);
       }
       expect(result.lossCount.get("T1") ?? 0).toBe(0);
+
+      // Runner-up is always decided; third place only exists once a
+      // semifinal is actually played (n >= 3), and is never the champion
+      // or runner-up themselves.
+      expect(result.runnerUpTeamId).not.toBeNull();
+      expect(result.runnerUpTeamId).not.toBe("T1");
+      expect(result.thirdPlaceTeamIds).toHaveLength(n === 2 ? 0 : n === 3 ? 1 : 2);
+      for (const id of result.thirdPlaceTeamIds) {
+        expect(id).not.toBe(result.championTeamId);
+        expect(id).not.toBe(result.runnerUpTeamId);
+      }
     }
   );
 

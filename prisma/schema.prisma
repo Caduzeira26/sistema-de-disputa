@@ -180,6 +180,18 @@ model Tournament {
   championTeamId String? @unique
   championTeam   Team?   @relation("Champion", fields: [championTeamId], references: [id])
 
+  /// Loser of the deciding match (single-elim final, or the grand
+  /// final/reset in double elimination) — set alongside championTeamId.
+  runnerUpTeamId String? @unique
+  runnerUpTeam   Team?   @relation("RunnerUp", fields: [runnerUpTeamId], references: [id])
+
+  /// Teams eliminated one step before the final: both semifinal losers in
+  /// single elimination (tied for 3rd, no decider match), or the one
+  /// losers-bracket-final loser in double elimination. Plain id list, not a
+  /// relation, since the count varies (0-2) and no organizer-facing query
+  /// needs to join through it.
+  thirdPlaceTeamIds String[] @default([])
+
   organizerId String
   organizer   User   @relation(fields: [organizerId], references: [id])
 
@@ -229,6 +241,7 @@ model Team {
   baskets        Basket[]
   fouls          Foul[]
   championOf     Tournament?       @relation("Champion")
+  runnerUpOf     Tournament?       @relation("RunnerUp")
   pixTransaction PixTransaction?
   transfersFrom  TransferRequest[] @relation("TransferFrom")
   transfersTo    TransferRequest[] @relation("TransferTo")

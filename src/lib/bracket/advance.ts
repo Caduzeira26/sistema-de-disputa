@@ -25,8 +25,32 @@ export interface ApplyResultOutcome {
   slotUpdates: MatchSlotUpdate[];
   /** Set once the tournament's winner is decided by this result. */
   championTeamId: string | null;
+  /** Set in the same result as championTeamId: the deciding match's loser. */
+  runnerUpTeamId: string | null;
+  /** Set when this result eliminates a bronze-medal contender — a
+   *  single-elimination semifinal loser, or the double-elimination
+   *  losers-bracket-final loser. Null otherwise. */
+  thirdPlaceTeamId: string | null;
   /** True if this result just populated the grand-final reset match. */
   resetActivated: boolean;
+}
+
+/**
+ * True if `match`'s loser is a bronze-medal contender: either a
+ * single-elimination semifinal (feeds directly into the tournament final,
+ * which itself has nowhere further to advance to) or a double-elimination
+ * losers-bracket final (feeds into the grand final's AWAY slot, by the fixed
+ * HOME=winners-bracket/AWAY=losers-bracket convention used when wiring the
+ * grand final at generation time).
+ */
+export function decidesThirdPlace(match: MatchRecord, allMatches: MatchRecord[]): boolean {
+  if (!match.winnerNextMatchId || !match.winnerNextSlot) return false;
+  const target = allMatches.find((m) => m.id === match.winnerNextMatchId);
+  if (!target) return false;
+  const isEliminationFinal = target.bracket === "WINNERS" && !target.winnerNextMatchId;
+  const isLosersBracketFinal =
+    target.bracket === "GRAND_FINAL" && !target.isReset && match.winnerNextSlot === "AWAY";
+  return isEliminationFinal || isLosersBracketFinal;
 }
 
 /**
@@ -61,14 +85,18 @@ export function applyMatchResult(
 
   const slotUpdates: MatchSlotUpdate[] = [];
   let championTeamId: string | null = null;
+  let runnerUpTeamId: string | null = null;
   let resetActivated = false;
+  const thirdPlaceTeamId = decidesThirdPlace(match, allMatches) ? loserTeamId : null;
 
   if (match.bracket === "GRAND_FINAL" && match.isReset) {
     championTeamId = winnerTeamId;
+    runnerUpTeamId = loserTeamId;
   } else if (match.bracket === "GRAND_FINAL") {
     if (winnerTeamId === match.homeTeamId) {
       // Winners-bracket finalist (HOME, by convention) won outright.
       championTeamId = winnerTeamId;
+      runnerUpTeamId = loserTeamId;
     } else {
       // Losers-bracket finalist forced a reset: both now have one loss.
       const reset = allMatches.find((m) => m.bracket === "GRAND_FINAL" && m.isReset);
@@ -85,6 +113,7 @@ export function applyMatchResult(
     } else if (match.bracket === "WINNERS") {
       // Single-elimination final: nowhere left to advance to.
       championTeamId = winnerTeamId;
+      runnerUpTeamId = loserTeamId;
     }
 
     if (match.loserNextMatchId && match.loserNextSlot) {
@@ -92,5 +121,5 @@ export function applyMatchResult(
     }
   }
 
-  return { winnerTeamId, loserTeamId, slotUpdates, championTeamId, resetActivated };
+  return { winnerTeamId, loserTeamId, slotUpdates, championTeamId, runnerUpTeamId, thirdPlaceTeamId, resetActivated };
 }

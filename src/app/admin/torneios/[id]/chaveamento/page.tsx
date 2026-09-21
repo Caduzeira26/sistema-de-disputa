@@ -10,6 +10,7 @@ import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
 import { TournamentHeaderLogo } from "@/components/TournamentBranding";
 import { PrintButton } from "@/components/PrintButton";
+import { FinalPodium } from "@/components/bracket/FinalPodium";
 
 const FORMAT_HAS_GROUPS = new Set(["GROUPS_SINGLE_ELIM", "GROUPS_DOUBLE_ELIM"]);
 
@@ -29,10 +30,12 @@ export default async function PrintBracketPage({
       groups: true,
       matches: { include: { venue: true } },
       championTeam: true,
+      runnerUpTeam: true,
     },
   });
 
   if (!tournament || tournament.organizerId !== session.user.id) notFound();
+  const thirdPlaceTeams = tournament.teams.filter((t) => tournament.thirdPlaceTeamIds.includes(t.id));
 
   const displayMatches = toDisplayMatches(tournament.matches, tournament.teams);
   const groupMatches = displayMatches.filter((m) => m.bracket === "GROUP");
@@ -56,6 +59,8 @@ export default async function PrintBracketPage({
           <p className="text-sm text-slate-500">{SPORT_LABELS[tournament.sportType]} — Chaveamento</p>
         </div>
       </div>
+
+      <FinalPodium champion={tournament.championTeam} runnerUp={tournament.runnerUpTeam} thirdPlace={thirdPlaceTeams} />
 
       {tournament.matches.length === 0 ? (
         <p className="mt-6 text-sm text-slate-500">Este torneio ainda não tem chaveamento gerado.</p>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { decidesThirdPlace } from "@/lib/bracket";
 import { recordMatchResult } from "@/lib/services/bracket";
 import { countSetsWon } from "@/lib/sets";
 import { sumPointsByTeam } from "@/lib/points";
@@ -258,6 +259,11 @@ export async function reopenMatch(matchId: string): Promise<void> {
     (match.bracket === "GRAND_FINAL" && (match.isReset || !match.winnerNextMatchId)) ||
     (match.bracket === "WINNERS" && !match.winnerNextMatchId);
 
+  const allMatches = await prisma.match.findMany({ where: { tournamentId: match.tournamentId } });
+  const thirdPlaceLoserId = decidesThirdPlace(match, allMatches)
+    ? match.homeScore! > match.awayScore! ? match.awayTeamId : match.homeTeamId
+    : null;
+
   await prisma.$transaction(async (tx) => {
     if (match.winnerNextMatchId && match.winnerNextSlot) {
       await tx.match.update({
@@ -277,7 +283,14 @@ export async function reopenMatch(matchId: string): Promise<void> {
     if (decidedChampion) {
       await tx.tournament.update({
         where: { id: match.tournamentId },
-        data: { championTeamId: null, status: "IN_PROGRESS" },
+        data: { championTeamId: null, runnerUpTeamId: null, status: "IN_PROGRESS" },
+      });
+    }
+    if (thirdPlaceLoserId) {
+      const tournament = await tx.tournament.findUniqueOrThrow({ where: { id: match.tournamentId } });
+      await tx.tournament.update({
+        where: { id: match.tournamentId },
+        data: { thirdPlaceTeamIds: { set: tournament.thirdPlaceTeamIds.filter((id) => id !== thirdPlaceLoserId) } },
       });
     }
     await tx.match.update({
