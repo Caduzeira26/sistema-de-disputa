@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -62,6 +63,10 @@ export function LoginForm() {
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
         />
       </div>
+
+      <Link href="/admin/esqueci-senha" className="-mt-2 self-end text-sm text-slate-500 underline hover:text-slate-700">
+        Esqueci a senha
+      </Link>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
