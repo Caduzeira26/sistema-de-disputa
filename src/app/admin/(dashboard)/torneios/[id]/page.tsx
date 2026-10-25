@@ -126,6 +126,10 @@ export default async function TournamentDetailPage({
               <Link href={`/torneios/${tournament.slug}/inscricao`} className="underline" target="_blank">
                 /torneios/{tournament.slug}/inscricao
               </Link>
+              {" · "}
+              <Link href={`/admin/torneios/${tournament.id}/qrcode`} className="underline" target="_blank">
+                Cartaz com QR Code
+              </Link>
             </p>
             <div className="mt-1 flex gap-3">
               <Link href={`/admin/torneios/${tournament.id}/agenda`} className="text-sm text-slate-600 underline">
