@@ -4,13 +4,14 @@ import { prisma } from "@/lib/db";
 import {
   generateSingleElimination,
   generateDoubleElimination,
-  generateGroupStage,
+  generateGroupStageFromGroups,
   computeStandings,
   applyMatchResult,
   type TeamInput,
   type GeneratedMatch,
   type GeneratedGroup,
 } from "@/lib/bracket";
+import { orderQualifiersForBracket, resolveDraw, type DrawKind, type DrawStep } from "@/lib/draw";
 
 function groupName(index: number): string {
   return `Grupo ${String.fromCharCode(65 + index)}`;
@@ -79,38 +80,53 @@ async function persistGeneratedBracket(
  *  action, so a longer budget is a safe tradeoff. */
 const BRACKET_TRANSACTION_OPTIONS = { timeout: 30_000, maxWait: 10_000 };
 
-export async function generateBracket(tournamentId: string): Promise<void> {
+/**
+ * Turns a fully revealed official draw into the real bracket. The draw is the
+ * only way to generate one: the order of teams comes from the drawn result,
+ * never from registration order.
+ */
+export async function generateBracketFromDraw(tournamentId: string): Promise<void> {
   const tournament = await prisma.tournament.findUniqueOrThrow({
     where: { id: tournamentId },
-    include: { teams: { where: { status: "APPROVED" }, orderBy: { createdAt: "asc" } } },
+    include: { draw: true },
   });
+  const draw = tournament.draw;
+  if (!draw) throw new Error("Realize o sorteio antes de gerar o chaveamento.");
+  if (draw.status === "COMPLETED") throw new Error("O chaveamento já foi gerado a partir deste sorteio.");
+
+  const steps = draw.steps as unknown as DrawStep[];
+  if (draw.revealed < steps.length) {
+    throw new Error("Revele todas as equipes do sorteio antes de confirmar.");
+  }
 
   const existing = await prisma.match.count({ where: { tournamentId } });
   if (existing > 0) {
     throw new Error("O chaveamento já foi gerado para este torneio.");
   }
-  if (tournament.teams.length < 2) {
-    throw new Error("É preciso pelo menos 2 equipes aprovadas para gerar o chaveamento.");
-  }
 
-  // Seed by approval order — there's no manual seeding UI yet.
-  const teamInputs: TeamInput[] = tournament.teams.map((t, i) => ({ id: t.id, seed: i + 1 }));
+  const kind = draw.kind as DrawKind;
+  const numGroups = draw.numGroups ?? 1;
+  const { orderedTeamIds, groups } = resolveDraw(kind, steps, numGroups);
+  const teamInputs: TeamInput[] = orderedTeamIds.map((id, i) => ({ id, seed: i + 1 }));
 
   await prisma.$transaction(async (tx) => {
     await Promise.all(teamInputs.map((t) => tx.team.update({ where: { id: t.id }, data: { seed: t.seed } })));
 
-    if (tournament.format === "SINGLE_ELIMINATION") {
-      const { matches } = generateSingleElimination(teamInputs);
-      await persistGeneratedBracket(tx, tournamentId, [], matches);
+    if (kind === "GROUPS") {
+      const { groups: generatedGroups, matches } = generateGroupStageFromGroups(groups);
+      await persistGeneratedBracket(tx, tournamentId, generatedGroups, matches);
     } else if (tournament.format === "DOUBLE_ELIMINATION") {
       const { matches } = generateDoubleElimination(teamInputs);
       await persistGeneratedBracket(tx, tournamentId, [], matches);
     } else {
-      const numGroups = tournament.numGroups ?? Math.max(1, Math.round(Math.sqrt(teamInputs.length)));
-      const { groups, matches } = generateGroupStage(teamInputs, numGroups);
-      await persistGeneratedBracket(tx, tournamentId, groups, matches);
+      const { matches } = generateSingleElimination(teamInputs);
+      await persistGeneratedBracket(tx, tournamentId, [], matches);
     }
 
+    await tx.tournamentDraw.update({
+      where: { id: draw.id },
+      data: { status: "COMPLETED", confirmedAt: new Date() },
+    });
     await tx.tournament.update({ where: { id: tournamentId }, data: { status: "IN_PROGRESS" } });
   }, BRACKET_TRANSACTION_OPTIONS);
 }
@@ -133,6 +149,8 @@ export async function resetBracket(tournamentId: string): Promise<void> {
     await tx.match.deleteMany({ where: { tournamentId } });
     await tx.team.updateMany({ where: { tournamentId }, data: { groupId: null, seed: null } });
     await tx.group.deleteMany({ where: { tournamentId } });
+    await tx.tournamentDraw.deleteMany({ where: { tournamentId } });
+    await tx.team.updateMany({ where: { tournamentId }, data: { pot: null } });
     await tx.tournament.update({
       where: { id: tournamentId },
       data: { status: "REGISTRATION_OPEN", championTeamId: null, runnerUpTeamId: null, thirdPlaceTeamIds: [] },
@@ -160,9 +178,9 @@ export async function generateEliminationFromStandings(tournamentId: string): Pr
   }
 
   const advancePerGroup = tournament.advancePerGroup ?? 2;
-  const qualifiersByPlacement: string[][] = [];
+  const qualifiersByGroup: string[][] = [];
 
-  for (const group of tournament.groups) {
+  for (const group of [...tournament.groups].sort((a, b) => a.name.localeCompare(b.name))) {
     const teamIds = group.teams.map((t) => t.id);
     const groupMatches = tournament.matches.filter((m) => m.groupId === group.id);
     const standings = computeStandings(teamIds, groupMatches, {
@@ -170,12 +188,10 @@ export async function generateEliminationFromStandings(tournamentId: string): Pr
       draw: tournament.pointsDraw,
       loss: tournament.pointsLoss,
     });
-    standings.slice(0, advancePerGroup).forEach((s, placementIdx) => {
-      (qualifiersByPlacement[placementIdx] ??= []).push(s.teamId);
-    });
+    qualifiersByGroup.push(standings.slice(0, advancePerGroup).map((s) => s.teamId));
   }
 
-  const orderedQualifiers = qualifiersByPlacement.flat();
+  const orderedQualifiers = orderQualifiersForBracket(qualifiersByGroup);
   if (orderedQualifiers.length < 2) {
     throw new Error("Não há classificados suficientes para gerar a eliminatória.");
   }

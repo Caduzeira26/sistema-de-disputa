@@ -173,10 +173,18 @@ async function requireOrganizerForTeam(teamId: string) {
   return team;
 }
 
+async function assertNoDrawInProgress(tournamentId: string) {
+  const draw = await prisma.tournamentDraw.findUnique({ where: { tournamentId } });
+  if (draw?.status === "IN_PROGRESS") {
+    throw new Error("Há um sorteio em andamento. Cancele o sorteio antes de alterar as equipes.");
+  }
+}
+
 export async function setTeamStatus(formData: FormData) {
   const teamId = formData.get("teamId") as string;
   const status = formData.get("status") as "APPROVED" | "REJECTED" | "PENDING";
   const team = await requireOrganizerForTeam(teamId);
+  await assertNoDrawInProgress(team.tournamentId);
 
   await prisma.team.update({ where: { id: teamId }, data: { status } });
   revalidatePath(`/admin/torneios/${team.tournamentId}`);
@@ -185,6 +193,7 @@ export async function setTeamStatus(formData: FormData) {
 export async function deleteTeam(formData: FormData) {
   const teamId = formData.get("teamId") as string;
   const team = await requireOrganizerForTeam(teamId);
+  await assertNoDrawInProgress(team.tournamentId);
 
   await prisma.team.delete({ where: { id: teamId } });
   revalidatePath(`/admin/torneios/${team.tournamentId}`);

@@ -188,3 +188,26 @@ export function generateSingleElimination(teams: TeamInput[]): GeneratedBracket 
   const { matches, finalMatchId } = buildEliminationTree(teams, "WB");
   return { matches, finalMatchId };
 }
+
+/**
+ * Indices (into the entrant list handed to `buildEliminationTree`) of the
+ * entrants that skip round 1. Mirrors `buildGroup`'s bye placement exactly —
+ * a test cross-checks it against real generated trees — so an official draw
+ * can give the bye slots to the top seeds.
+ */
+export function eliminationByeIndices(n: number, offset = 0): number[] {
+  if (n <= 2) return [];
+  const byes = Math.min(n - prevPowerOfTwo(n), nextPowerOfTwo(n) - n);
+
+  if (byes >= 3) {
+    const leftSize = Math.ceil(n / 2);
+    return [...eliminationByeIndices(leftSize, offset), ...eliminationByeIndices(n - leftSize, offset + leftSize)];
+  }
+
+  const frontByes = Math.ceil(byes / 2);
+  const backByes = byes - frontByes;
+  return [
+    ...Array.from({ length: frontByes }, (_, i) => offset + i),
+    ...Array.from({ length: backByes }, (_, i) => offset + n - backByes + i),
+  ];
+}

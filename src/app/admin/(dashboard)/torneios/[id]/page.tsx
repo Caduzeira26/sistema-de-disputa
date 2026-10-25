@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { updateTournamentStatus } from "@/lib/actions/tournaments";
 import { setTeamStatus } from "@/lib/actions/teams";
 import { DeleteTeamButton } from "@/components/admin/DeleteTeamButton";
-import { GenerateBracketButton, GenerateEliminationButton, ResetBracketButton } from "@/components/admin/GenerateBracketButton";
+import { GenerateEliminationButton, ResetBracketButton } from "@/components/admin/GenerateBracketButton";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
@@ -65,6 +65,7 @@ export default async function TournamentDetailPage({
       teams: { orderBy: { createdAt: "asc" }, include: { players: true } },
       groups: true,
       matches: { include: { venue: true } },
+      draw: true,
       championTeam: true,
       runnerUpTeam: true,
     },
@@ -91,6 +92,7 @@ export default async function TournamentDetailPage({
   const groupMatchesRaw = tournament.matches.filter((m) => m.bracket === "GROUP");
   const allGroupMatchesFinished = groupMatches.length > 0 && groupMatches.every((m) => m.status === "FINISHED");
   const canGenerateBracket = tournament.matches.length === 0 && approvedTeams.length >= 2;
+  const drawInProgress = tournament.draw?.status === "IN_PROGRESS";
   const canGenerateElimination = hasGroups && allGroupMatchesFinished && eliminationMatches.length === 0;
 
   const teamNames = Object.fromEntries(tournament.teams.map((t) => [t.id, t.name]));
@@ -243,7 +245,7 @@ export default async function TournamentDetailPage({
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex flex-wrap items-center gap-3">
-                        {team.status !== "APPROVED" && (
+                        {!drawInProgress && team.status !== "APPROVED" && (
                           <form action={setTeamStatus}>
                             <input type="hidden" name="teamId" value={team.id} />
                             <input type="hidden" name="status" value="APPROVED" />
@@ -252,7 +254,7 @@ export default async function TournamentDetailPage({
                             </button>
                           </form>
                         )}
-                        {team.status !== "REJECTED" && (
+                        {!drawInProgress && team.status !== "REJECTED" && (
                           <form action={setTeamStatus}>
                             <input type="hidden" name="teamId" value={team.id} />
                             <input type="hidden" name="status" value="REJECTED" />
@@ -274,7 +276,7 @@ export default async function TournamentDetailPage({
                         >
                           Completar equipe
                         </Link>
-                        <DeleteTeamButton teamId={team.id} />
+                        {!drawInProgress && <DeleteTeamButton teamId={team.id} />}
                       </div>
                     </td>
                   </tr>
@@ -300,12 +302,25 @@ export default async function TournamentDetailPage({
         </div>
 
         {canGenerateBracket && (
-          <div className="mt-3">
-            <GenerateBracketButton
-              tournamentId={tournament.id}
-              label={hasGroups ? "Gerar fase de grupos" : "Gerar chaveamento"}
-            />
+          <div className="mt-3 flex flex-col items-start gap-1">
+            <Link
+              href={`/admin/torneios/${tournament.id}/sorteio`}
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              {drawInProgress ? "Continuar o sorteio" : "Realizar o sorteio"}
+            </Link>
+            <p className="text-xs text-slate-500">
+              O chaveamento é gerado a partir do sorteio, com potes e cabeças de chave, como numa competição oficial.
+            </p>
           </div>
+        )}
+
+        {tournament.draw && tournament.matches.length > 0 && (
+          <p className="mt-3 text-sm">
+            <Link href={`/admin/torneios/${tournament.id}/sorteio`} className="text-slate-600 underline">
+              Ver o sorteio realizado
+            </Link>
+          </p>
         )}
 
         {tournament.matches.length === 0 && !canGenerateBracket && (

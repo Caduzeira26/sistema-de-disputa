@@ -217,6 +217,7 @@ model Tournament {
   pixTransactions        PixTransaction[]
   transferRequests       TransferRequest[]
   assistantConversations AssistantConversation[]
+  draw                   TournamentDraw?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -247,6 +248,8 @@ model Team {
   groupId String?
   group   Group?  @relation(fields: [groupId], references: [id])
   seed    Int?
+  /// Pote do sorteio (1 = cabeças de chave). Vazio = último pote.
+  pot     Int?
 
   players        Player[]
   homeMatches    Match[]           @relation("HomeTeam")
@@ -519,4 +522,27 @@ model AssistantMessage {
   createdAt      DateTime              @default(now())
 
   @@index([conversationId])
+}
+
+enum DrawStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+/// O sorteio oficial de um torneio. A sequência inteira é sorteada no servidor
+/// (RNG criptográfico) e gravada em `steps`; a cerimônia só revela passo a
+/// passo (`revealed`), então recarregar a página nunca muda o resultado.
+model TournamentDraw {
+  id           String     @id @default(cuid())
+  tournamentId String     @unique
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  /// GROUPS (fase de grupos) ou KNOCKOUT (chave eliminatória).
+  kind         String
+  numGroups    Int?
+  /// [{ teamId, pot, groupIndex?, slot? }] na ordem em que serão reveladas.
+  steps        Json
+  revealed     Int        @default(0)
+  status       DrawStatus @default(IN_PROGRESS)
+  createdAt    DateTime   @default(now())
+  confirmedAt  DateTime?
 }

@@ -63,12 +63,12 @@ export interface GroupStageResult {
   matches: GeneratedMatch[];
 }
 
-export function generateGroupStage(teams: TeamInput[], numGroups: number): GroupStageResult {
-  const grouped = splitIntoGroups(teams, numGroups);
+/** Builds the round-robin fixtures for groups that are already formed (e.g. by an official draw). */
+export function generateGroupStageFromGroups(groupTeamIds: string[][]): GroupStageResult {
   const nextGroupId = createIdGenerator("GRP");
   const nextMatchId = createIdGenerator("GROUP");
 
-  const groups = grouped.map((ts) => ({ id: nextGroupId(), teamIds: ts.map((t) => t.id) }));
+  const groups = groupTeamIds.map((teamIds) => ({ id: nextGroupId(), teamIds }));
   const matches: GeneratedMatch[] = [];
 
   for (const group of groups) {
@@ -93,4 +93,9 @@ export function generateGroupStage(teams: TeamInput[], numGroups: number): Group
   }
 
   return { groups, matches };
+}
+
+export function generateGroupStage(teams: TeamInput[], numGroups: number): GroupStageResult {
+  const grouped = splitIntoGroups(teams, numGroups);
+  return generateGroupStageFromGroups(grouped.map((ts) => ts.map((t) => t.id)));
 }
