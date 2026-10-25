@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { decidesThirdPlace } from "@/lib/bracket";
+import { decideWinnerSide, decidesThirdPlace, toPenalties } from "@/lib/bracket";
 import { recordMatchResult } from "@/lib/services/bracket";
 import { countSetsWon } from "@/lib/sets";
 import { sumPointsByTeam } from "@/lib/points";
@@ -224,7 +224,7 @@ export async function reopenMatch(matchId: string): Promise<void> {
   if (match.bracket === "GROUP") {
     await prisma.match.update({
       where: { id: matchId },
-      data: { status: "SCHEDULED", homeScore: null, awayScore: null },
+      data: { status: "SCHEDULED", homeScore: null, awayScore: null, homePenalties: null, awayPenalties: null },
     });
     return;
   }
@@ -261,7 +261,9 @@ export async function reopenMatch(matchId: string): Promise<void> {
 
   const allMatches = await prisma.match.findMany({ where: { tournamentId: match.tournamentId } });
   const thirdPlaceLoserId = decidesThirdPlace(match, allMatches)
-    ? match.homeScore! > match.awayScore! ? match.awayTeamId : match.homeTeamId
+    ? decideWinnerSide(match.homeScore, match.awayScore, toPenalties(match.homePenalties, match.awayPenalties)) === "HOME"
+      ? match.awayTeamId
+      : match.homeTeamId
     : null;
 
   await prisma.$transaction(async (tx) => {
@@ -295,7 +297,7 @@ export async function reopenMatch(matchId: string): Promise<void> {
     }
     await tx.match.update({
       where: { id: matchId },
-      data: { status: "SCHEDULED", homeScore: null, awayScore: null },
+      data: { status: "SCHEDULED", homeScore: null, awayScore: null, homePenalties: null, awayPenalties: null },
     });
   });
 }

@@ -1,4 +1,5 @@
 import type { BracketKind, Slot } from "./types";
+import { decideWinnerSide, type Penalties } from "./winner";
 
 export interface MatchRecord {
   id: string;
@@ -67,7 +68,8 @@ export function applyMatchResult(
   match: MatchRecord,
   homeScore: number,
   awayScore: number,
-  allMatches: MatchRecord[]
+  allMatches: MatchRecord[],
+  penalties?: Penalties | null
 ): ApplyResultOutcome {
   if (match.bracket === "GROUP") {
     throw new Error("applyMatchResult: group-stage matches don't advance a winner");
@@ -75,11 +77,12 @@ export function applyMatchResult(
   if (!match.homeTeamId || !match.awayTeamId) {
     throw new Error("applyMatchResult: match has no teams assigned yet");
   }
-  if (homeScore === awayScore) {
+  const winnerSide = decideWinnerSide(homeScore, awayScore, penalties);
+  if (winnerSide === null) {
     throw new Error("applyMatchResult: elimination and grand-final matches cannot end in a draw");
   }
 
-  const homeWon = homeScore > awayScore;
+  const homeWon = winnerSide === "HOME";
   const winnerTeamId = homeWon ? match.homeTeamId : match.awayTeamId;
   const loserTeamId = homeWon ? match.awayTeamId : match.homeTeamId;
 

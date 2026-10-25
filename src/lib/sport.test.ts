@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSportFamily, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES } from "./sport";
+import { getSportFamily, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES, supportsPenalties } from "./sport";
 
 describe("getSportFamily", () => {
   it("groups goal-based sports together", () => {
@@ -13,6 +13,11 @@ describe("getSportFamily", () => {
     expect(getSportFamily("VOLEIBOL")).toBe("SETS_CARDS");
     expect(getSportFamily("BASQUETE")).toBe("PERIODS_FOULS");
     expect(getSportFamily("TENIS_DE_MESA")).toBe("TABLE_TENNIS_TIES");
+  });
+
+  it("maps the electronic games to the score-only family", () => {
+    expect(getSportFamily("FIFA")).toBe("SCORE_ONLY");
+    expect(getSportFamily("JUST_DANCE")).toBe("SCORE_ONLY");
   });
 
   it("has a label for every sport type", () => {
@@ -36,5 +41,18 @@ describe("MIN_PLAYERS_PER_TEAM", () => {
     for (const sport of SPORT_TYPES) {
       expect(MIN_PLAYERS_PER_TEAM[sport]).toBeGreaterThanOrEqual(1);
     }
+  });
+});
+
+describe("electronic games", () => {
+  it("are played 1x1, so a single player is a valid team", () => {
+    expect(MIN_PLAYERS_PER_TEAM.FIFA).toBe(1);
+    expect(MIN_PLAYERS_PER_TEAM.JUST_DANCE).toBe(1);
+  });
+
+  it("only FIFA goes to a penalty shootout", () => {
+    expect(supportsPenalties("FIFA")).toBe(true);
+    expect(supportsPenalties("JUST_DANCE")).toBe(false);
+    expect(supportsPenalties("FUTSAL")).toBe(false);
   });
 });

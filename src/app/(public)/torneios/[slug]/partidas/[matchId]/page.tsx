@@ -75,13 +75,15 @@ export default async function PublicMatchSumulaPage({
         {match.status === "FINISHED" ? (
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
             Encerrada · {match.homeScore} x {match.awayScore}
+            {match.homePenalties !== null && match.awayPenalties !== null &&
+              ` (${match.homePenalties} x ${match.awayPenalties} nos pênaltis)`}
           </span>
         ) : (
           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">Ainda não realizada</span>
         )}
       </div>
 
-      {family === "TABLE_TENNIS_TIES" ? (
+      {family === "SCORE_ONLY" ? null : family === "TABLE_TENNIS_TIES" ? (
         <div className="mt-8">
           <h2 className="mb-2 text-lg font-semibold text-slate-900">Jogos</h2>
           {match.tableTennisGames.length === 0 ? (

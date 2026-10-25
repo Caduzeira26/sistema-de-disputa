@@ -11,6 +11,8 @@ interface RawMatch {
   awayTeamId: string | null;
   homeScore: number | null;
   awayScore: number | null;
+  homePenalties?: number | null;
+  awayPenalties?: number | null;
   status: string;
   isReset: boolean;
   scheduledAt?: Date | null;
@@ -38,6 +40,8 @@ export function toDisplayMatches(matches: RawMatch[], teams: RawTeam[]): Display
     awayTeam: m.awayTeamId ? (teamById.get(m.awayTeamId) ?? null) : null,
     homeScore: m.homeScore,
     awayScore: m.awayScore,
+    homePenalties: m.homePenalties ?? null,
+    awayPenalties: m.awayPenalties ?? null,
     status: m.status as DisplayMatch["status"],
     isReset: m.isReset,
     scheduledAt: m.scheduledAt ?? null,

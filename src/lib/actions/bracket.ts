@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { generateEliminationFromStandings, recordMatchResult, resetBracket } from "@/lib/services/bracket";
+import { supportsPenalties } from "@/lib/sport";
 
 async function requireOwnedTournament(tournamentId: string) {
   const session = await auth();
@@ -49,10 +50,17 @@ export async function generateEliminationAction(
   return {};
 }
 
+const optionalCount = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? undefined : v),
+  z.coerce.number().int().min(0).optional()
+);
+
 const resultSchema = z.object({
   matchId: z.string().min(1),
   homeScore: z.coerce.number().int().min(0),
   awayScore: z.coerce.number().int().min(0),
+  homePenalties: optionalCount,
+  awayPenalties: optionalCount,
 });
 
 export type RecordResultState = { error?: string };
@@ -65,6 +73,8 @@ export async function recordMatchResultAction(
     matchId: formData.get("matchId"),
     homeScore: formData.get("homeScore"),
     awayScore: formData.get("awayScore"),
+    homePenalties: formData.get("homePenalties"),
+    awayPenalties: formData.get("awayPenalties"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Placar inválido." };
@@ -72,10 +82,30 @@ export async function recordMatchResultAction(
 
   const match = await prisma.match.findUnique({ where: { id: parsed.data.matchId } });
   if (!match) return { error: "Partida não encontrada." };
-  await requireOwnedTournament(match.tournamentId);
+  const tournament = await requireOwnedTournament(match.tournamentId);
+
+  const { homeScore, awayScore, homePenalties, awayPenalties } = parsed.data;
+  const hasShootout = homePenalties !== undefined && awayPenalties !== undefined;
+  if ((homePenalties === undefined) !== (awayPenalties === undefined)) {
+    return { error: "Informe os pênaltis dos dois lados." };
+  }
+  if (hasShootout && homeScore === awayScore && homePenalties === awayPenalties) {
+    return { error: "A disputa de pênaltis não pode terminar empatada." };
+  }
+  const penalties = hasShootout && supportsPenalties(tournament.sportType)
+    ? { home: homePenalties, away: awayPenalties }
+    : null;
+
+  if (match.bracket !== "GROUP" && homeScore === awayScore && !penalties) {
+    return {
+      error: supportsPenalties(tournament.sportType)
+        ? "Jogo eliminatório não pode terminar empatado: informe a disputa de pênaltis."
+        : "Jogo eliminatório não pode terminar empatado. Repita a partida ou ajuste o placar.",
+    };
+  }
 
   try {
-    await recordMatchResult(parsed.data.matchId, parsed.data.homeScore, parsed.data.awayScore);
+    await recordMatchResult(parsed.data.matchId, homeScore, awayScore, penalties);
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Não foi possível salvar o placar." };
   }

@@ -30,6 +30,31 @@ describe("applyMatchResult — validation", () => {
   });
 });
 
+describe("applyMatchResult — penalty shootout", () => {
+  it("lets a level score advance the shootout winner", () => {
+    const m = baseMatch({ winnerNextMatchId: "M2", winnerNextSlot: "HOME" });
+    const outcome = applyMatchResult(m, 1, 1, [], { home: 3, away: 5 });
+    expect(outcome.winnerTeamId).toBe("B");
+    expect(outcome.loserTeamId).toBe("A");
+    expect(outcome.slotUpdates).toEqual([{ matchId: "M2", slot: "HOME", teamId: "B" }]);
+  });
+
+  it("still rejects a level score when the shootout is also level", () => {
+    expect(() => applyMatchResult(baseMatch(), 2, 2, [], { home: 4, away: 4 })).toThrow(/draw/);
+  });
+
+  it("ignores the shootout when the score already decided the match", () => {
+    const outcome = applyMatchResult(baseMatch(), 2, 1, [], { home: 0, away: 9 });
+    expect(outcome.winnerTeamId).toBe("A");
+  });
+
+  it("crowns the champion by shootout in a single-elimination final", () => {
+    const outcome = applyMatchResult(baseMatch(), 0, 0, [], { home: 5, away: 4 });
+    expect(outcome.championTeamId).toBe("A");
+    expect(outcome.runnerUpTeamId).toBe("B");
+  });
+});
+
 describe("applyMatchResult — winners bracket", () => {
   it("advances the winner via winnerNextMatchId/Slot", () => {
     const m = baseMatch({ winnerNextMatchId: "M2", winnerNextSlot: "AWAY" });

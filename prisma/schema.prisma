@@ -60,6 +60,8 @@ enum SportType {
   VOLEIBOL
   BASQUETE
   TENIS_DE_MESA
+  FIFA
+  JUST_DANCE
 }
 
 enum PlanTier {
@@ -369,6 +371,9 @@ model Match {
 
   homeScore Int?
   awayScore Int?
+  /// Disputa de pênaltis (FIFA): só preenchida quando o placar empata num jogo eliminatório.
+  homePenalties Int?
+  awayPenalties Int?
   status    MatchStatus @default(SCHEDULED)
 
   scheduledAt DateTime?

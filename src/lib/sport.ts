@@ -6,11 +6,13 @@ export const SPORT_TYPES = [
   "VOLEIBOL",
   "BASQUETE",
   "TENIS_DE_MESA",
+  "FIFA",
+  "JUST_DANCE",
 ] as const;
 
 export type SportType = (typeof SPORT_TYPES)[number];
 
-export type SportFamily = "GOALS_CARDS" | "SETS_CARDS" | "PERIODS_FOULS" | "TABLE_TENNIS_TIES";
+export type SportFamily = "GOALS_CARDS" | "SETS_CARDS" | "PERIODS_FOULS" | "TABLE_TENNIS_TIES" | "SCORE_ONLY";
 
 export const SPORT_LABELS: Record<SportType, string> = {
   FUTEBOL_CAMPO: "Futebol de campo",
@@ -20,6 +22,8 @@ export const SPORT_LABELS: Record<SportType, string> = {
   VOLEIBOL: "Vôlei",
   BASQUETE: "Basquete",
   TENIS_DE_MESA: "Tênis de mesa",
+  FIFA: "FIFA / EA FC",
+  JUST_DANCE: "Just Dance",
 };
 
 const SPORT_FAMILY: Record<SportType, SportFamily> = {
@@ -30,6 +34,8 @@ const SPORT_FAMILY: Record<SportType, SportFamily> = {
   VOLEIBOL: "SETS_CARDS",
   BASQUETE: "PERIODS_FOULS",
   TENIS_DE_MESA: "TABLE_TENNIS_TIES",
+  FIFA: "SCORE_ONLY",
+  JUST_DANCE: "SCORE_ONLY",
 };
 
 /**
@@ -57,6 +63,9 @@ export const MIN_PLAYERS_PER_TEAM: Record<SportType, number> = {
   VOLEIBOL: 6,
   BASQUETE: 5,
   TENIS_DE_MESA: 1,
+  // Jogos eletrônicos 1x1: a "equipe" é o próprio jogador.
+  FIFA: 1,
+  JUST_DANCE: 1,
 };
 
 /**
@@ -66,3 +75,12 @@ export const MIN_PLAYERS_PER_TEAM: Record<SportType, number> = {
 export const MAX_PLAYERS_PER_TEAM: Partial<Record<SportType, number>> = {
   FUTSAL: 15,
 };
+
+/**
+ * Sports whose knockout matches can be level after regular time and go to a
+ * penalty shootout. In FIFA/EA FC a tie is settled by extra time and then
+ * penalties; Just Dance has no draws (the higher song score wins).
+ */
+export function supportsPenalties(sportType: SportType): boolean {
+  return sportType === "FIFA";
+}

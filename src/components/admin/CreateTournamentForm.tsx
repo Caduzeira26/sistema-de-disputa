@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { createTournament, type CreateTournamentState } from "@/lib/actions/tournaments";
-import { SPORT_LABELS, type SportType } from "@/lib/sport";
+import { SPORT_LABELS, SPORT_TYPES, type SportType } from "@/lib/sport";
 
 const initialState: CreateTournamentState = {};
 
@@ -59,7 +59,7 @@ export function CreateTournamentForm({ allowedSports }: { allowedSports: readonl
             </option>
           ))}
         </select>
-        {allowedSports.length < 7 && (
+        {allowedSports.length < SPORT_TYPES.length && (
           <p className="text-xs text-slate-400">
             Mais modalidades disponíveis nos planos Pro e Liga.{" "}
             <Link href="/planos" className="underline">

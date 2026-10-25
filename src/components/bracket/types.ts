@@ -14,6 +14,8 @@ export interface DisplayMatch {
   awayTeam: DisplayTeam | null;
   homeScore: number | null;
   awayScore: number | null;
+  homePenalties: number | null;
+  awayPenalties: number | null;
   status: "SCHEDULED" | "IN_PROGRESS" | "FINISHED";
   isReset: boolean;
   scheduledAt: Date | null;

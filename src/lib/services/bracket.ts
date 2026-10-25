@@ -7,6 +7,7 @@ import {
   generateGroupStageFromGroups,
   computeStandings,
   applyMatchResult,
+  type Penalties,
   type TeamInput,
   type GeneratedMatch,
   type GeneratedGroup,
@@ -208,7 +209,12 @@ export async function generateEliminationFromStandings(tournamentId: string): Pr
   }, BRACKET_TRANSACTION_OPTIONS);
 }
 
-export async function recordMatchResult(matchId: string, homeScore: number, awayScore: number): Promise<void> {
+export async function recordMatchResult(
+  matchId: string,
+  homeScore: number,
+  awayScore: number,
+  penalties?: Penalties | null
+): Promise<void> {
   const match = await prisma.match.findUniqueOrThrow({ where: { id: matchId } });
 
   if (match.bracket === "GROUP") {
@@ -216,6 +222,7 @@ export async function recordMatchResult(matchId: string, homeScore: number, away
     await prisma.match.update({ where: { id: matchId }, data: { homeScore, awayScore, status: "FINISHED" } });
     return;
   }
+  const shootout = homeScore === awayScore ? (penalties ?? null) : null;
   if (match.status === "FINISHED") {
     throw new Error("Esta partida já foi encerrada.");
   }
@@ -235,11 +242,21 @@ export async function recordMatchResult(matchId: string, homeScore: number, away
     },
     homeScore,
     awayScore,
-    allMatches
+    allMatches,
+    shootout
   );
 
   await prisma.$transaction(async (tx) => {
-    await tx.match.update({ where: { id: matchId }, data: { homeScore, awayScore, status: "FINISHED" } });
+    await tx.match.update({
+      where: { id: matchId },
+      data: {
+        homeScore,
+        awayScore,
+        homePenalties: shootout?.home ?? null,
+        awayPenalties: shootout?.away ?? null,
+        status: "FINISHED",
+      },
+    });
 
     for (const update of outcome.slotUpdates) {
       await tx.match.update({

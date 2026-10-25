@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { decideWinnerSide, toPenalties } from "@/lib/bracket/winner";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { BrandFooter } from "@/components/BrandFooter";
@@ -65,8 +66,9 @@ export default async function PublicAgendaPage({ params }: { params: Promise<{ s
                 {matches.map((m) => {
                   const bracketLabel = m.bracket === "GROUP" && m.groupId ? groupNameById[m.groupId] : BRACKET_LABEL[m.bracket];
                   const isFinished = m.status === "FINISHED";
-                  const homeWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.homeScore > m.awayScore;
-                  const awayWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.awayScore > m.homeScore;
+                  const winnerSide = isFinished ? decideWinnerSide(m.homeScore, m.awayScore, toPenalties(m.homePenalties, m.awayPenalties)) : null;
+                  const homeWon = winnerSide === "HOME";
+                  const awayWon = winnerSide === "AWAY";
                   return (
                     <div key={m.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
                       <div>

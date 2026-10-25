@@ -5,5 +5,6 @@ export * from "./doubleElimination";
 export * from "./groups";
 export * from "./standings";
 export * from "./advance";
+export * from "./winner";
 export * from "./gameOrder";
 export * from "./treeLayout";

@@ -1,20 +1,28 @@
 import Link from "next/link";
 import type { DisplayMatch } from "./types";
 import { MatchResultForm } from "./MatchResultForm";
+import { decideWinnerSide, toPenalties } from "@/lib/bracket/winner";
 
 function TeamRow({
   team,
   score,
+  penalties,
   won,
 }: {
   team: DisplayMatch["homeTeam"];
   score: number | null;
+  penalties: number | null;
   won: boolean;
 }) {
   return (
     <div className={`flex items-center justify-between px-2 py-1 text-sm ${won ? "font-semibold text-slate-900" : "text-slate-600"}`}>
       <span className="truncate">{team ? team.name : "A definir"}</span>
-      {score !== null && <span className="ml-2 tabular-nums">{score}</span>}
+      {score !== null && (
+        <span className="ml-2 tabular-nums">
+          {score}
+          {penalties !== null && <span className="ml-1 text-xs text-slate-400">({penalties})</span>}
+        </span>
+      )}
     </div>
   );
 }
@@ -38,8 +46,10 @@ export function MatchCard({
   publicSlug?: string;
 }) {
   const isFinished = match.status === "FINISHED";
-  const homeWon = isFinished && match.homeScore !== null && match.awayScore !== null && match.homeScore > match.awayScore;
-  const awayWon = isFinished && match.homeScore !== null && match.awayScore !== null && match.awayScore > match.homeScore;
+  const shootout = toPenalties(match.homePenalties, match.awayPenalties);
+  const winnerSide = isFinished ? decideWinnerSide(match.homeScore, match.awayScore, shootout) : null;
+  const homeWon = winnerSide === "HOME";
+  const awayWon = winnerSide === "AWAY";
   const playable = !isFinished && !!match.homeTeam && !!match.awayTeam;
   const detailsHref =
     match.homeTeam && match.awayTeam
@@ -63,8 +73,8 @@ export function MatchCard({
         </div>
       )}
       <div className="divide-y divide-slate-100">
-        <TeamRow team={match.homeTeam} score={match.homeScore} won={homeWon} />
-        <TeamRow team={match.awayTeam} score={match.awayScore} won={awayWon} />
+        <TeamRow team={match.homeTeam} score={match.homeScore} penalties={match.homePenalties} won={homeWon} />
+        <TeamRow team={match.awayTeam} score={match.awayScore} penalties={match.awayPenalties} won={awayWon} />
       </div>
       {(match.scheduledAt || match.venueName) && (
         <div className="border-t border-slate-100 px-2 py-1 text-[11px] text-slate-500">

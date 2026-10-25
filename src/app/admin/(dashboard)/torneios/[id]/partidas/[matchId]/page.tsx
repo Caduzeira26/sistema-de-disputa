@@ -14,6 +14,7 @@ import { GameForm } from "@/components/admin/GameForm";
 import { TableTennisSetForm } from "@/components/admin/TableTennisSetForm";
 import { FinishTableTennisMatchButton } from "@/components/admin/FinishTableTennisMatchButton";
 import { ReopenMatchButton } from "@/components/admin/ReopenMatchButton";
+import { ScoreOnlyResultForm } from "@/components/admin/ScoreOnlyResultForm";
 import {
   removeGoalAction,
   removeCardAction,
@@ -23,7 +24,7 @@ import {
   removeTableTennisGameAction,
   removeTableTennisSetAction,
 } from "@/lib/actions/sumula";
-import { getSportFamily } from "@/lib/sport";
+import { getSportFamily, supportsPenalties } from "@/lib/sport";
 import { countSetsWon } from "@/lib/sets";
 import { sumPointsByTeam } from "@/lib/points";
 import { countGamesWon } from "@/lib/tableTennis";
@@ -117,6 +118,8 @@ export default async function MatchSumulaPage({
         {match.status === "FINISHED" ? (
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
             Encerrada · {match.homeScore} x {match.awayScore}
+            {match.homePenalties !== null && match.awayPenalties !== null &&
+              ` (${match.homePenalties} x ${match.awayPenalties} nos pênaltis)`}
           </span>
         ) : (
           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">Em aberto</span>
@@ -399,6 +402,27 @@ export default async function MatchSumulaPage({
             )}
           </div>
         </>
+      ) : family === "SCORE_ONLY" ? (
+        <div className="mt-6">
+          {match.status === "FINISHED" ? (
+            <ReopenMatchButton matchId={match.id} />
+          ) : (
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <h2 className="mb-3 text-sm font-semibold text-slate-700">Resultado da partida</h2>
+              <ScoreOnlyResultForm
+                matchId={match.id}
+                homeName={match.homeTeam!.name}
+                awayName={match.awayTeam!.name}
+                scoreLabel={
+                  match.tournament.sportType === "JUST_DANCE"
+                    ? "Pontuação de cada dançarino na música (vence a maior)."
+                    : "Gols de cada lado no tempo normal e na prorrogação."
+                }
+                allowPenalties={supportsPenalties(match.tournament.sportType) && match.bracket !== "GROUP"}
+              />
+            </div>
+          )}
+        </div>
       ) : (
         <p className="mt-4 text-sm text-slate-500">
           A súmula para esta modalidade ainda não foi implementada.

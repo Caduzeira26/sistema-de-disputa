@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { decideWinnerSide, toPenalties } from "@/lib/bracket/winner";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -88,8 +89,9 @@ export default async function PrintAgendaPage({
             {rows.map((m) => {
               const bracketLabel = m.bracket === "GROUP" && m.groupId ? (groupNameById[m.groupId] ?? "Grupo") : BRACKET_LABEL[m.bracket];
               const isFinished = m.status === "FINISHED";
-              const homeWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.homeScore > m.awayScore;
-              const awayWon = isFinished && m.homeScore !== null && m.awayScore !== null && m.awayScore > m.homeScore;
+              const winnerSide = isFinished ? decideWinnerSide(m.homeScore, m.awayScore, toPenalties(m.homePenalties, m.awayPenalties)) : null;
+              const homeWon = winnerSide === "HOME";
+              const awayWon = winnerSide === "AWAY";
               return (
                 <tr key={m.id} className="border-b border-slate-200">
                   <td className="py-2 pr-2 font-medium text-slate-900">{gameNumbers.get(m.id) ?? "—"}</td>
