@@ -14,6 +14,8 @@ const FORMAT_OPTIONS = [
   { value: "GROUPS_DOUBLE_ELIM", label: "Fase de grupos + eliminatória dupla" },
 ];
 
+const HEATS_FORMAT_OPTION = { value: "HEATS", label: "Baterias de até 4 dançarinos (avançam os 2 melhores)" };
+
 const LOBBY_FORMAT_OPTIONS = [
   { value: "LOBBY_LEAGUE", label: "Quedas em pontos corridos (com grande final opcional)" },
 ];
@@ -21,7 +23,12 @@ const LOBBY_FORMAT_OPTIONS = [
 export function CreateTournamentForm({ allowedSports }: { allowedSports: readonly SportType[] }) {
   const [state, formAction, pending] = useActionState(createTournament, initialState);
   const [sport, setSport] = useState<SportType>(allowedSports[0]);
-  const formatOptions = getSportFamily(sport) === "LOBBY_POINTS" ? LOBBY_FORMAT_OPTIONS : FORMAT_OPTIONS;
+  const formatOptions =
+    getSportFamily(sport) === "LOBBY_POINTS"
+      ? LOBBY_FORMAT_OPTIONS
+      : sport === "JUST_DANCE"
+        ? [...FORMAT_OPTIONS, HEATS_FORMAT_OPTION]
+        : FORMAT_OPTIONS;
 
   return (
     <form action={formAction} className="flex max-w-lg flex-col gap-4">
@@ -83,7 +90,7 @@ export function CreateTournamentForm({ allowedSports }: { allowedSports: readonl
         <select
           id="format"
           name="format"
-          key={formatOptions[0].value}
+          key={sport}
           defaultValue={formatOptions[0].value}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
         >

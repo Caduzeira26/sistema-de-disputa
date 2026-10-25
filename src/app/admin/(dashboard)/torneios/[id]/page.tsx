@@ -7,6 +7,7 @@ import { setTeamStatus } from "@/lib/actions/teams";
 import { DeleteTeamButton } from "@/components/admin/DeleteTeamButton";
 import { GenerateEliminationButton, ResetBracketButton } from "@/components/admin/GenerateBracketButton";
 import { LobbyAdminSection } from "@/components/admin/LobbyAdminSection";
+import { HeatsAdminSection } from "@/components/admin/HeatsAdminSection";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
@@ -294,6 +295,13 @@ export default async function TournamentDetailPage({
           status={tournament.status}
           hasDraw={!!tournament.draw}
           groupsCount={tournament.groups.length}
+          teamNames={Object.fromEntries(approvedTeams.map((t) => [t.id, t.name]))}
+        />
+      ) : tournament.format === "HEATS" ? (
+        <HeatsAdminSection
+          tournamentId={tournament.id}
+          status={tournament.status}
+          hasDraw={!!tournament.draw}
           teamNames={Object.fromEntries(approvedTeams.map((t) => [t.id, t.name]))}
         />
       ) : (

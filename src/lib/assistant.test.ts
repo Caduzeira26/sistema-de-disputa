@@ -25,6 +25,7 @@ describe("buildSystemPrompt", () => {
   it("explains the electronic games and that truco and sinuca still aren't available", () => {
     const prompt = buildSystemPrompt();
     expect(prompt).toContain("confronto 1x1");
+    expect(prompt).toContain("baterias de até 4 dançarinos");
     expect(prompt).toContain("O Free Fire funciona em quedas");
     expect(prompt).toContain("Truco, sinuca e outros jogos NÃO estão disponíveis ainda");
   });

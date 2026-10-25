@@ -7,6 +7,7 @@ import { DrawControls } from "@/components/admin/DrawControls";
 import { DrawSetupForm } from "@/components/admin/DrawSetupForm";
 import type { DrawKind, DrawStep } from "@/lib/draw";
 import { LOBBY_SIZE } from "@/lib/lobbyScoring";
+import { HEAT_SIZE } from "@/lib/heats";
 
 export default async function DrawPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,7 +25,8 @@ export default async function DrawPage({ params }: { params: Promise<{ id: strin
   if (!tournament || tournament.organizerId !== session.user.id) notFound();
 
   const isLobby = tournament.format === "LOBBY_LEAGUE";
-  const usesGroups = isLobby || tournament.format === "GROUPS_SINGLE_ELIM" || tournament.format === "GROUPS_DOUBLE_ELIM";
+  const isHeats = tournament.format === "HEATS";
+  const usesGroups = isLobby || isHeats || tournament.format === "GROUPS_SINGLE_ELIM" || tournament.format === "GROUPS_DOUBLE_ELIM";
   const teamNames = Object.fromEntries(tournament.teams.map((t) => [t.id, t.name]));
   const draw = tournament.draw;
   const steps = (draw?.steps ?? []) as unknown as DrawStep[];
@@ -62,6 +64,11 @@ export default async function DrawPage({ params }: { params: Promise<{ id: strin
             </p>
             {tournament.teams.length < 2 ? (
               <p className="text-sm text-slate-500">É preciso pelo menos 2 equipes aprovadas para fazer o sorteio.</p>
+            ) : isHeats && tournament.teams.length <= HEAT_SIZE ? (
+              <p className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                Com até {HEAT_SIZE} dançarinos todos dançam na mesma bateria, então não há sorteio. Volte ao torneio e crie
+                a bateria.
+              </p>
             ) : isLobby && tournament.teams.length <= LOBBY_SIZE ? (
               <p className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                 Com até {LOBBY_SIZE} equipes todas jogam na mesma sala, então não há sorteio de grupos. Volte ao torneio e
@@ -74,9 +81,11 @@ export default async function DrawPage({ params }: { params: Promise<{ id: strin
                 usesGroups={usesGroups}
                 defaultNumGroups={
                   tournament.numGroups ??
-                  (isLobby
-                    ? Math.ceil(tournament.teams.length / LOBBY_SIZE)
-                    : Math.max(1, Math.round(Math.sqrt(tournament.teams.length))))
+                  (isHeats
+                    ? Math.ceil(tournament.teams.length / HEAT_SIZE)
+                    : isLobby
+                      ? Math.ceil(tournament.teams.length / LOBBY_SIZE)
+                      : Math.max(1, Math.round(Math.sqrt(tournament.teams.length))))
                 }
               />
             )}
@@ -100,6 +109,7 @@ export default async function DrawPage({ params }: { params: Promise<{ id: strin
               total={steps.length}
               numGroups={draw.numGroups ?? 1}
               teamNames={teamNames}
+              groupWord={isHeats ? "Bateria" : "Grupo"}
             />
           </div>
         )}

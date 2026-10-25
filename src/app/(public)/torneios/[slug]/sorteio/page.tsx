@@ -54,6 +54,7 @@ export default async function PublicDrawPage({ params }: { params: Promise<{ slu
             total={steps.length}
             numGroups={draw.numGroups ?? 1}
             teamNames={teamNames}
+            groupWord={tournament.format === "HEATS" ? "Bateria" : "Grupo"}
           />
         )}
       </div>

@@ -13,6 +13,7 @@ import {
   type GeneratedGroup,
 } from "@/lib/bracket";
 import { orderQualifiersForBracket, resolveDraw, type DrawKind, type DrawStep } from "@/lib/draw";
+import { createHeatRounds } from "@/lib/services/heats";
 
 function groupName(index: number): string {
   return `Grupo ${String.fromCharCode(65 + index)}`;
@@ -113,7 +114,10 @@ export async function generateBracketFromDraw(tournamentId: string): Promise<voi
   await prisma.$transaction(async (tx) => {
     await Promise.all(teamInputs.map((t) => tx.team.update({ where: { id: t.id }, data: { seed: t.seed } })));
 
-    if (tournament.format === "LOBBY_LEAGUE") {
+    if (tournament.format === "HEATS") {
+      // Just Dance: each drawn group is a heat of round 1.
+      await createHeatRounds(tx, tournamentId, 1, groups);
+    } else if (tournament.format === "LOBBY_LEAGUE") {
       // Free Fire: the drawn groups are the lobbies. There are no head-to-head
       // matches; the organizer creates the quedas afterwards.
       await persistGeneratedBracket(

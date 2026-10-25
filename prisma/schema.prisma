@@ -14,6 +14,7 @@ enum TournamentFormat {
   GROUPS_SINGLE_ELIM
   GROUPS_DOUBLE_ELIM
   LOBBY_LEAGUE
+  HEATS
 }
 
 enum TournamentStatus {
@@ -560,6 +561,8 @@ model TournamentDraw {
 enum LobbyStage {
   QUALIFYING
   FINAL
+  /// Just Dance: uma bateria de dançarinos na mesma música.
+  HEAT
 }
 
 /// Free Fire: uma "queda" (partida de battle royale com várias equipes ao mesmo
@@ -575,6 +578,8 @@ model LobbyRound {
   /// Grupo (lobby) da fase classificatória; nulo = todas as equipes juntas / grande final.
   groupId      String?
   group        Group?     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  /// Só para baterias (HEAT): rodada eliminatória (1, 2, ...); `number` é a bateria dentro da rodada.
+  phase        Int        @default(1)
   finished     Boolean    @default(false)
   createdAt    DateTime   @default(now())
 
@@ -593,6 +598,8 @@ model LobbyEntry {
   placement Int?
   kills     Int        @default(0)
   points    Int        @default(0)
+  /// Só para baterias: pontuação do jogo na música (maior vence).
+  score     Int?
 
   @@unique([roundId, teamId])
 }

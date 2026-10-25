@@ -19,7 +19,7 @@ const createTournamentSchema = z
   .object({
     name: z.string().min(2, "Informe o nome do torneio"),
     description: z.string().optional(),
-    format: z.enum(["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION", "GROUPS_SINGLE_ELIM", "GROUPS_DOUBLE_ELIM", "LOBBY_LEAGUE"]),
+    format: z.enum(["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION", "GROUPS_SINGLE_ELIM", "GROUPS_DOUBLE_ELIM", "LOBBY_LEAGUE", "HEATS"]),
     sportType: z.enum(SPORT_TYPES),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
@@ -61,6 +61,9 @@ export async function createTournament(
   }
   if (!isLobbySport && parsed.data.format === "LOBBY_LEAGUE") {
     return { error: "O formato de quedas é exclusivo do Free Fire." };
+  }
+  if (parsed.data.format === "HEATS" && parsed.data.sportType !== "JUST_DANCE") {
+    return { error: "O formato de baterias é exclusivo do Just Dance." };
   }
 
   const limits = await getPlanLimits(session.user.id);

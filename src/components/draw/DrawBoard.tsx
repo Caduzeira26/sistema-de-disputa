@@ -1,11 +1,21 @@
 import { eliminationByeIndices } from "@/lib/bracket";
 import type { DrawKind, DrawStep } from "@/lib/draw";
 
-function groupLabel(index: number): string {
-  return `Grupo ${String.fromCharCode(65 + index)}`;
+function groupLabel(index: number, word = "Grupo"): string {
+  return `${word} ${String.fromCharCode(65 + index)}`;
 }
 
-function LastDrawn({ step, name, kind }: { step: DrawStep | undefined; name: string; kind: DrawKind }) {
+function LastDrawn({
+  step,
+  name,
+  kind,
+  groupWord,
+}: {
+  step: DrawStep | undefined;
+  name: string;
+  kind: DrawKind;
+  groupWord: string;
+}) {
   if (!step) {
     return (
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-slate-500">
@@ -13,7 +23,7 @@ function LastDrawn({ step, name, kind }: { step: DrawStep | undefined; name: str
       </div>
     );
   }
-  const destination = kind === "GROUPS" ? groupLabel(step.groupIndex ?? 0) : "posição na chave";
+  const destination = kind === "GROUPS" ? groupLabel(step.groupIndex ?? 0, groupWord) : "posição na chave";
   return (
     <div className="rounded-xl border border-slate-900 bg-slate-900 p-6 text-center text-white">
       <p className="text-xs uppercase tracking-wide text-slate-300">Última equipe sorteada · Pote {step.pot}</p>
@@ -36,6 +46,7 @@ export function DrawBoard({
   total,
   numGroups,
   teamNames,
+  groupWord = "Grupo",
 }: {
   kind: DrawKind;
   steps: DrawStep[];
@@ -43,6 +54,8 @@ export function DrawBoard({
   total: number;
   numGroups: number;
   teamNames: Record<string, string>;
+  /** What a drawn group is called: "Grupo" normally, "Bateria" for Just Dance heats. */
+  groupWord?: string;
 }) {
   const shown = steps.slice(0, revealed);
   const last = shown[shown.length - 1];
@@ -50,7 +63,7 @@ export function DrawBoard({
 
   return (
     <div className="flex flex-col gap-6">
-      <LastDrawn step={last} name={last ? nameOf(last.teamId) : ""} kind={kind} />
+      <LastDrawn step={last} name={last ? nameOf(last.teamId) : ""} kind={kind} groupWord={groupWord} />
 
       <p className="text-sm text-slate-500">
         {revealed} de {total} equipes sorteadas
@@ -62,7 +75,7 @@ export function DrawBoard({
             const inGroup = shown.filter((s) => s.groupIndex === g);
             return (
               <div key={g} className="rounded-lg border border-slate-200 bg-white p-4">
-                <h3 className="mb-2 text-sm font-semibold text-slate-900">{groupLabel(g)}</h3>
+                <h3 className="mb-2 text-sm font-semibold text-slate-900">{groupLabel(g, groupWord)}</h3>
                 <ul className="flex flex-col gap-1">
                   {inGroup.map((s) => (
                     <li

@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { buildDrawSteps, cryptoRng, type DrawKind, type DrawStep } from "@/lib/draw";
 import { generateBracketFromDraw } from "@/lib/services/bracket";
 import { LOBBY_SIZE } from "@/lib/lobbyScoring";
+import { HEAT_SIZE } from "@/lib/heats";
 
 async function requireOwnedTournament(tournamentId: string) {
   const session = await auth();
@@ -54,7 +55,8 @@ export async function startDrawAction(_prev: DrawActionState, formData: FormData
     });
 
     const isLobby = tournament.format === "LOBBY_LEAGUE";
-    const usesGroups = isLobby || tournament.format === "GROUPS_SINGLE_ELIM" || tournament.format === "GROUPS_DOUBLE_ELIM";
+    const isHeats = tournament.format === "HEATS";
+    const usesGroups = isLobby || isHeats || tournament.format === "GROUPS_SINGLE_ELIM" || tournament.format === "GROUPS_DOUBLE_ELIM";
     const kind: DrawKind = usesGroups ? "GROUPS" : "KNOCKOUT";
 
     let numGroups: number | null = null;
@@ -63,6 +65,9 @@ export async function startDrawAction(_prev: DrawActionState, formData: FormData
       if (!Number.isInteger(numGroups) || numGroups < 1) return { error: "Informe o número de grupos." };
       if (teams.length / numGroups < 2) {
         return { error: "Cada grupo precisa ter pelo menos 2 equipes. Reduza o número de grupos." };
+      }
+      if (isHeats && Math.ceil(teams.length / numGroups) > HEAT_SIZE) {
+        return { error: `Cada bateria comporta no máximo ${HEAT_SIZE} dançarinos. Aumente o número de baterias.` };
       }
       if (isLobby && Math.ceil(teams.length / numGroups) > LOBBY_SIZE) {
         return { error: `Cada grupo comporta no máximo ${LOBBY_SIZE} equipes (o tamanho de uma sala). Aumente o número de grupos.` };

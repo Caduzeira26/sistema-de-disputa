@@ -6,6 +6,8 @@ import { toDisplayMatches } from "@/lib/bracket-view";
 import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
 import { loadLobbyOverview } from "@/lib/services/lobby";
 import { LobbyOverview } from "@/components/lobby/LobbyOverview";
+import { loadHeatsOverview } from "@/lib/services/heats";
+import { HeatsOverview } from "@/components/heats/HeatsOverview";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 import { formatTournamentDateRange } from "@/lib/formatDateRange";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
@@ -46,6 +48,7 @@ export default async function PublicTournamentPage({
 
   const lobbyOverview =
     getSportFamily(tournament.sportType) === "LOBBY_POINTS" ? await loadLobbyOverview(tournament.id) : null;
+  const heatsOverview = tournament.format === "HEATS" ? await loadHeatsOverview(tournament.id) : null;
   const displayMatches = toDisplayMatches(tournament.matches, tournament.teams);
   const groupMatches = displayMatches.filter((m) => m.bracket === "GROUP");
   const eliminationMatches = displayMatches.filter((m) => m.bracket !== "GROUP");
@@ -150,6 +153,16 @@ export default async function PublicTournamentPage({
         <div className="mt-10">
           <h2 className="mb-3 text-lg font-semibold text-slate-900">Chaveamento</h2>
           <BracketBoard matches={eliminationMatches} publicSlug={tournament.slug} />
+        </div>
+      )}
+
+      {heatsOverview && heatsOverview.phases.length > 0 && (
+        <div className="mt-10">
+          <h2 className="mb-3 text-lg font-semibold text-slate-900">Baterias</h2>
+          <HeatsOverview
+            overview={heatsOverview}
+            teamNames={Object.fromEntries(tournament.teams.map((t) => [t.id, t.name]))}
+          />
         </div>
       )}
 
