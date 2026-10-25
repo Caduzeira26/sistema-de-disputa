@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { createTournament, type CreateTournamentState } from "@/lib/actions/tournaments";
-import { SPORT_LABELS, SPORT_TYPES, type SportType } from "@/lib/sport";
+import { SPORT_LABELS, SPORT_TYPES, getSportFamily, type SportType } from "@/lib/sport";
 
 const initialState: CreateTournamentState = {};
 
@@ -14,8 +14,14 @@ const FORMAT_OPTIONS = [
   { value: "GROUPS_DOUBLE_ELIM", label: "Fase de grupos + eliminatória dupla" },
 ];
 
+const LOBBY_FORMAT_OPTIONS = [
+  { value: "LOBBY_LEAGUE", label: "Quedas em pontos corridos (com grande final opcional)" },
+];
+
 export function CreateTournamentForm({ allowedSports }: { allowedSports: readonly SportType[] }) {
   const [state, formAction, pending] = useActionState(createTournament, initialState);
+  const [sport, setSport] = useState<SportType>(allowedSports[0]);
+  const formatOptions = getSportFamily(sport) === "LOBBY_POINTS" ? LOBBY_FORMAT_OPTIONS : FORMAT_OPTIONS;
 
   return (
     <form action={formAction} className="flex max-w-lg flex-col gap-4">
@@ -50,7 +56,8 @@ export function CreateTournamentForm({ allowedSports }: { allowedSports: readonl
         <select
           id="sportType"
           name="sportType"
-          defaultValue={allowedSports[0]}
+          value={sport}
+          onChange={(e) => setSport(e.target.value as SportType)}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
         >
           {allowedSports.map((sport) => (
@@ -76,10 +83,11 @@ export function CreateTournamentForm({ allowedSports }: { allowedSports: readonl
         <select
           id="format"
           name="format"
-          defaultValue="SINGLE_ELIMINATION"
+          key={formatOptions[0].value}
+          defaultValue={formatOptions[0].value}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
         >
-          {FORMAT_OPTIONS.map((opt) => (
+          {formatOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>

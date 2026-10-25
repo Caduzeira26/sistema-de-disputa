@@ -6,6 +6,7 @@ import { updateTournamentStatus } from "@/lib/actions/tournaments";
 import { setTeamStatus } from "@/lib/actions/teams";
 import { DeleteTeamButton } from "@/components/admin/DeleteTeamButton";
 import { GenerateEliminationButton, ResetBracketButton } from "@/components/admin/GenerateBracketButton";
+import { LobbyAdminSection } from "@/components/admin/LobbyAdminSection";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
@@ -287,6 +288,15 @@ export default async function TournamentDetailPage({
         )}
       </div>
 
+      {family === "LOBBY_POINTS" ? (
+        <LobbyAdminSection
+          tournamentId={tournament.id}
+          status={tournament.status}
+          hasDraw={!!tournament.draw}
+          groupsCount={tournament.groups.length}
+          teamNames={Object.fromEntries(approvedTeams.map((t) => [t.id, t.name]))}
+        />
+      ) : (
       <div className="mt-10">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">Chaveamento</h2>
@@ -382,6 +392,7 @@ export default async function TournamentDetailPage({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

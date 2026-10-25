@@ -8,11 +8,12 @@ export const SPORT_TYPES = [
   "TENIS_DE_MESA",
   "FIFA",
   "JUST_DANCE",
+  "FREE_FIRE",
 ] as const;
 
 export type SportType = (typeof SPORT_TYPES)[number];
 
-export type SportFamily = "GOALS_CARDS" | "SETS_CARDS" | "PERIODS_FOULS" | "TABLE_TENNIS_TIES" | "SCORE_ONLY";
+export type SportFamily = "GOALS_CARDS" | "SETS_CARDS" | "PERIODS_FOULS" | "TABLE_TENNIS_TIES" | "SCORE_ONLY" | "LOBBY_POINTS";
 
 export const SPORT_LABELS: Record<SportType, string> = {
   FUTEBOL_CAMPO: "Futebol de campo",
@@ -24,6 +25,7 @@ export const SPORT_LABELS: Record<SportType, string> = {
   TENIS_DE_MESA: "Tênis de mesa",
   FIFA: "FIFA / EA FC",
   JUST_DANCE: "Just Dance",
+  FREE_FIRE: "Free Fire",
 };
 
 const SPORT_FAMILY: Record<SportType, SportFamily> = {
@@ -36,6 +38,7 @@ const SPORT_FAMILY: Record<SportType, SportFamily> = {
   TENIS_DE_MESA: "TABLE_TENNIS_TIES",
   FIFA: "SCORE_ONLY",
   JUST_DANCE: "SCORE_ONLY",
+  FREE_FIRE: "LOBBY_POINTS",
 };
 
 /**
@@ -66,14 +69,17 @@ export const MIN_PLAYERS_PER_TEAM: Record<SportType, number> = {
   // Jogos eletrônicos 1x1: a "equipe" é o próprio jogador.
   FIFA: 1,
   JUST_DANCE: 1,
+  // Esquadrão de Free Fire: 4 em campo (regulamentos oficiais aceitam 1 reserva).
+  FREE_FIRE: 4,
 };
 
 /**
  * Maximum roster size per team, where the organizer wants one. Undefined =
- * no cap. Currently only futsal has one.
+ * no cap. Futsal and Free Fire (4 titulares + 1 reserva) have one.
  */
 export const MAX_PLAYERS_PER_TEAM: Partial<Record<SportType, number>> = {
   FUTSAL: 15,
+  FREE_FIRE: 5,
 };
 
 /**

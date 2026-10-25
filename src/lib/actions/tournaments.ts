@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
-import { SPORT_TYPES } from "@/lib/sport";
+import { SPORT_TYPES, getSportFamily } from "@/lib/sport";
 import { saveTournamentLogo } from "@/lib/storage";
 import {
   countTournamentsForLimit,
@@ -19,7 +19,7 @@ const createTournamentSchema = z
   .object({
     name: z.string().min(2, "Informe o nome do torneio"),
     description: z.string().optional(),
-    format: z.enum(["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION", "GROUPS_SINGLE_ELIM", "GROUPS_DOUBLE_ELIM"]),
+    format: z.enum(["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION", "GROUPS_SINGLE_ELIM", "GROUPS_DOUBLE_ELIM", "LOBBY_LEAGUE"]),
     sportType: z.enum(SPORT_TYPES),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
@@ -53,6 +53,14 @@ export async function createTournament(
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
+
+  const isLobbySport = getSportFamily(parsed.data.sportType) === "LOBBY_POINTS";
+  if (isLobbySport && parsed.data.format !== "LOBBY_LEAGUE") {
+    return { error: "O Free Fire usa o formato de quedas em pontos corridos." };
+  }
+  if (!isLobbySport && parsed.data.format === "LOBBY_LEAGUE") {
+    return { error: "O formato de quedas é exclusivo do Free Fire." };
   }
 
   const limits = await getPlanLimits(session.user.id);

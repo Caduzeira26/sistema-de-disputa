@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getSportFamily, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES, supportsPenalties } from "./sport";
+import {
+  getSportFamily,
+  MAX_PLAYERS_PER_TEAM,
+  MIN_PLAYERS_PER_TEAM,
+  SPORT_LABELS,
+  SPORT_TYPES,
+  supportsPenalties,
+} from "./sport";
 
 describe("getSportFamily", () => {
   it("groups goal-based sports together", () => {
@@ -54,5 +61,16 @@ describe("electronic games", () => {
     expect(supportsPenalties("FIFA")).toBe(true);
     expect(supportsPenalties("JUST_DANCE")).toBe(false);
     expect(supportsPenalties("FUTSAL")).toBe(false);
+  });
+});
+
+describe("Free Fire", () => {
+  it("is played in quedas, not head-to-head", () => {
+    expect(getSportFamily("FREE_FIRE")).toBe("LOBBY_POINTS");
+  });
+
+  it("takes squads of 4 to 5 players (4 starters + 1 reserve)", () => {
+    expect(MIN_PLAYERS_PER_TEAM.FREE_FIRE).toBe(4);
+    expect(MAX_PLAYERS_PER_TEAM.FREE_FIRE).toBe(5);
   });
 });

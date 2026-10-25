@@ -13,6 +13,7 @@ enum TournamentFormat {
   DOUBLE_ELIMINATION
   GROUPS_SINGLE_ELIM
   GROUPS_DOUBLE_ELIM
+  LOBBY_LEAGUE
 }
 
 enum TournamentStatus {
@@ -62,6 +63,7 @@ enum SportType {
   TENIS_DE_MESA
   FIFA
   JUST_DANCE
+  FREE_FIRE
 }
 
 enum PlanTier {
@@ -101,8 +103,8 @@ model User {
   name         String
   createdAt    DateTime @default(now())
 
-  tournaments   Tournament[]
-  subscriptions Subscription[]
+  tournaments         Tournament[]
+  subscriptions       Subscription[]
   passwordResetTokens PasswordResetToken[]
 }
 
@@ -220,6 +222,7 @@ model Tournament {
   transferRequests       TransferRequest[]
   assistantConversations AssistantConversation[]
   draw                   TournamentDraw?
+  lobbyRounds            LobbyRound[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -265,6 +268,7 @@ model Team {
   pixTransaction PixTransaction?
   transfersFrom  TransferRequest[] @relation("TransferFrom")
   transfersTo    TransferRequest[] @relation("TransferTo")
+  lobbyEntries   LobbyEntry[]
 
   createdAt DateTime @default(now())
 
@@ -348,8 +352,9 @@ model Group {
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   name         String
 
-  teams   Team[]
-  matches Match[]
+  teams       Team[]
+  matches     Match[]
+  lobbyRounds LobbyRound[]
 }
 
 model Match {
@@ -369,12 +374,12 @@ model Match {
   awayTeamId String?
   awayTeam   Team?   @relation("AwayTeam", fields: [awayTeamId], references: [id])
 
-  homeScore Int?
-  awayScore Int?
+  homeScore     Int?
+  awayScore     Int?
   /// Disputa de pênaltis (FIFA): só preenchida quando o placar empata num jogo eliminatório.
   homePenalties Int?
   awayPenalties Int?
-  status    MatchStatus @default(SCHEDULED)
+  status        MatchStatus @default(SCHEDULED)
 
   scheduledAt DateTime?
   venueId     String?
@@ -550,4 +555,44 @@ model TournamentDraw {
   status       DrawStatus @default(IN_PROGRESS)
   createdAt    DateTime   @default(now())
   confirmedAt  DateTime?
+}
+
+enum LobbyStage {
+  QUALIFYING
+  FINAL
+}
+
+/// Free Fire: uma "queda" (partida de battle royale com várias equipes ao mesmo
+/// tempo). Não existe vencedor/perdedor contra um adversário, então não cabe em
+/// Match: cada equipe recebe colocação + abates e soma pontos.
+model LobbyRound {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  stage        LobbyStage
+  /// Número da queda dentro do estágio (e do grupo, quando há grupos).
+  number       Int
+  /// Grupo (lobby) da fase classificatória; nulo = todas as equipes juntas / grande final.
+  groupId      String?
+  group        Group?     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  finished     Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  entries LobbyEntry[]
+
+  @@index([tournamentId, stage])
+}
+
+model LobbyEntry {
+  id        String     @id @default(cuid())
+  roundId   String
+  round     LobbyRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  teamId    String
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  /// 1 = Booyah. Vazio até a queda ser lançada.
+  placement Int?
+  kills     Int        @default(0)
+  points    Int        @default(0)
+
+  @@unique([roundId, teamId])
 }

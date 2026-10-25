@@ -113,7 +113,16 @@ export async function generateBracketFromDraw(tournamentId: string): Promise<voi
   await prisma.$transaction(async (tx) => {
     await Promise.all(teamInputs.map((t) => tx.team.update({ where: { id: t.id }, data: { seed: t.seed } })));
 
-    if (kind === "GROUPS") {
+    if (tournament.format === "LOBBY_LEAGUE") {
+      // Free Fire: the drawn groups are the lobbies. There are no head-to-head
+      // matches; the organizer creates the quedas afterwards.
+      await persistGeneratedBracket(
+        tx,
+        tournamentId,
+        groups.map((teamIds, i) => ({ id: `LOBBY${i}`, teamIds })),
+        []
+      );
+    } else if (kind === "GROUPS") {
       const { groups: generatedGroups, matches } = generateGroupStageFromGroups(groups);
       await persistGeneratedBracket(tx, tournamentId, generatedGroups, matches);
     } else if (tournament.format === "DOUBLE_ELIMINATION") {
@@ -148,6 +157,7 @@ export async function resetBracket(tournamentId: string): Promise<void> {
       data: { winnerNextMatchId: null, loserNextMatchId: null },
     });
     await tx.match.deleteMany({ where: { tournamentId } });
+    await tx.lobbyRound.deleteMany({ where: { tournamentId } });
     await tx.team.updateMany({ where: { tournamentId }, data: { groupId: null, seed: null } });
     await tx.group.deleteMany({ where: { tournamentId } });
     await tx.tournamentDraw.deleteMany({ where: { tournamentId } });
