@@ -2,7 +2,9 @@
 
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { changePasswordSchema } from "@/lib/passwordChange";
 import {
   RESET_TOKEN_TTL_MS,
   generateResetToken,
@@ -95,6 +97,39 @@ export async function requestPasswordReset(
     console.error("[password-reset] failed to send e-mail", err);
     return { error: "Não foi possível enviar o e-mail agora. Tente novamente em instantes." };
   }
+
+  return { success: true };
+}
+
+export type ChangePasswordState = { error?: string; success?: boolean };
+
+/** Lets a signed-in organizer set a new password, after confirming the current one. */
+export async function changePassword(
+  _prevState: ChangePasswordState,
+  formData: FormData
+): Promise<ChangePasswordState> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Sessão expirada. Entre novamente." };
+
+  const parsed = changePasswordSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user || !(await bcrypt.compare(parsed.data.currentPassword, user.passwordHash))) {
+    return { error: "A senha atual está incorreta." };
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.passwordResetToken.deleteMany({ where: { userId: user.id } }),
+  ]);
 
   return { success: true };
 }

@@ -24,7 +24,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             )}
           </nav>
           <div className="flex items-center gap-3 text-sm text-slate-500">
-            <span>{session?.user?.name ?? session?.user?.email}</span>
+            <Link href="/admin/conta" className="hover:text-slate-900" title="Minha conta e senha">
+              {session?.user?.name ?? session?.user?.email}
+            </Link>
             <SignOutButton />
           </div>
         </div>
