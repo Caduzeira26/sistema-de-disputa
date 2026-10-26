@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
+import { tournamentNameSchema } from "@/lib/tournamentName";
 import { SPORT_TYPES, getSportFamily } from "@/lib/sport";
 import { saveTournamentLogo } from "@/lib/storage";
 import {
@@ -126,6 +127,39 @@ export async function updateTournamentStatus(formData: FormData) {
 
   revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
   revalidatePath("/admin");
+}
+
+export type RenameTournamentState = { error?: string; success?: boolean };
+
+/**
+ * Only the display name changes; the slug stays, so the public link, the
+ * registration link and any QR code already printed keep working.
+ */
+export async function renameTournament(
+  _prevState: RenameTournamentState,
+  formData: FormData
+): Promise<RenameTournamentState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Sessão expirada. Faça login novamente." };
+
+  const tournamentId = formData.get("tournamentId");
+  const parsedName = tournamentNameSchema.safeParse(formData.get("name"));
+  if (typeof tournamentId !== "string" || !tournamentId) return { error: "Torneio não encontrado." };
+  if (!parsedName.success) {
+    return { error: parsedName.error.issues[0]?.message ?? "Nome inválido." };
+  }
+
+  const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+  if (!tournament || tournament.organizerId !== session.user.id) {
+    return { error: "Torneio não encontrado." };
+  }
+
+  await prisma.tournament.update({ where: { id: tournamentId }, data: { name: parsedName.data } });
+
+  revalidatePath(`/admin/torneios/${tournamentId}`);
+  revalidatePath(`/torneios/${tournament.slug}`);
+  revalidatePath("/admin");
+  return { success: true };
 }
 
 const updateDatesSchema = z

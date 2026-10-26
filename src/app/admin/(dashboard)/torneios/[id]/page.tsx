@@ -17,6 +17,7 @@ import { computeStandings } from "@/lib/bracket";
 import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
 import { TournamentLogoForm } from "@/components/admin/TournamentLogoForm";
 import { TournamentDatesForm } from "@/components/admin/TournamentDatesForm";
+import { TournamentNameForm } from "@/components/admin/TournamentNameForm";
 import { TournamentFeeForm } from "@/components/admin/TournamentFeeForm";
 import { TournamentTransferDeadlineForm } from "@/components/admin/TournamentTransferDeadlineForm";
 import { TransferRequestsList } from "@/components/admin/TransferRequestsList";
@@ -168,6 +169,11 @@ export default async function TournamentDetailPage({
 
       <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
         <TournamentLogoForm tournamentId={tournament.id} logoUrl={tournament.logoUrl} />
+      </div>
+
+      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="mb-2 text-sm font-semibold text-slate-700">Nome do torneio</h2>
+        <TournamentNameForm tournamentId={tournament.id} name={tournament.name} />
       </div>
 
       <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
