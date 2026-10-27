@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -87,6 +88,18 @@ export function SignupForm() {
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
+
+      <p className="text-xs text-slate-500">
+        Ao criar a conta, você concorda com os{" "}
+        <Link href="/termos" target="_blank" className="underline">
+          Termos de Uso
+        </Link>{" "}
+        e com a{" "}
+        <Link href="/privacidade" target="_blank" className="underline">
+          Política de Privacidade
+        </Link>
+        .
+      </p>
 
       <button
         type="submit"

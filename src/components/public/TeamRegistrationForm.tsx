@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerTeam, type RegisterTeamState } from "@/lib/actions/teams";
@@ -243,6 +244,15 @@ export function TeamRegistrationForm({
       </fieldset>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+
+      <p className="text-xs text-slate-500">
+        Ao enviar, você declara ter a autorização dos atletas (ou dos responsáveis, no caso de menores de 18 anos) para
+        o uso destes dados na organização do campeonato. Veja a{" "}
+        <Link href="/privacidade" target="_blank" className="underline">
+          Política de Privacidade
+        </Link>
+        .
+      </p>
 
       <button
         type="submit"
