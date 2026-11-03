@@ -6,6 +6,8 @@ import { TournamentHeaderLogo, TournamentWatermark } from "@/components/Tourname
 import { ManualPixCard } from "@/components/public/ManualPixCard";
 import { formatBRL, getPlanLimits } from "@/lib/plans";
 import { manualPixFromTournament } from "@/lib/manualPix";
+import { buildPixPayload } from "@/lib/brcode";
+import { buildQr } from "@/lib/qr";
 
 export default async function TeamRegistrationPage({
   params,
@@ -20,6 +22,10 @@ export default async function TeamRegistrationPage({
   const limits = await getPlanLimits(tournament.organizerId);
   // A manual PIX key, when set, replaces the automatic (Efí) charge.
   const manualPix = manualPixFromTournament(tournament);
+  const manualPixCode = manualPix
+    ? buildPixPayload({ key: manualPix.key, holder: manualPix.holder, amountCents: manualPix.amountCents })
+    : null;
+  const manualPixQr = manualPixCode ? buildQr(manualPixCode, "M") : null;
 
   return (
     <main className="relative mx-auto w-full max-w-2xl flex-1 overflow-hidden px-4 py-10">
@@ -38,9 +44,9 @@ export default async function TeamRegistrationPage({
         </p>
       ) : (
         <div className="mt-6">
-          {manualPix ? (
+          {manualPix && manualPixCode && manualPixQr ? (
             <div className="mb-4">
-              <ManualPixCard pix={manualPix} />
+              <ManualPixCard pix={manualPix} payload={manualPixCode} qr={{ size: manualPixQr.size, path: manualPixQr.path }} />
             </div>
           ) : tournament.registrationFeeCents ? (
             <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">

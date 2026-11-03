@@ -188,6 +188,13 @@ export default async function TournamentDetailPage({
           </p>
         ) : null}
         <ManualPixForm tournamentId={tournament.id} current={manualPixFromTournament(tournament)} />
+        {tournament.manualPixKey && (
+          <p className="mt-3 text-sm">
+            <Link href={`/admin/torneios/${tournament.id}/pix`} target="_blank" className="font-medium text-slate-700 underline">
+              Ver e imprimir o QR Code do PIX
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">

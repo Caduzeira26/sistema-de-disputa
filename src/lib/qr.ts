@@ -16,11 +16,12 @@ export interface QrGeometry {
 }
 
 /**
- * Builds the QR matrix at the highest error-correction level (H, ~30%
- * recoverable), which is what makes it safe to cover the center with a logo.
+ * Builds the QR matrix. Defaults to the highest error-correction level (H,
+ * ~30% recoverable), which is what makes it safe to cover the center with a
+ * logo; pass "M" for codes with no logo to keep them less dense.
  */
-export function buildQr(text: string): QrGeometry {
-  const qr = QRCode.create(text, { errorCorrectionLevel: "H" });
+export function buildQr(text: string, errorCorrectionLevel: "L" | "M" | "Q" | "H" = "H"): QrGeometry {
+  const qr = QRCode.create(text, { errorCorrectionLevel });
   const size = qr.modules.size;
   const data = qr.modules.data;
   const dark = (x: number, y: number) => data[y * size + x] === 1;
