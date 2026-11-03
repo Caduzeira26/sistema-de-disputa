@@ -3,7 +3,9 @@ import { prisma } from "@/lib/db";
 import { TeamRegistrationForm } from "@/components/public/TeamRegistrationForm";
 import { AssistantWidget } from "@/components/AssistantWidget";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
+import { ManualPixCard } from "@/components/public/ManualPixCard";
 import { formatBRL, getPlanLimits } from "@/lib/plans";
+import { manualPixFromTournament } from "@/lib/manualPix";
 
 export default async function TeamRegistrationPage({
   params,
@@ -16,6 +18,8 @@ export default async function TeamRegistrationPage({
   if (!tournament) notFound();
 
   const limits = await getPlanLimits(tournament.organizerId);
+  // A manual PIX key, when set, replaces the automatic (Efí) charge.
+  const manualPix = manualPixFromTournament(tournament);
 
   return (
     <main className="relative mx-auto w-full max-w-2xl flex-1 overflow-hidden px-4 py-10">
@@ -34,7 +38,11 @@ export default async function TeamRegistrationPage({
         </p>
       ) : (
         <div className="mt-6">
-          {tournament.registrationFeeCents ? (
+          {manualPix ? (
+            <div className="mb-4">
+              <ManualPixCard pix={manualPix} />
+            </div>
+          ) : tournament.registrationFeeCents ? (
             <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
               Inscrição paga: {formatBRL(tournament.registrationFeeCents)} por equipe. Você poderá pagar via PIX
               logo após enviar os dados.
@@ -45,6 +53,7 @@ export default async function TeamRegistrationPage({
             tournamentSlug={tournament.slug}
             sportType={tournament.sportType}
             canManageAthleteRegistry={limits.canManageAthleteRegistry}
+            manualPix={manualPix}
           />
         </div>
       )}

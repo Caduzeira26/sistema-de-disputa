@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerTeam, type RegisterTeamState } from "@/lib/actions/teams";
+import type { ManualPixSettings } from "@/lib/manualPix";
 import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, getSportFamily, type SportType } from "@/lib/sport";
 
 const initialState: RegisterTeamState = {};
@@ -26,11 +27,13 @@ export function TeamRegistrationForm({
   tournamentSlug,
   sportType,
   canManageAthleteRegistry,
+  manualPix,
 }: {
   tournamentId: string;
   tournamentSlug: string;
   sportType: SportType;
   canManageAthleteRegistry?: boolean;
+  manualPix?: ManualPixSettings | null;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(registerTeam, initialState);
@@ -71,6 +74,11 @@ export function TeamRegistrationForm({
         <p className="mt-1 text-sm">
           O organizador vai analisar os dados da equipe. Você pode ser contatado para confirmar detalhes.
         </p>
+        {manualPix && (
+          <p className="mt-3 text-sm font-medium">
+            Falta pagar a inscrição: use a chave PIX no topo da página e envie o comprovante ao organizador.
+          </p>
+        )}
         {state.teamId && (
           <p className="mt-3 text-sm">
             Precisa completar o time com mais jogadores depois? Guarde este link:{" "}

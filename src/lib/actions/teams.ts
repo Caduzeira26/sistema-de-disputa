@@ -145,7 +145,8 @@ export async function registerTeam(
 
   revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
 
-  if (tournament.registrationFeeCents && tournament.registrationFeeCents > 0) {
+  // A manual PIX key replaces the automatic charge: the team pays the organizer directly.
+  if (tournament.registrationFeeCents && tournament.registrationFeeCents > 0 && !tournament.manualPixKey) {
     try {
       const charge = await createTeamRegistrationCharge(team.id);
       return { success: true, paymentTxid: charge.txid, teamId: team.id };

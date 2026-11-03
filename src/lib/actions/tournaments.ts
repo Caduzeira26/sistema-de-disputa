@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
 import { tournamentNameSchema } from "@/lib/tournamentName";
+import { manualPixSchema, parseReaisToCents } from "@/lib/manualPix";
 import { SPORT_TYPES, getSportFamily } from "@/lib/sport";
 import { saveTournamentLogo } from "@/lib/storage";
 import {
@@ -250,6 +251,51 @@ export async function updateTournamentFee(_prevState: UpdateFeeState, formData: 
   revalidatePath(`/admin/torneios/${parsed.data.tournamentId}`);
   revalidatePath(`/torneios/${tournament.slug}`);
   return {};
+}
+
+export type UpdateManualPixState = { error?: string; success?: boolean };
+
+/**
+ * Saves (or clears, when the key is empty) the organizer's own PIX key that is
+ * shown on the registration form. No plan gate: the money never passes
+ * through the platform, the organizer confirms payments by hand.
+ */
+export async function updateManualPix(
+  _prevState: UpdateManualPixState,
+  formData: FormData
+): Promise<UpdateManualPixState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Sessão expirada. Faça login novamente." };
+
+  const tournamentId = formData.get("tournamentId");
+  if (typeof tournamentId !== "string" || !tournamentId) return { error: "Torneio não encontrado." };
+
+  const parsed = manualPixSchema.safeParse({
+    key: formData.get("key") ?? "",
+    holder: formData.get("holder") ?? "",
+    amount: formData.get("amount") ?? "",
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+
+  const amountCents = parseReaisToCents(parsed.data.amount);
+  if (amountCents === undefined) return { error: "Valor inválido. Use por exemplo 30 ou 30,00." };
+
+  const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+  if (!tournament || tournament.organizerId !== session.user.id) return { error: "Torneio não encontrado." };
+
+  const hasKey = parsed.data.key.length > 0;
+  await prisma.tournament.update({
+    where: { id: tournamentId },
+    data: {
+      manualPixKey: hasKey ? parsed.data.key : null,
+      manualPixHolder: hasKey && parsed.data.holder ? parsed.data.holder : null,
+      manualPixAmountCents: hasKey ? amountCents : null,
+    },
+  });
+
+  revalidatePath(`/admin/torneios/${tournamentId}`);
+  revalidatePath(`/torneios/${tournament.slug}/inscricao`);
+  return { success: true };
 }
 
 const updateTransferDeadlineSchema = z.object({

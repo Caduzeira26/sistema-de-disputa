@@ -185,6 +185,14 @@ model Tournament {
   /// Only settable when the organizer's plan allows charging (Pro/Liga).
   registrationFeeCents Int?
 
+  /// Manual PIX: the organizer's own key, shown on the registration form so
+  /// teams pay outside the system and the organizer approves them by hand.
+  /// Independent of the automatic Efí charge above (which wins when a fee is
+  /// set). The amount is informational only.
+  manualPixKey         String?
+  manualPixHolder      String?
+  manualPixAmountCents Int?
+
   /// Deadline for athlete transfer requests (Liga plan only). Null = no
   /// automatic cutoff — the organizer decides case by case.
   transferDeadline DateTime?
