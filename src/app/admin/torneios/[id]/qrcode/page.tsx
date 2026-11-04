@@ -7,9 +7,10 @@ import { formatTournamentDateRange } from "@/lib/formatDateRange";
 import { getAppUrl } from "@/lib/email";
 import { registrationUrl } from "@/lib/qr";
 import { PrintButton } from "@/components/PrintButton";
+import { PosterSheet } from "@/components/PosterSheet";
 import { RegistrationQr } from "@/components/RegistrationQr";
 
-/** Printable poster: tournament logo + QR code that opens the online registration form. */
+/** Printable A4 poster: tournament logo + QR code that opens the online registration form. */
 export default async function RegistrationPosterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
@@ -28,7 +29,7 @@ export default async function RegistrationPosterPage({ params }: { params: Promi
         <Link href={`/admin/torneios/${tournament.id}`} className="text-sm text-slate-500 underline">
           Voltar ao torneio
         </Link>
-        <PrintButton label="Imprimir cartaz" />
+        <PrintButton label="Imprimir cartaz (A4)" />
       </div>
 
       {!open && (
@@ -38,29 +39,31 @@ export default async function RegistrationPosterPage({ params }: { params: Promi
         </p>
       )}
 
-      <section className="flex flex-col items-center gap-6 rounded-2xl border-2 border-slate-900 p-8 text-center print:break-inside-avoid print:border-4 print:p-12">
+      <PosterSheet>
         {tournament.logoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={tournament.logoUrl} alt={`Logo de ${tournament.name}`} className="h-32 w-32 object-contain print:h-44 print:w-44" />
+          <img src={tournament.logoUrl} alt={`Logo de ${tournament.name}`} className="h-28 w-28 object-contain print:h-[40mm] print:w-[40mm]" />
         )}
 
         <div>
-          <h1 className="text-3xl font-bold uppercase leading-tight text-slate-900 print:text-5xl">{tournament.name}</h1>
-          <p className="mt-2 text-lg text-slate-600 print:text-2xl">
+          <h1 className="text-2xl font-bold uppercase leading-tight text-slate-900 print:text-[30px]">{tournament.name}</h1>
+          <p className="mt-2 text-base text-slate-600 print:text-2xl">
             {SPORT_LABELS[tournament.sportType]}
             {dates ? ` · ${dates}` : ""}
           </p>
         </div>
 
-        <p className="text-2xl font-semibold text-slate-900 print:text-4xl">Inscreva sua equipe</p>
+        <p className="text-xl font-semibold text-slate-900 print:text-4xl">Inscreva sua equipe</p>
 
-        <div className="w-full max-w-sm print:max-w-md">
+        <div className="w-full max-w-xs print:w-[125mm] print:max-w-none">
           <RegistrationQr url={url} logoUrl={tournament.logoUrl} label={`QR Code da inscrição em ${tournament.name}`} />
         </div>
 
-        <p className="text-base text-slate-700 print:text-xl">Aponte a câmera do celular para o QR Code e preencha a ficha de inscrição.</p>
-        <p className="break-all text-sm text-slate-500 print:text-base">{url}</p>
-      </section>
+        <div>
+          <p className="text-sm text-slate-700 print:text-2xl">Aponte a câmera do celular para o QR Code e preencha a ficha de inscrição.</p>
+          <p className="mt-2 break-all text-xs text-slate-500 print:text-lg">{url}</p>
+        </div>
+      </PosterSheet>
     </main>
   );
 }

@@ -8,8 +8,9 @@ import { buildPixPayload } from "@/lib/brcode";
 import { buildQr, QUIET_ZONE } from "@/lib/qr";
 import { manualPixFromTournament } from "@/lib/manualPix";
 import { PrintButton } from "@/components/PrintButton";
+import { PosterSheet } from "@/components/PosterSheet";
 
-/** Printable sheet with the PIX QR code (key + amount) for paying the registration. */
+/** Printable A4 sheet with the PIX QR code (key + amount) for paying the registration. */
 export default async function PixPosterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
@@ -42,35 +43,38 @@ export default async function PixPosterPage({ params }: { params: Promise<{ id: 
         <Link href={`/admin/torneios/${tournament.id}`} className="text-sm text-slate-500 underline">
           Voltar ao torneio
         </Link>
-        <PrintButton label="Imprimir QR Code do PIX" />
+        <PrintButton label="Imprimir QR Code do PIX (A4)" />
       </div>
 
-      <section className="flex flex-col items-center gap-5 rounded-2xl border-2 border-slate-900 p-8 text-center print:break-inside-avoid print:border-4 print:p-12">
+      <PosterSheet>
         {tournament.logoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={tournament.logoUrl} alt={`Logo de ${tournament.name}`} className="h-28 w-28 object-contain print:h-40 print:w-40" />
+          <img src={tournament.logoUrl} alt={`Logo de ${tournament.name}`} className="h-28 w-28 object-contain print:h-[40mm] print:w-[40mm]" />
         )}
+
         <div>
-          <h1 className="text-3xl font-bold uppercase leading-tight text-slate-900 print:text-5xl">{tournament.name}</h1>
-          <p className="mt-2 text-lg text-slate-600 print:text-2xl">{SPORT_LABELS[tournament.sportType]}</p>
+          <h1 className="text-2xl font-bold uppercase leading-tight text-slate-900 print:text-[30px]">{tournament.name}</h1>
+          <p className="mt-2 text-base text-slate-600 print:text-2xl">{SPORT_LABELS[tournament.sportType]}</p>
         </div>
 
-        <p className="text-2xl font-semibold text-slate-900 print:text-4xl">
+        <p className="text-xl font-semibold text-slate-900 print:text-4xl">
           Pagamento da inscrição{pix.amountCents ? ` — ${formatBRL(pix.amountCents)}` : ""}
         </p>
 
-        <svg viewBox={`0 0 ${total} ${total}`} role="img" aria-label="QR Code do PIX" className="h-auto w-full max-w-sm print:max-w-md">
+        <svg viewBox={`0 0 ${total} ${total}`} role="img" aria-label="QR Code do PIX" className="h-auto w-full max-w-xs print:w-[125mm] print:max-w-none">
           <rect width={total} height={total} fill="#ffffff" />
           <path d={qr.path} transform={`translate(${QUIET_ZONE} ${QUIET_ZONE})`} fill="#0f172a" shapeRendering="crispEdges" />
         </svg>
 
-        <p className="text-base text-slate-700 print:text-xl">Aponte a câmera do app do seu banco para o QR Code.</p>
-        <p className="text-sm text-slate-600 print:text-lg">
-          Chave PIX: <span className="font-semibold text-slate-900">{pix.key}</span>
-          {pix.holder ? ` · ${pix.holder}` : ""}
-        </p>
-        <p className="text-sm text-slate-500 print:text-base">Depois de pagar, envie o comprovante ao organizador.</p>
-      </section>
+        <div>
+          <p className="text-sm text-slate-700 print:text-2xl">Aponte a câmera do app do seu banco para o QR Code.</p>
+          <p className="mt-2 text-sm text-slate-600 print:text-xl">
+            Chave PIX: <span className="font-semibold text-slate-900">{pix.key}</span>
+            {pix.holder ? ` · ${pix.holder}` : ""}
+          </p>
+          <p className="mt-2 text-xs text-slate-500 print:text-lg">Depois de pagar, envie o comprovante ao organizador.</p>
+        </div>
+      </PosterSheet>
     </main>
   );
 }
