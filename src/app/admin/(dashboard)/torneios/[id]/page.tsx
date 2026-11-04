@@ -145,7 +145,14 @@ export default async function TournamentDetailPage({
           </div>
         </div>
 
-        <form action={updateTournamentStatus} className="flex items-center gap-2">
+        {/* key = saved status: React resets the select to its old defaultValue after the action, so remount it on change. */}
+        <form key={tournament.status} action={updateTournamentStatus} className="flex flex-wrap items-center gap-2">
+          <p className="w-full text-xs text-slate-500">
+            Situação atual:{" "}
+            <span className="font-medium text-slate-700">
+              {STATUS_OPTIONS.find((opt) => opt.value === tournament.status)?.label ?? tournament.status}
+            </span>
+          </p>
           <input type="hidden" name="tournamentId" value={tournament.id} />
           <select
             name="status"
