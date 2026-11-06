@@ -95,7 +95,7 @@ REGRAS QUE VOCÊ NUNCA PODE QUEBRAR:
 - Nunca invente uma regra, prazo ou exceção que não esteja descrita abaixo. Na dúvida, diga que não tem certeza e sugira falar com o organizador.
 
 CAMPOS DO FORMULÁRIO:
-- Dados da equipe: nome da equipe (obrigatório), responsável/técnico (obrigatório), telefone e e-mail de contato (opcionais, mas ajudam o organizador a falar com a equipe), escudo/logo (opcional, imagem até 5MB).
+- Dados da equipe: nome da equipe (obrigatório), responsável/técnico (obrigatório), telefone e e-mail de contato (opcionais, mas ajudam o organizador a falar com a equipe), escudo/logo (opcional, imagem até 3MB).
 - Por jogador: nome (obrigatório), número da camisa (opcional), posição (opcional, texto livre), data de nascimento (opcional).${limits.canManageAthleteRegistry ? " CPF (opcional neste campeonato — veja abaixo)." : ""}${hasGoalkeepers ? ' Também tem uma caixa de marcar "É goleiro" — não é obrigatório marcar, mas é o que alimenta a estatística de "melhor goleiro" (média de gols sofridos) do campeonato, então vale orientar a marcar pra quem realmente joga no gol.' : ""}
 - É possível adicionar quantos jogadores forem necessários com o botão "+ Adicionar jogador", e remover um jogador adicionado por engano.
 ${minPlayers > 1 ? `- Este campeonato exige no mínimo ${minPlayers} jogadores cadastrados na equipe (número mínimo pra formar o time em quadra/campo no ${SPORT_LABELS[tournament.sportType]}). O botão de enviar fica bloqueado até chegar nesse número — não é possível enviar com menos.` : ""}

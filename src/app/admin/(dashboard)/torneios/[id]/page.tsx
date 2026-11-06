@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { updateTournamentStatus } from "@/lib/actions/tournaments";
-import { setTeamStatus } from "@/lib/actions/teams";
 import { DeleteTeamButton } from "@/components/admin/DeleteTeamButton";
 import { GenerateEliminationButton, ResetBracketButton } from "@/components/admin/GenerateBracketButton";
 import { LobbyAdminSection } from "@/components/admin/LobbyAdminSection";
@@ -19,6 +18,7 @@ import { TournamentLogoForm } from "@/components/admin/TournamentLogoForm";
 import { TournamentDatesForm } from "@/components/admin/TournamentDatesForm";
 import { TournamentNameForm } from "@/components/admin/TournamentNameForm";
 import { ManualPixForm } from "@/components/admin/ManualPixForm";
+import { ApproveAllTeamsForm, TeamStatusForm } from "@/components/admin/TeamStatusForm";
 import { manualPixFromTournament } from "@/lib/manualPix";
 import { TournamentFeeForm } from "@/components/admin/TournamentFeeForm";
 import { TournamentTransferDeadlineForm } from "@/components/admin/TournamentTransferDeadlineForm";
@@ -89,6 +89,7 @@ export default async function TournamentDetailPage({
     : [];
 
   const approvedTeams = tournament.teams.filter((t) => t.status === "APPROVED");
+  const pendingTeams = tournament.teams.filter((t) => t.status === "PENDING");
   const displayMatches = toDisplayMatches(tournament.matches, tournament.teams);
   const groupMatches = displayMatches.filter((m) => m.bracket === "GROUP");
   const eliminationMatches = displayMatches.filter((m) => m.bracket !== "GROUP");
@@ -254,6 +255,18 @@ export default async function TournamentDetailPage({
           Equipes inscritas ({tournament.teams.length})
         </h2>
 
+        {pendingTeams.length > 0 && !drawInProgress && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="text-sm text-amber-800">
+              {pendingTeams.length === 1
+                ? "1 equipe está aguardando aprovação."
+                : `${pendingTeams.length} equipes estão aguardando aprovação.`}{" "}
+              Só equipes aprovadas entram no sorteio e no chaveamento.
+            </p>
+            <ApproveAllTeamsForm tournamentId={tournament.id} count={pendingTeams.length} />
+          </div>
+        )}
+
         {tournament.teams.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
             Nenhuma equipe se inscreveu ainda. Compartilhe o link público acima.
@@ -286,22 +299,22 @@ export default async function TournamentDetailPage({
                     <td className="px-4 py-2">
                       <div className="flex flex-wrap items-center gap-3">
                         {!drawInProgress && team.status !== "APPROVED" && (
-                          <form action={setTeamStatus}>
-                            <input type="hidden" name="teamId" value={team.id} />
-                            <input type="hidden" name="status" value="APPROVED" />
-                            <button type="submit" className="text-sm text-emerald-700 hover:text-emerald-900">
-                              Aprovar
-                            </button>
-                          </form>
+                          <TeamStatusForm
+                            teamId={team.id}
+                            status="APPROVED"
+                            label="Aprovar"
+                            pendingLabel="Aprovando..."
+                            className="text-sm text-emerald-700 hover:text-emerald-900"
+                          />
                         )}
                         {!drawInProgress && team.status !== "REJECTED" && (
-                          <form action={setTeamStatus}>
-                            <input type="hidden" name="teamId" value={team.id} />
-                            <input type="hidden" name="status" value="REJECTED" />
-                            <button type="submit" className="text-sm text-amber-700 hover:text-amber-900">
-                              Rejeitar
-                            </button>
-                          </form>
+                          <TeamStatusForm
+                            teamId={team.id}
+                            status="REJECTED"
+                            label="Rejeitar"
+                            pendingLabel="Rejeitando..."
+                            className="text-sm text-amber-700 hover:text-amber-900"
+                          />
                         )}
                         <Link
                           href={`/admin/torneios/${tournament.id}/equipes/${team.id}/editar`}
@@ -380,9 +393,16 @@ export default async function TournamentDetailPage({
         )}
 
         {tournament.matches.length === 0 && !canGenerateBracket && (
-          <p className="mt-3 text-sm text-slate-500">
-            É preciso pelo menos 2 equipes aprovadas para gerar o chaveamento.
-          </p>
+          <div className="mt-3 flex flex-col items-start gap-2">
+            <p className="text-sm text-slate-500">
+              {pendingTeams.length > 0
+                ? `Você tem ${approvedTeams.length} equipe(s) aprovada(s) e ${pendingTeams.length} aguardando aprovação. Aprove as equipes na lista acima: são necessárias pelo menos 2 aprovadas para fazer o sorteio.`
+                : "É preciso pelo menos 2 equipes aprovadas para fazer o sorteio e gerar o chaveamento."}
+            </p>
+            {pendingTeams.length > 0 && !drawInProgress && (
+              <ApproveAllTeamsForm tournamentId={tournament.id} count={pendingTeams.length} />
+            )}
+          </div>
         )}
 
         {tournament.matches.length > 0 && (

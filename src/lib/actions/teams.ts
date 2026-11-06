@@ -11,6 +11,7 @@ import { EfiNotConfiguredError } from "@/lib/efi";
 import { findOrCreateAthlete, isValidDocumentFormat, normalizeDocument } from "@/lib/athletes";
 import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS } from "@/lib/sport";
 import { isRosterCompletionWindowOpen } from "@/lib/roster";
+import { MAX_LOGO_BYTES, MAX_LOGO_LABEL } from "@/lib/upload";
 
 const playerSchema = z.object({
   name: z.string().min(1, "Nome do jogador é obrigatório"),
@@ -104,8 +105,8 @@ export async function registerTeam(
     if (!logoFile.type.startsWith("image/")) {
       return { error: "O escudo deve ser um arquivo de imagem." };
     }
-    if (logoFile.size > 5 * 1024 * 1024) {
-      return { error: "A imagem do escudo deve ter no máximo 5MB." };
+    if (logoFile.size > MAX_LOGO_BYTES) {
+      return { error: `A imagem do escudo deve ter no máximo ${MAX_LOGO_LABEL}.` };
     }
     logoUrl = await saveTeamLogo(logoFile);
   }
@@ -189,6 +190,22 @@ export async function setTeamStatus(formData: FormData) {
 
   await prisma.team.update({ where: { id: teamId }, data: { status } });
   revalidatePath(`/admin/torneios/${team.tournamentId}`);
+}
+
+/** Approves every team still waiting for approval in one go (one round trip instead of one per team). */
+export async function approveAllPendingTeams(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Não autenticado.");
+
+  const tournamentId = formData.get("tournamentId");
+  if (typeof tournamentId !== "string" || !tournamentId) throw new Error("Torneio não encontrado.");
+
+  const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+  if (!tournament || tournament.organizerId !== session.user.id) throw new Error("Torneio não encontrado.");
+  await assertNoDrawInProgress(tournamentId);
+
+  await prisma.team.updateMany({ where: { tournamentId, status: "PENDING" }, data: { status: "APPROVED" } });
+  revalidatePath(`/admin/torneios/${tournamentId}`);
 }
 
 export async function deleteTeam(formData: FormData) {

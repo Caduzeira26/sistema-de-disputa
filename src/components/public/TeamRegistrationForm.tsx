@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerTeam, type RegisterTeamState } from "@/lib/actions/teams";
 import type { ManualPixSettings } from "@/lib/manualPix";
+import { MAX_LOGO_BYTES, MAX_LOGO_LABEL } from "@/lib/upload";
 import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, getSportFamily, type SportType } from "@/lib/sport";
 
 const initialState: RegisterTeamState = {};
@@ -38,6 +39,7 @@ export function TeamRegistrationForm({
   const router = useRouter();
   const [state, formAction, pending] = useActionState(registerTeam, initialState);
   const [players, setPlayers] = useState<PlayerDraft[]>([emptyPlayer()]);
+  const [logoError, setLogoError] = useState<string | null>(null);
   const minPlayers = MIN_PLAYERS_PER_TEAM[sportType];
   const maxPlayers = MAX_PLAYERS_PER_TEAM[sportType];
   const belowMinimum = players.length < minPlayers;
@@ -152,9 +154,25 @@ export function TeamRegistrationForm({
 
         <div className="flex flex-col gap-1">
           <label htmlFor="logo" className="text-sm font-medium text-slate-700">
-            Escudo/logo (opcional, até 5MB)
+            Escudo/logo (opcional, até {MAX_LOGO_LABEL})
           </label>
-          <input id="logo" name="logo" type="file" accept="image/*" className="text-sm" />
+          <input
+            id="logo"
+            name="logo"
+            type="file"
+            accept="image/*"
+            className="text-sm"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file && file.size > MAX_LOGO_BYTES) {
+                e.target.value = "";
+                setLogoError(`Essa imagem é grande demais (máximo ${MAX_LOGO_LABEL}). Escolha uma menor.`);
+              } else {
+                setLogoError(null);
+              }
+            }}
+          />
+          {logoError && <p className="text-sm text-red-600">{logoError}</p>}
         </div>
       </fieldset>
 

@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
 import { tournamentNameSchema } from "@/lib/tournamentName";
 import { manualPixSchema, parseReaisToCents } from "@/lib/manualPix";
+import { MAX_LOGO_BYTES, MAX_LOGO_LABEL } from "@/lib/upload";
 import { SPORT_TYPES, getSportFamily } from "@/lib/sport";
 import { saveTournamentLogo } from "@/lib/storage";
 import {
@@ -358,8 +359,8 @@ export async function updateTournamentLogo(_prevState: UpdateLogoState, formData
   if (!logoFile.type.startsWith("image/")) {
     return { error: "A logo deve ser um arquivo de imagem." };
   }
-  if (logoFile.size > 5 * 1024 * 1024) {
-    return { error: "A imagem deve ter no máximo 5MB." };
+  if (logoFile.size > MAX_LOGO_BYTES) {
+    return { error: `A imagem deve ter no máximo ${MAX_LOGO_LABEL}.` };
   }
 
   const logoUrl = await saveTournamentLogo(logoFile);
