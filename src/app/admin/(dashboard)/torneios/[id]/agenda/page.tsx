@@ -29,6 +29,7 @@ export default async function TournamentAgendaPage({
     where: { id },
     include: {
       venues: { orderBy: { name: "asc" } },
+      teams: { select: { status: true } },
       groups: true,
       matches: {
         orderBy: [{ round: "asc" }, { position: "asc" }],
@@ -39,6 +40,8 @@ export default async function TournamentAgendaPage({
 
   if (!tournament || tournament.organizerId !== session.user.id) notFound();
 
+  const approvedCount = tournament.teams.filter((t) => t.status === "APPROVED").length;
+  const pendingCount = tournament.teams.filter((t) => t.status === "PENDING").length;
   const groupNameById = Object.fromEntries(tournament.groups.map((g) => [g.id, g.name]));
   const gameNumbers = assignGameNumbers(tournament.matches);
   const orderedMatches = topologicalMatchOrder(tournament.matches);
@@ -65,7 +68,28 @@ export default async function TournamentAgendaPage({
           <VenueManager tournamentId={tournament.id} venues={tournament.venues} />
         </div>
 
-        <AutoScheduleForm tournamentId={tournament.id} venues={tournament.venues} />
+        {tournament.matches.length === 0 ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <p className="font-medium">A agenda é montada depois do sorteio: ainda não há partidas neste torneio.</p>
+            <p className="mt-1">
+              Hoje são {approvedCount} equipe(s) aprovada(s) e {pendingCount} aguardando aprovação. Só equipes aprovadas
+              entram no sorteio.
+            </p>
+            <ol className="mt-2 list-decimal space-y-1 pl-5">
+              <li>Na página do torneio, aprove as equipes (há o botão &quot;Aprovar todas as pendentes&quot;).</li>
+              <li>Clique em &quot;Realizar o sorteio&quot; e confirme para gerar o chaveamento.</li>
+              <li>Volte aqui para distribuir datas, horários e locais.</li>
+            </ol>
+            <Link
+              href={`/admin/torneios/${tournament.id}`}
+              className="mt-3 inline-block rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Ir para o torneio
+            </Link>
+          </div>
+        ) : (
+          <AutoScheduleForm tournamentId={tournament.id} venues={tournament.venues} />
+        )}
 
         <div>
           <h2 className="mb-2 text-lg font-semibold text-slate-900">Partidas ({tournament.matches.length})</h2>
