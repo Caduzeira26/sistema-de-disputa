@@ -42,3 +42,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# tutorial videos (large; the scripts that make them live in videos/fonte)
+/videos/*.mp4
+/videos/tmp
