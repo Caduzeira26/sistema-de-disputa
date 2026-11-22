@@ -35,6 +35,20 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("NÃO existe ainda repasse automático/split");
   });
 
+  it("describes the free plan and the Corporativo plan with their real prices", () => {
+    const prompt = buildSystemPrompt();
+    expect(prompt).toContain(`Grátis: ${formatBRL(0)}`);
+    expect(prompt).toContain(`instalação de ${formatBRL(120000)}`);
+    expect(prompt).toContain(`${formatBRL(20000)}/mês`);
+    expect(prompt).toContain("NÃO é assinado pelo site");
+  });
+
+  it("explains the payment methods and that a boleto only unlocks once it is compensated", () => {
+    const prompt = buildSystemPrompt();
+    expect(prompt).toContain("PIX, boleto, cartão de crédito ou cartão de débito");
+    expect(prompt).toContain("o boleto só libera o plano depois que o valor for compensado");
+  });
+
   it("includes the Start avulso one-off pricing", () => {
     const prompt = buildSystemPrompt();
     expect(prompt).toContain(`Também vendido avulso por ${formatBRL(2500)}`);

@@ -14,3 +14,10 @@ export const BUSINESS = {
 
 /** Date the current Termos de Uso and Política de Privacidade took effect. */
 export const LEGAL_UPDATED_AT = "27 de outubro de 2026";
+
+/** Public WhatsApp of Digita Money (the same one on digitamoney.com.br), used for plans that are sold by talking to the team. */
+export const WHATSAPP_NUMBER = "554399680406";
+
+export function whatsappLink(message: string): string {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}

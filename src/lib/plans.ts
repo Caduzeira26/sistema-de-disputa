@@ -88,6 +88,44 @@ export const PLAN_CATALOG: Record<PlanTier, PlanCatalogEntry> = {
 
 export const PLAN_ORDER: PlanTier[] = ["START", "PRO", "LIGA"];
 
+/**
+ * The free package every new account gets, shown on /planos so people can see
+ * what they get before signing up. The numbers are the same ones the trial
+ * limits below enforce (Start's team cap and sports, one tournament).
+ */
+export const FREE_PLAN = {
+  label: "Grátis",
+  priceCents: 0,
+  maxTournaments: 1,
+  maxTeamsPerTournament: PLAN_CATALOG.START.maxTeamsPerTournament,
+  allowedSports: PLAN_CATALOG.START.allowedSports,
+  features: [
+    "1 campeonato completo, sem pagar nada",
+    "Até 16 equipes por campeonato",
+    "Futebol de campo e futsal",
+    "Inscrição online com QR Code e site público",
+    "Sorteio, chaveamento, tabela, artilharia e cartões",
+    "Sem cartão de crédito",
+  ],
+} as const;
+
+/**
+ * Corporativo: the whole system installed for the customer, with the
+ * tournament site on their own domain. It is sold by talking to the team (the
+ * installation is hands-on), so it has no self-service checkout.
+ */
+export const CORPORATE_PLAN = {
+  label: "Corporativo",
+  setupPriceCents: 120000,
+  priceMonthlyCents: 20000,
+  features: [
+    "Tudo dos planos Start, Pro e Liga",
+    "Site do campeonato no domínio da sua organização",
+    "Instalação e configuração feitas pela nossa equipe",
+    "Todas as modalidades, com campeonatos e equipes ilimitados",
+  ],
+} as const;
+
 /** How a user's tournament count is compared against `maxActiveTournaments`. */
 export type TournamentCountMode = "ACTIVE_ONLY" | "LIFETIME";
 
@@ -109,8 +147,8 @@ export type PlanLimits = {
 
 const TRIAL_LIMITS: Omit<PlanLimits, "tournamentCountSince"> = {
   plan: "TRIAL",
-  maxTeamsPerTournament: PLAN_CATALOG.START.maxTeamsPerTournament,
-  maxActiveTournaments: 1,
+  maxTeamsPerTournament: FREE_PLAN.maxTeamsPerTournament,
+  maxActiveTournaments: FREE_PLAN.maxTournaments,
   tournamentCountMode: "LIFETIME",
   allowedSports: PLAN_CATALOG.START.allowedSports,
   canChargeRegistration: false,

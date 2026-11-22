@@ -6,7 +6,7 @@ import { AssistantWidget } from "@/components/AssistantWidget";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FieldLines } from "@/components/sport/FieldLines";
 import { SportBall } from "@/components/sport/SportBall";
-import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents } from "@/lib/plans";
+import { CORPORATE_PLAN, FREE_PLAN, PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents } from "@/lib/plans";
 import { SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
 
 export const metadata: Metadata = {
@@ -209,16 +209,33 @@ export default function HomePage() {
         {/* PLANS */}
         <section className="mx-auto max-w-6xl px-4 py-12">
           <h2 className="text-center text-2xl font-bold sm:text-3xl">
-            Planos a partir de <span className={gradientText}>{formatBRL(PLAN_CATALOG.START.priceMonthlyCents)}/mês</span>
+            Comece <span className={gradientText}>grátis</span>, cresça quando precisar
           </h2>
-          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <p className="mx-auto mt-3 max-w-xl text-center text-slate-600">
+            O pacote grátis já traz um campeonato completo. Os planos pagos começam em {formatBRL(PLAN_CATALOG.START.priceMonthlyCents)}/mês.
+          </p>
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="anim-kickoff hover-lift rounded-2xl border border-[#35e0b0]/60 bg-white p-5" style={stagger(0)}>
+              <h3 className="font-bold text-slate-900">{FREE_PLAN.label}</h3>
+              <p className="mt-1">
+                <span className="font-display text-2xl font-bold text-slate-900">{formatBRL(FREE_PLAN.priceCents)}</span>
+              </p>
+              <ul className="mt-3 flex flex-col gap-1.5 text-sm text-slate-600">
+                {FREE_PLAN.features.slice(0, 3).map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <span className="text-emerald-600">✓</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
             {PLAN_ORDER.map((tier, i) => {
               const entry = PLAN_CATALOG[tier];
               return (
                 <div
                   key={tier}
                   className={`anim-kickoff hover-lift rounded-2xl border bg-white p-5 ${entry.highlight ? "border-slate-900 ring-1 ring-slate-900" : "border-slate-200"}`}
-                  style={stagger(i)}
+                  style={stagger(i + 1)}
                 >
                   <h3 className="font-bold text-slate-900">{entry.label}</h3>
                   <p className="mt-1">
@@ -236,10 +253,25 @@ export default function HomePage() {
                 </div>
               );
             })}
+            <div className="anim-kickoff hover-lift rounded-2xl border border-[#3fa9ff]/50 bg-white p-5" style={stagger(4)}>
+              <h3 className="font-bold text-slate-900">{CORPORATE_PLAN.label}</h3>
+              <p className="mt-1">
+                <span className="font-display text-xl font-bold text-slate-900">{formatBRL(CORPORATE_PLAN.setupPriceCents)}</span>
+                <span className="text-sm text-slate-500"> + {formatBRL(CORPORATE_PLAN.priceMonthlyCents)}/mês</span>
+              </p>
+              <ul className="mt-3 flex flex-col gap-1.5 text-sm text-slate-600">
+                {CORPORATE_PLAN.features.slice(0, 3).map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <span className="text-emerald-600">✓</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
           <p className="mt-6 text-center">
             <Link href="/planos" className="text-sm font-medium text-[#3fa9ff] underline-offset-4 hover:underline">
-              Comparar todos os planos
+              Ver todos os planos e o que cada um inclui
             </Link>
           </p>
         </section>

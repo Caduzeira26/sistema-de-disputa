@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  CORPORATE_PLAN,
+  FREE_PLAN,
   formatBRL,
   getEffectiveMonthlyPriceCents,
   getSubscriptionPriceCents,
@@ -145,5 +147,36 @@ describe("getSubscriptionPriceCents", () => {
 
   it("falls back to the monthly price when a plan has no avulso option", () => {
     expect(getSubscriptionPriceCents("PRO", "PER_TOURNAMENT", afterPromo)).toBe(14700);
+  });
+});
+
+describe("FREE_PLAN", () => {
+  it("matches what the free trial really allows", () => {
+    expect(FREE_PLAN.priceCents).toBe(0);
+    expect(FREE_PLAN.maxTournaments).toBe(1);
+    expect(FREE_PLAN.maxTeamsPerTournament).toBe(16);
+    expect([...FREE_PLAN.allowedSports]).toEqual(["FUTEBOL_CAMPO", "FUTSAL"]);
+  });
+
+  it("only advertises the sports and team cap it enforces", () => {
+    const text = FREE_PLAN.features.join(" | ");
+    expect(text).toContain("Até 16 equipes");
+    expect(text).toContain("Futebol de campo e futsal");
+    expect(text).toContain("Sem cartão de crédito");
+  });
+});
+
+describe("CORPORATE_PLAN", () => {
+  it("costs R$ 1.200 to install plus R$ 200 a month", () => {
+    expect(CORPORATE_PLAN.setupPriceCents).toBe(120000);
+    expect(CORPORATE_PLAN.priceMonthlyCents).toBe(20000);
+    expect(formatBRL(CORPORATE_PLAN.setupPriceCents).replace(/ /g, " ")).toBe("R$ 1.200,00");
+    expect(formatBRL(CORPORATE_PLAN.priceMonthlyCents).replace(/ /g, " ")).toBe("R$ 200,00");
+  });
+
+  it("includes everything from the other plans and the own-domain site", () => {
+    const text = CORPORATE_PLAN.features.join(" | ");
+    expect(text).toContain("Tudo dos planos Start, Pro e Liga");
+    expect(text).toContain("domínio");
   });
 });
