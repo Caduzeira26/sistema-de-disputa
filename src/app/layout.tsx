@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Manrope, Unbounded } from "next/font/google";
+import { PageTransition } from "@/components/sport/PageTransition";
 import "./globals.css";
 
 // Same trio as digitamoney.com.br: Unbounded for headings, Manrope for text, IBM Plex Mono for labels.
@@ -15,7 +16,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${unbounded.variable} ${manrope.variable} ${plexMono.variable} antialiased`}>
-      <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900">{children}</body>
+      <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+        {children}
+        <PageTransition />
+      </body>
     </html>
   );
 }

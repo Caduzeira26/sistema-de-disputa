@@ -458,3 +458,76 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
+
+/* ------------------------------------------------------------------ */
+/* Page wipe (see components/sport/PageTransition.tsx)                 */
+/* ------------------------------------------------------------------ */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .sweep-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -12vw;
+    width: 124vw;
+    z-index: 90;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(600px 300px at 50% 50%, rgb(53 224 176 / 0.2), transparent 70%),
+      linear-gradient(120deg, rgb(53 224 176 / 0.12), rgb(63 169 255 / 0.12)),
+      linear-gradient(120deg, #0a1113 0%, #0d171a 100%);
+    clip-path: polygon(9% 0, 100% 0, 91% 100%, 0 100%);
+    will-change: transform;
+  }
+  /* glowing leading edges */
+  .sweep-panel::before,
+  .sweep-panel::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, #35e0b0, #3fa9ff);
+    box-shadow: 0 0 24px 4px rgb(53 224 176 / 0.55);
+  }
+  .sweep-panel::before {
+    left: 8.2%;
+    transform: skewX(-6deg);
+  }
+  .sweep-panel::after {
+    right: 8.2%;
+    transform: skewX(-6deg);
+  }
+  .sweep-ball {
+    filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.5));
+  }
+  .sweep-in {
+    animation: sweep-in 0.3s cubic-bezier(0.7, 0, 0.3, 1) both;
+  }
+  .sweep-out {
+    animation: sweep-out 0.5s cubic-bezier(0.7, 0, 0.3, 1) both;
+  }
+}
+@media print, (prefers-reduced-motion: reduce) {
+  .sweep-panel {
+    display: none;
+  }
+}
+@keyframes sweep-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes sweep-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-105%);
+  }
+}
