@@ -87,6 +87,8 @@ const OVERLAY = `(() => {
     badgeEl = root.querySelector(".badge");
     cursorEl = root.querySelector(".cursor");
     ringEl = root.querySelector(".ring");
+    const z = window.__tutZoom || 1;
+    if (z !== 1) { capEl.style.zoom = String(z); cursorEl.style.width = cursorEl.style.height = 26 * z + "px"; }
     document.documentElement.appendChild(host);
     const s = saved();
     if (s.cap) { txtEl.textContent = s.cap; capEl.classList.add("on"); }
@@ -142,9 +144,9 @@ const OVERLAY = `(() => {
 
 /* --------------------------- cartões de texto ------------------------ */
 
-function cartaHtml({ etiqueta, titulo, subtitulo, logo }) {
+function cartaHtml({ etiqueta, titulo, subtitulo, logo, zoom = 1 }) {
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><style>
-  html,body{margin:0;height:100%;background:#0a1113;color:#eef6f4;font-family:Manrope,system-ui,sans-serif}
+  html{zoom:${zoom}}html,body{margin:0;height:100%;background:#0a1113;color:#eef6f4;font-family:Manrope,system-ui,sans-serif}
   body{display:flex;align-items:center;justify-content:center;text-align:center;
     background:radial-gradient(900px 500px at 85% -10%,rgba(63,169,255,.22),transparent 60%),radial-gradient(700px 420px at -5% 0%,rgba(53,224,176,.2),transparent 60%),#0a1113}
   .box{max-width:980px;padding:0 40px}
@@ -238,14 +240,18 @@ async function gravar(opcoes) {
   const vozes = sintetizar(textos, path.join(pasta, "voz"), opcoes.velocidade ?? 0);
 
   const logo = "data:image/png;base64," + fs.readFileSync(path.join(ROOT, "public", "digitamoney-icon-v2.png")).toString("base64");
+  const L = opcoes.largura || 1024;
+  const A = Math.round((L * 9) / 16);
+  const Z = L / 1024;
   const browser = await chromium.launch({ executablePath: CHROME, headless: true });
   const contexto = await browser.newContext({
-    viewport: { width: 1024, height: 576 },
-    recordVideo: { dir: path.join(pasta, "raw"), size: { width: 1024, height: 576 } },
+    viewport: { width: L, height: A },
+    recordVideo: { dir: path.join(pasta, "raw"), size: { width: L, height: A } },
     storageState: opcoes.estado || undefined,
     locale: "pt-BR",
     deviceScaleFactor: 1,
   });
+  await contexto.addInitScript("window.__tutZoom=" + Z + ";");
   await contexto.addInitScript(OVERLAY);
   const erros = [];
   const t0 = Date.now();
@@ -262,7 +268,7 @@ async function gravar(opcoes) {
   }
 
   // 1) cartão de abertura
-  await page.setContent(cartaHtml({ etiqueta: opcoes.etiqueta, titulo: opcoes.titulo, subtitulo: opcoes.subtitulo, logo }));
+  await page.setContent(cartaHtml({ etiqueta: opcoes.etiqueta, titulo: opcoes.titulo, subtitulo: opcoes.subtitulo, logo, zoom: Z }));
   await page.waitForTimeout(500);
   await sleep(await falar(0, 700));
 
@@ -289,7 +295,7 @@ async function gravar(opcoes) {
 
   // 3) encerramento
   await page.evaluate(() => window.__tut && window.__tut.caption("", "")).catch(() => {});
-  await page.setContent(cartaHtml({ etiqueta: opcoes.etiquetaFim || "Até o próximo vídeo", titulo: opcoes.proximo, subtitulo: "Sistema de Disputa · Digita Money", logo }));
+  await page.setContent(cartaHtml({ etiqueta: opcoes.etiquetaFim || "Até o próximo vídeo", titulo: opcoes.proximo, subtitulo: "Sistema de Disputa · Digita Money", logo, zoom: Z }));
   await page.waitForTimeout(400);
   await sleep(await falar(vozes.length - 1, 900));
 
