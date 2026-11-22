@@ -5,7 +5,7 @@ import { SPORT_LABELS } from "@/lib/sport";
 import { formatTournamentDateRange } from "@/lib/formatDateRange";
 import { BrandFooter } from "@/components/BrandFooter";
 import { PlanUsageCard } from "@/components/admin/PlanUsageCard";
-import { countTournamentsForLimit, getPlanLimits } from "@/lib/plans";
+import { PLAN_CATALOG, countTournamentsForLimit, formatBRL, getPlanLimits } from "@/lib/plans";
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Rascunho",
@@ -28,8 +28,31 @@ export default async function AdminHomePage() {
   const limits = session?.user ? await getPlanLimits(session.user.id) : null;
   const usedTournamentCount = session?.user && limits ? await countTournamentsForLimit(session.user.id, limits) : 0;
 
+  const pendingCharge = session?.user
+    ? await prisma.gatewayPayment.findFirst({
+        where: { status: "PENDING", subscription: { userId: session.user.id } },
+        orderBy: { createdAt: "desc" },
+        include: { subscription: true },
+      })
+    : null;
+
   return (
     <div>
+      {pendingCharge && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p>
+            Você tem uma cobrança do plano {PLAN_CATALOG[pendingCharge.subscription.plan].label} (
+            {formatBRL(pendingCharge.amountCents)}) aguardando pagamento. O plano é liberado assim que o pagamento for confirmado.
+          </p>
+          <Link
+            href={`/admin/assinatura/cobranca/${pendingCharge.id}`}
+            className="rounded-md bg-slate-900 px-3 py-2 font-medium text-white hover:bg-slate-800"
+          >
+            Ver cobrança
+          </Link>
+        </div>
+      )}
+
       {limits && <PlanUsageCard limits={limits} usedCount={usedTournamentCount} />}
 
       <div className="flex items-center justify-between">

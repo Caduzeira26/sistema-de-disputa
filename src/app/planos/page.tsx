@@ -4,6 +4,7 @@ import { BrandFooter } from "@/components/BrandFooter";
 import { AssistantWidget } from "@/components/AssistantWidget";
 import { CheckoutButton } from "@/components/CheckoutButton";
 import { PromoCountdown } from "@/components/PromoCountdown";
+import { isAsaasConfigured } from "@/lib/asaas";
 import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents, isPromoActive } from "@/lib/plans";
 
 const FAQ_ITEMS = [
@@ -124,7 +125,9 @@ export default async function PlansPage() {
         </div>
 
         <p className="mt-10 text-center text-sm text-slate-400">
-          Assinaturas mensais são renovadas manualmente — você paga um novo PIX a cada mês.
+          {isAsaasConfigured()
+            ? "Pague por PIX, boleto, cartão de crédito ou débito. Assinaturas mensais são renovadas manualmente — a cada mês você paga uma nova cobrança. No boleto, o plano é liberado depois que o valor for compensado."
+            : "Assinaturas mensais são renovadas manualmente — você paga um novo PIX a cada mês."}
         </p>
 
         {/* Comparativo rápido */}

@@ -28,7 +28,8 @@ export default function PrivacyPage() {
         <ul>
           <li>
             <strong>Organizadores:</strong> nome, e-mail e senha (guardada apenas em formato criptografado, sem
-            possibilidade de leitura), plano contratado e histórico de pagamentos da assinatura.
+            possibilidade de leitura), CPF ou CNPJ (informado ao assinar um plano, para emitir a cobrança), plano
+            contratado e histórico de pagamentos da assinatura.
           </li>
           <li>
             <strong>Equipes:</strong> nome e logo da equipe, nome do responsável, telefone e e-mail de contato.
@@ -84,7 +85,11 @@ export default function PrivacyPage() {
           <li>Hospedagem da aplicação e arquivos (Vercel).</li>
           <li>Banco de dados (Supabase).</li>
           <li>Envio de e-mails (Resend).</li>
-          <li>Cobranças por PIX (Efí) e, na venda de assinaturas, a plataforma de vendas utilizada (por exemplo, Hotmart).</li>
+          <li>
+            Cobranças e pagamentos (Asaas e Efí: PIX, boleto e cartões) e, na venda de assinaturas, a plataforma de
+            vendas utilizada (por exemplo, Hotmart). Para emitir a cobrança, o Asaas recebe seu nome, e-mail e CPF ou
+            CNPJ; os dados do cartão são digitados na página segura do Asaas e não passam pelo nosso sistema.
+          </li>
           <li>Assistente virtual, que usa inteligência artificial da Anthropic para gerar as respostas.</li>
         </ul>
         <p>

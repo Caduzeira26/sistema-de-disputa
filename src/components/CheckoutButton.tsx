@@ -28,6 +28,21 @@ export function CheckoutButton({
     <form action={formAction}>
       <input type="hidden" name="plan" value={plan} />
       <input type="hidden" name="paymentType" value={paymentType} />
+      {state.needsDocument && (
+        <div className="mb-2 flex flex-col gap-1">
+          <label htmlFor={`cpfCnpj-${plan}-${paymentType}`} className="text-xs font-medium text-slate-700">
+            CPF ou CNPJ (necessário para emitir a cobrança)
+          </label>
+          <input
+            id={`cpfCnpj-${plan}-${paymentType}`}
+            name="cpfCnpj"
+            inputMode="numeric"
+            autoComplete="off"
+            required
+            className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          />
+        </div>
+      )}
       <button type="submit" disabled={pending} className={className}>
         {pending ? "Redirecionando..." : label}
       </button>

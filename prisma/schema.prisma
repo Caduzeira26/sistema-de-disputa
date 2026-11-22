@@ -85,6 +85,18 @@ enum PaymentType {
   PER_TOURNAMENT
 }
 
+/// Where a gateway (Asaas) charge stands. PAID is the only state that unlocks a
+/// plan: for a boleto it means the money was credited, for a card it means the
+/// payment was approved (confirmed), for PIX that it was received.
+enum GatewayPaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  REFUNDED
+  CHARGEBACK
+  CANCELED
+}
+
 enum PixTransactionKind {
   TEAM_REGISTRATION
   SUBSCRIPTION
@@ -103,6 +115,10 @@ model User {
   passwordHash String
   name         String
   createdAt    DateTime @default(now())
+
+  /// CPF/CNPJ (digits only). Asaas needs it to issue a charge; asked once at checkout.
+  cpfCnpj         String?
+  asaasCustomerId String?
 
   tournaments         Tournament[]
   subscriptions       Subscription[]
@@ -139,6 +155,7 @@ model Subscription {
   createdAt   DateTime           @default(now())
 
   pixTransactions PixTransaction[]
+  gatewayPayments GatewayPayment[]
 
   @@index([userId, status])
 }
@@ -610,4 +627,29 @@ model LobbyEntry {
   score     Int?
 
   @@unique([roundId, teamId])
+}
+
+/// A plan charge issued through Asaas (PIX, boleto, credit or debit card — the
+/// customer picks on Asaas's hosted page, so no card data touches this app).
+/// `status` only changes after re-reading the charge from Asaas (never from a
+/// webhook body alone) — see src/lib/gatewayPayments.ts.
+model GatewayPayment {
+  id             String               @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription         @relation(fields: [subscriptionId], references: [id])
+
+  /// Asaas charge id (pay_...).
+  gatewayId   String               @unique
+  amountCents Int
+  /// The method actually used, known once the customer pays (BOLETO, PIX, CREDIT_CARD, DEBIT_CARD...).
+  billingType String?
+  status      GatewayPaymentStatus @default(PENDING)
+  invoiceUrl  String
+  bankSlipUrl String?
+  dueDate     DateTime
+  paidAt      DateTime?
+  createdAt   DateTime             @default(now())
+
+  @@index([status])
+  @@index([subscriptionId])
 }

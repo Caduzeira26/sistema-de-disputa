@@ -7,6 +7,8 @@ import { auth } from "@/lib/auth";
 import { createSubscriptionCharge } from "@/lib/pix";
 import { EfiNotConfiguredError } from "@/lib/efi";
 import { PLAN_CATALOG } from "@/lib/plans";
+import { isAsaasConfigured } from "@/lib/asaas";
+import { CheckoutInputError, startGatewayCheckout } from "@/lib/gatewayPayments";
 
 const checkoutSchema = z
   .object({
@@ -18,7 +20,11 @@ const checkoutSchema = z
     path: ["paymentType"],
   });
 
-export type StartCheckoutState = { error?: string };
+export type StartCheckoutState = {
+  error?: string;
+  /** Asaas needs the buyer's CPF/CNPJ; the form reveals the field and asks again. */
+  needsDocument?: boolean;
+};
 
 export async function startCheckout(_prevState: StartCheckoutState, formData: FormData): Promise<StartCheckoutState> {
   const session = await auth();
@@ -37,6 +43,26 @@ export async function startCheckout(_prevState: StartCheckoutState, formData: Fo
   const catalogEntry = PLAN_CATALOG[parsed.data.plan];
   if (parsed.data.paymentType === "PER_TOURNAMENT" && !catalogEntry.priceAvulsoCents) {
     return { error: "Esse plano não tem opção avulsa." };
+  }
+
+  // PIX, boleto, credit and debit card through Asaas when it's configured; the Efí PIX path below is the fallback.
+  if (isAsaasConfigured()) {
+    let gatewayPaymentId: string;
+    try {
+      const result = await startGatewayCheckout({
+        userId: session.user.id,
+        plan: parsed.data.plan,
+        paymentType: parsed.data.paymentType,
+        cpfCnpjInput: (formData.get("cpfCnpj") as string | null) ?? null,
+      });
+      if (result.needsDocument) return { needsDocument: true };
+      gatewayPaymentId = result.gatewayPaymentId;
+    } catch (err) {
+      if (err instanceof CheckoutInputError) return { needsDocument: true, error: err.message };
+      console.error("[checkout] could not create the Asaas charge", err);
+      return { error: "Não foi possível gerar a cobrança agora. Tente novamente em instantes." };
+    }
+    redirect(`/admin/assinatura/cobranca/${gatewayPaymentId}`);
   }
 
   const subscription = await prisma.subscription.create({

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatBRL,
   getEffectiveMonthlyPriceCents,
+  getSubscriptionPriceCents,
   isPromoActive,
   isSportAllowed,
   isWithinTeamLimit,
@@ -126,5 +127,23 @@ describe("formatBRL", () => {
 
   it("formats whole reais without cents drift", () => {
     expect(formatBRL(19700)).toBe("R$ 197,00");
+  });
+});
+
+describe("getSubscriptionPriceCents", () => {
+  const afterPromo = new Date("2099-01-01T00:00:00Z");
+
+  it("charges the avulso price for a one-off Start purchase", () => {
+    expect(getSubscriptionPriceCents("START", "PER_TOURNAMENT", afterPromo)).toBe(2500);
+  });
+
+  it("charges the monthly price otherwise", () => {
+    expect(getSubscriptionPriceCents("START", "MONTHLY", afterPromo)).toBe(2990);
+    expect(getSubscriptionPriceCents("PRO", "MONTHLY", afterPromo)).toBe(14700);
+    expect(getSubscriptionPriceCents("LIGA", "MONTHLY", afterPromo)).toBe(19700);
+  });
+
+  it("falls back to the monthly price when a plan has no avulso option", () => {
+    expect(getSubscriptionPriceCents("PRO", "PER_TOURNAMENT", afterPromo)).toBe(14700);
   });
 });

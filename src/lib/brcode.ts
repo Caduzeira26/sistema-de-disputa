@@ -4,6 +4,7 @@
  * the payload carries the key and, optionally, the amount, so the payer's bank
  * app fills everything in on scan.
  */
+import { isValidCpf } from "@/lib/document";
 
 /** CRC16-CCITT (poly 0x1021, init 0xFFFF), as required by the BR Code spec. */
 export function crc16(text: string): string {
@@ -15,18 +16,6 @@ export function crc16(text: string): string {
     }
   }
   return crc.toString(16).toUpperCase().padStart(4, "0");
-}
-
-function isValidCpf(digits: string): boolean {
-  if (!/^\d{11}$/.test(digits) || /^(\d)\1{10}$/.test(digits)) return false;
-  const nums = digits.split("").map(Number);
-  for (const length of [9, 10]) {
-    let sum = 0;
-    for (let i = 0; i < length; i++) sum += nums[i] * (length + 1 - i);
-    const rest = sum % 11;
-    if (nums[length] !== (rest < 2 ? 0 : 11 - rest)) return false;
-  }
-  return true;
 }
 
 /**

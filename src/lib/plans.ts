@@ -199,6 +199,13 @@ export function getEffectiveMonthlyPriceCents(entry: PlanCatalogEntry, now = new
   return entry.priceMonthlyCents;
 }
 
+/** What a plan purchase costs right now: the avulso price for a one-off Start, otherwise the (promo-aware) monthly price. */
+export function getSubscriptionPriceCents(plan: PlanTier, paymentType: "MONTHLY" | "PER_TOURNAMENT", now = new Date()): number {
+  const entry = PLAN_CATALOG[plan];
+  if (paymentType === "PER_TOURNAMENT") return entry.priceAvulsoCents ?? entry.priceMonthlyCents;
+  return getEffectiveMonthlyPriceCents(entry, now);
+}
+
 export function isPromoActive(entry: PlanCatalogEntry, now = new Date()): boolean {
   return Boolean(entry.promoPriceMonthlyCents && entry.promoEndsAt && now < entry.promoEndsAt);
 }
