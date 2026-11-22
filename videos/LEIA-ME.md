@@ -39,6 +39,11 @@ O roteiro simula o pagamento por esse servidor falso (`ASAAS_FALSO` muda o ender
 `videos/fonte/.env.local` (`ELEVENLABS_API_KEY=...`, arquivo ignorado pelo git). Cada texto fica em cache em `videos/tmp/cache-voz`,
 então regravar sem mudar a fala não gasta crédito; só texto novo é cobrado (~9 mil caracteres para os 6 vídeos).
 
+**Trocar só a voz, sem regravar a tela:** `python videos/fonte/trocar-voz.py NOME` (por exemplo `01-criando-a-conta`) usa o vídeo
+original guardado em `videos/tmp/antigos/NOME.mp4` e as falas novas geradas em `videos/tmp/NOME/voz` (uma gravação com `VOZ=elevenlabs`
+cria esses arquivos). O script acha o instante exato de cada fala original por correlação e coloca a voz nova no mesmo ponto;
+a imagem não é recodificada. A voz nova é mais rápida, então é desacelerada até 0,85x para acompanhar a tela.
+
 Requisitos: Chrome instalado, `ffmpeg` no PATH, a voz pt-BR do Windows e o `playwright-core`
 (caminho em `PLAYWRIGHT`, veja `fonte/lib.cjs`; também dá para apontar `CHROME` e `BASE`).
 
