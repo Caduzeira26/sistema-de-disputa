@@ -67,7 +67,10 @@ export default async function PublicTournamentPage({
         <p className="mt-1 text-sm text-slate-500">{formatTournamentDateRange(tournament.startDate, tournament.endDate)}</p>
       )}
       {tournament.description && <p className="mt-2 text-slate-600">{tournament.description}</p>}
-      <p className="mt-3 inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+      <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+        {tournament.status === "IN_PROGRESS" && (
+          <span aria-hidden className="live-dot h-2 w-2 rounded-full bg-red-600 text-red-600" />
+        )}
         {STATUS_LABEL[tournament.status]}
       </p>
 

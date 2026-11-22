@@ -1,6 +1,460 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-manrope), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-unbounded), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+/*
+ * Dark "digitamoney" theme, screen only.
+ *
+ * The app is written with Tailwind's default light palette (slate / emerald /
+ * amber / red). Instead of touching every component, those palette variables
+ * are remapped here to the digitamoney.com.br colors. Printing (posters,
+ * brackets, schedules, match sheets) keeps the original light palette, because
+ * everything below lives inside `@media screen`.
+ */
+@media screen {
+  :root {
+    color-scheme: dark;
+
+    --bg: #0a1113;
+    --bg-soft: #0d171a;
+    --surface: #121d20;
+    --surface-2: #17252a;
+    --border: #22343a;
+    --border-strong: #2e454c;
+    --text: #eef6f4;
+    --text-dim: #9db3b0;
+    --text-faint: #62807c;
+    --teal: #35e0b0;
+    --blue: #3fa9ff;
+    --violet: #9b7bff;
+    --on-accent: #06110f;
+    --brand-gradient: linear-gradient(120deg, #35e0b0 0%, #3fa9ff 100%);
+
+    /* slate: backgrounds go dark, text goes light */
+    --color-slate-50: #0a1113;
+    --color-slate-100: #17252a;
+    --color-slate-200: #22343a;
+    --color-slate-300: #2e454c;
+    --color-slate-400: #62807c;
+    --color-slate-500: #9db3b0;
+    --color-slate-600: #b7c9c6;
+    --color-slate-700: #d3e1de;
+    --color-slate-800: #e6f0ee;
+    --color-slate-900: #eef6f4;
+
+    /* emerald → teal (tinted fills, light text) */
+    --color-emerald-50: rgb(53 224 176 / 0.08);
+    --color-emerald-100: rgb(53 224 176 / 0.16);
+    --color-emerald-200: rgb(53 224 176 / 0.35);
+    --color-emerald-300: #6ee9c6;
+    --color-emerald-600: #35e0b0;
+    --color-emerald-700: #4fe6bd;
+    --color-emerald-800: #7ef0cd;
+    --color-emerald-900: #a5f5dd;
+
+    /* amber */
+    --color-amber-50: rgb(251 191 36 / 0.08);
+    --color-amber-100: rgb(251 191 36 / 0.15);
+    --color-amber-200: rgb(251 191 36 / 0.35);
+    --color-amber-300: rgb(251 191 36 / 0.5);
+    --color-amber-600: #fbbf24;
+    --color-amber-700: #fcd34d;
+    --color-amber-800: #fde68a;
+    --color-amber-900: #fef3c7;
+
+    /* red */
+    --color-red-50: rgb(248 113 113 / 0.1);
+    --color-red-100: rgb(248 113 113 / 0.16);
+    --color-red-200: rgb(248 113 113 / 0.35);
+    --color-red-300: rgb(248 113 113 / 0.5);
+    --color-red-600: #f87171;
+    --color-red-700: #fca5a5;
+    --color-red-800: #fecaca;
+  }
+
+  html {
+    background: var(--bg);
+  }
+
+  body {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(900px 500px at 85% -10%, rgb(63 169 255 / 0.1), transparent 60%),
+      radial-gradient(700px 420px at -5% 0%, rgb(53 224 176 / 0.09), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgb(53 224 176 / 0.35);
+  }
+
+  /* Headings use the display face; the poster sheets keep the body face so long names still fit an A4. */
+  :where(h1, h2):not(.poster *) {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  :where(h1):not(.poster *) {
+    line-height: 1.15;
+  }
+
+  /* Cards / panels that were white */
+  .bg-white {
+    background-color: var(--surface);
+  }
+  .hover\:bg-white:hover,
+  .hover\:bg-slate-50:hover,
+  .hover\:bg-slate-100:hover {
+    background-color: var(--surface-2);
+  }
+
+  /* Native form controls: no more white boxes */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    background-color: var(--bg-soft);
+    color: var(--text);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-faint);
+  }
+  .focus\:border-slate-500:focus,
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--teal);
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(53 224 176 / 0.18);
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--teal);
+  }
+
+  /* Primary buttons: pill with the digitamoney gradient */
+  button[class~="bg-slate-900"],
+  a[class~="bg-slate-900"],
+  input[type="submit"][class~="bg-slate-900"] {
+    overflow: hidden;
+    background-image: var(--brand-gradient);
+    background-color: transparent;
+    color: var(--on-accent);
+    font-weight: 700;
+    border-radius: 999px;
+    box-shadow: 0 8px 24px -12px rgb(53 224 176 / 0.6);
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      filter 0.18s ease;
+  }
+  button[class~="bg-slate-900"]:hover:not(:disabled),
+  a[class~="bg-slate-900"]:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 12px 30px -10px rgb(63 169 255 / 0.65);
+    filter: brightness(1.05);
+  }
+  button[class~="bg-slate-900"]:active:not(:disabled),
+  a[class~="bg-slate-900"]:active {
+    transform: translateY(0) scale(0.98);
+  }
+  /* (the sweep below needs a positioned button; fixed/absolute ones, like the chat bubble, already are) */
+  button[class~="bg-slate-900"]:not(.fixed):not(.absolute):not(.sticky),
+  a[class~="bg-slate-900"]:not(.fixed):not(.absolute):not(.sticky) {
+    position: relative;
+  }
+  /* light sweep across the button on hover, like a floodlight passing over the pitch */
+  button[class~="bg-slate-900"]::after,
+  a[class~="bg-slate-900"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.45) 50%, transparent 65%);
+    transform: translateX(-120%);
+  }
+  button[class~="bg-slate-900"]:hover:not(:disabled)::after,
+  a[class~="bg-slate-900"]:hover::after {
+    transform: translateX(120%);
+    transition: transform 0.7s ease;
+  }
+
+  /* Other dark-filled elements (badges, numbered circles, banners) become raised teal-edged panels */
+  :not(button):not(a)[class~="bg-slate-900"] {
+    background-color: var(--surface-2);
+    background-image: linear-gradient(135deg, rgb(53 224 176 / 0.12), rgb(63 169 255 / 0.12));
+    border: 1px solid rgb(53 224 176 / 0.35);
+    color: var(--text);
+  }
+  .border-slate-900 {
+    border-color: var(--teal);
+  }
+  .ring-slate-900 {
+    --tw-ring-color: var(--teal);
+  }
+
+  /* Solid emerald buttons/banners (white text): a deeper teal so white stays readable */
+  .bg-emerald-600 {
+    background-color: #0d8a69;
+  }
+  .bg-emerald-700,
+  .hover\:bg-emerald-700:hover {
+    background-color: #0a7358;
+  }
+  .hover\:bg-emerald-800:hover {
+    background-color: #085f49;
+  }
+  .border-emerald-700 {
+    border-color: #0a7358;
+  }
+
+  /* Outlined secondary buttons keep a visible edge on dark */
+  button.border-slate-300:not([class*="bg-"]),
+  a.border-slate-300:not([class*="bg-"]) {
+    border-radius: 999px;
+    transition:
+      border-color 0.18s ease,
+      background-color 0.18s ease,
+      transform 0.18s ease;
+  }
+  button.border-slate-300:not([class*="bg-"]):hover:not(:disabled),
+  a.border-slate-300:not([class*="bg-"]):hover {
+    border-color: var(--teal);
+    background-color: rgb(53 224 176 / 0.08);
+    transform: translateY(-1px);
+  }
+
+  /* Tables: tabular numbers like a scoreboard */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Scrollbars */
+  * {
+    scrollbar-color: var(--border-strong) var(--bg);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Sports motion. Screen only, and off for people who ask for less.    */
+/* ------------------------------------------------------------------ */
+@media screen and (prefers-reduced-motion: no-preference) {
+  /* Kick-off: every page's content comes onto the pitch one block after another */
+  main > * {
+    animation: kickoff 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  main > *:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  main > *:nth-child(3) {
+    animation-delay: 0.12s;
+  }
+  main > *:nth-child(4) {
+    animation-delay: 0.18s;
+  }
+  main > *:nth-child(5) {
+    animation-delay: 0.24s;
+  }
+  main > *:nth-child(n + 6) {
+    animation-delay: 0.3s;
+  }
+
+  .anim-kickoff {
+    animation: kickoff 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+
+  /* a team "dropped" into its slot by the draw */
+  .anim-drop-in {
+    animation: drop-in 0.65s cubic-bezier(0.25, 1.4, 0.45, 1) both;
+  }
+
+  /* LIVE dot */
+  .live-dot {
+    position: relative;
+  }
+  .live-dot::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.35;
+    animation: live-ping 1.4s ease-out infinite;
+  }
+
+  /* hero: ball, field lines, speed lines, floodlights */
+  .anim-ball-roll {
+    animation: ball-roll 9s linear infinite;
+  }
+  .anim-ball-bounce {
+    animation: ball-bounce 0.9s cubic-bezier(0.3, 0, 0.7, 1) infinite;
+  }
+  .anim-ball-spin {
+    animation: ball-spin 2.4s linear infinite;
+  }
+  .anim-speed-lines {
+    animation: speed-lines 1.6s linear infinite;
+  }
+  .anim-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .anim-glow {
+    animation: glow 4s ease-in-out infinite;
+  }
+  .anim-score-pop {
+    animation: score-pop 0.5s cubic-bezier(0.25, 1.6, 0.45, 1) both;
+  }
+
+  /* podium confetti */
+  .confetti-piece {
+    animation: confetti-fall var(--dur, 3.2s) ease-in var(--delay, 0s) infinite;
+  }
+
+  /* cards lift a little on hover */
+  .hover-lift {
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    border-color: rgb(53 224 176 / 0.5);
+    box-shadow: 0 18px 40px -22px rgb(53 224 176 / 0.55);
+  }
+}
+
+@keyframes kickoff {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-26px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes live-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+@keyframes ball-roll {
+  0% {
+    transform: translateX(-12vw) rotate(0deg);
+  }
+  100% {
+    transform: translateX(112vw) rotate(1080deg);
+  }
+}
+@keyframes ball-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  45% {
+    transform: translateY(-46px) scale(0.97, 1.03);
+  }
+  92% {
+    transform: translateY(0) scale(1.1, 0.88);
+  }
+}
+@keyframes ball-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes speed-lines {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -120px 0;
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes score-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, -20px, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--drift, 0px), 190px, 0) rotate(var(--spin, 540deg));
+    opacity: 0;
+  }
+}
+
+/* horizontal ticker (modalities strip on the home page) */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .anim-marquee {
+    animation: marquee 38s linear infinite;
+  }
+  .anim-marquee:hover {
+    animation-play-state: paused;
+  }
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* small "mono" caption used for eyebrows and labels, like on digitamoney.com.br */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }

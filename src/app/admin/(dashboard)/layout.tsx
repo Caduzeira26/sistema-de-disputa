@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { SignOutButton } from "@/components/admin/SignOutButton";
@@ -8,9 +9,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-slate-50/80 backdrop-blur-md print:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
+            <Link href="/admin" className="flex items-center" aria-label="Sistema de Disputa">
+              <Image src="/digitamoney-icon-v2.png" alt="" width={560} height={560} className="h-8 w-8" />
+            </Link>
             <Link href="/admin" className="text-slate-900">
               Torneios
             </Link>

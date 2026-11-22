@@ -25,8 +25,8 @@ function LastDrawn({
   }
   const destination = kind === "GROUPS" ? groupLabel(step.groupIndex ?? 0, groupWord) : "posição na chave";
   return (
-    <div className="rounded-xl border border-slate-900 bg-slate-900 p-6 text-center text-white">
-      <p className="text-xs uppercase tracking-wide text-slate-300">Última equipe sorteada · Pote {step.pot}</p>
+    <div key={step.teamId} className="anim-drop-in rounded-xl border border-slate-900 bg-slate-900 p-6 text-center text-white">
+      <p className="eyebrow text-slate-500">Última equipe sorteada · Pote {step.pot}</p>
       <p className="mt-2 text-3xl font-semibold">{name}</p>
       {kind === "GROUPS" && <p className="mt-1 text-lg text-emerald-300">→ {destination}</p>}
     </div>
@@ -81,7 +81,7 @@ export function DrawBoard({
                     <li
                       key={s.teamId}
                       className={`flex items-center justify-between rounded px-2 py-1 text-sm ${
-                        s.teamId === last?.teamId ? "bg-emerald-100 font-medium text-emerald-900" : "bg-slate-50 text-slate-700"
+                        s.teamId === last?.teamId ? "anim-drop-in bg-emerald-100 font-medium text-emerald-900" : "bg-slate-50 text-slate-700"
                       }`}
                     >
                       <span>{nameOf(s.teamId)}</span>
@@ -125,7 +125,7 @@ function KnockoutSlots({
           !step
             ? "bg-slate-50 text-slate-400"
             : step.teamId === lastTeamId
-              ? "bg-emerald-100 font-medium text-emerald-900"
+              ? "anim-drop-in bg-emerald-100 font-medium text-emerald-900"
               : "bg-slate-100 text-slate-800"
         }`}
       >

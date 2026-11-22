@@ -4,6 +4,7 @@ import { BrandFooter } from "@/components/BrandFooter";
 import { AssistantWidget } from "@/components/AssistantWidget";
 import { CheckoutButton } from "@/components/CheckoutButton";
 import { PromoCountdown } from "@/components/PromoCountdown";
+import { SiteHeader } from "@/components/SiteHeader";
 import { isAsaasConfigured } from "@/lib/asaas";
 import { PLAN_CATALOG, PLAN_ORDER, formatBRL, getEffectiveMonthlyPriceCents, isPromoActive } from "@/lib/plans";
 
@@ -31,6 +32,7 @@ export default async function PlansPage() {
 
   return (
     <div className="flex flex-1 flex-col">
+      <SiteHeader />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-12">
         {proPromoActive && (
           <div className="mb-8 flex flex-col items-center gap-1 rounded-lg bg-emerald-600 px-4 py-3 text-center text-white">
