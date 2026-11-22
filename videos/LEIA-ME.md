@@ -1,7 +1,7 @@
 # Vídeos de ajuda do Sistema de Disputa
 
 Série de 5 vídeos passo a passo (mais 1 extra sobre planos e pagamento), para quem nunca usou o sistema. Narração em português do Brasil
-(voz "Microsoft Maria", do Windows) e legendas na tela, gravados numa cópia de teste do sistema
+(voz masculina "Lax Whisper", do ElevenLabs, a mesma do canal Terço dos Homens) e legendas na tela, gravados numa cópia de teste do sistema
 com um campeonato de exemplo ("Copa Digita Money de Futsal").
 
 | Arquivo | Assunto | Duração |
@@ -34,6 +34,10 @@ O vídeo 6 (planos e pagamento) precisa também do Asaas de mentira, para não c
 `node videos/fonte/fake-asaas.mjs` (servidor local na porta 4010 que imita a API do Asaas) e suba o servidor
 de gravação com `ASAAS_API_KEY=test-key ASAAS_API_URL=http://localhost:4010/v3 ASAAS_WEBHOOK_TOKEN=<32+ caracteres>`.
 O roteiro simula o pagamento por esse servidor falso (`ASAAS_FALSO` muda o endereço).
+
+**Voz:** o padrão é a voz do Windows ("Microsoft Maria"). Para usar a Lax Whisper, rode com `VOZ=elevenlabs` e deixe a chave em
+`videos/fonte/.env.local` (`ELEVENLABS_API_KEY=...`, arquivo ignorado pelo git). Cada texto fica em cache em `videos/tmp/cache-voz`,
+então regravar sem mudar a fala não gasta crédito; só texto novo é cobrado (~9 mil caracteres para os 6 vídeos).
 
 Requisitos: Chrome instalado, `ffmpeg` no PATH, a voz pt-BR do Windows e o `playwright-core`
 (caminho em `PLAYWRIGHT`, veja `fonte/lib.cjs`; também dá para apontar `CHROME` e `BASE`).

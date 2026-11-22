@@ -46,7 +46,11 @@ function sintetizar(textos, pasta, velocidade = 0) {
   const itens = textos.map((texto, i) => ({ arquivo: path.join(pasta, `fala-${String(i).padStart(2, "0")}.wav`), texto }));
   const lista = path.join(pasta, "lista.json");
   fs.writeFileSync(lista, "\ufeff" + JSON.stringify(itens), "utf8");
-  const r = spawnSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(__dirname, "voz.ps1"), "-Lista", lista, "-Velocidade", String(velocidade)], { encoding: "utf8" });
+  // VOZ=elevenlabs usa a voz do Terço dos Homens (precisa da chave, veja voz-elevenlabs.cjs); o padrão é a voz do Windows.
+  const r =
+    (process.env.VOZ || "").toLowerCase() === "elevenlabs"
+      ? spawnSync("node", [path.join(__dirname, "voz-elevenlabs.cjs"), lista], { encoding: "utf8" })
+      : spawnSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(__dirname, "voz.ps1"), "-Lista", lista, "-Velocidade", String(velocidade)], { encoding: "utf8" });
   if (r.status !== 0) throw new Error("Falha ao gerar a voz: " + (r.stderr || r.stdout));
   return itens.map((it) => ({ arquivo: it.arquivo, segundos: wavSeconds(it.arquivo) }));
 }
