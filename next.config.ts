@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
         source: "/:path((?!api/asaas/webhook$).*)",
         has: [{ type: "host", value: "sistema-de-disputa.vercel.app" }],
         destination: "https://disputa.digitamoney.com.br/:path",
-        permanent: false,
+        permanent: true,
       },
     ];
   },
