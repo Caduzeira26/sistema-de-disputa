@@ -8,6 +8,19 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "4mb",
     },
   },
+  async redirects() {
+    // The app now lives at disputa.digitamoney.com.br. Anyone still using the old
+    // vercel.app address (printed QR posters, bookmarks) is sent to the same page there.
+    // The Asaas webhook is left alone so payment notifications are never bounced.
+    return [
+      {
+        source: "/:path((?!api/asaas/webhook$).*)",
+        has: [{ type: "host", value: "sistema-de-disputa.vercel.app" }],
+        destination: "https://disputa.digitamoney.com.br/:path",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
