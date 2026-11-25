@@ -1,6 +1,6 @@
 # Vídeos de ajuda do Sistema de Disputa
 
-Série de 5 vídeos passo a passo (mais 1 extra sobre planos e pagamento), para quem nunca usou o sistema. Narração em português do Brasil
+Série de 5 vídeos passo a passo (mais 2 extras: planos e pagamento, e Kings League), para quem nunca usou o sistema. Narração em português do Brasil
 (voz masculina "Lax Whisper", do ElevenLabs, a mesma do canal Terço dos Homens) e legendas na tela, gravados numa cópia de teste do sistema
 com um campeonato de exemplo ("Copa Digita Money de Futsal").
 
@@ -12,6 +12,7 @@ com um campeonato de exemplo ("Copa Digita Money de Futsal").
 | `04-sorteio.mp4` | Potes, sorteio ao vivo e chaveamento | ~2 min |
 | `05-resultados.mp4` | Lançar placares, campeão, página pública e estatísticas | ~2,5 min |
 | `06-planos-e-pagamento.mp4` | Os planos (Grátis, Start, Pro, Liga, Corporativo) e como pagar | ~4 min |
+| `07-kings-league.mp4` | Campeonato Kings League: súmula, cartas, shootouts, classificação e playoffs | ~4 min |
 
 Os `.mp4` não vão para o git (são grandes). O que vai são os roteiros, em `fonte/`.
 
