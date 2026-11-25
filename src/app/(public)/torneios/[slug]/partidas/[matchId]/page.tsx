@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getSportFamily } from "@/lib/sport";
+import { getSportFamily, shootoutLabel } from "@/lib/sport";
+import { kingsPhases } from "@/lib/kings";
+import { KingsPhaseGuide, KingsTimeline } from "@/components/kings/KingsTimeline";
 import { TournamentHeaderLogo, TournamentWatermark } from "@/components/TournamentBranding";
 import { assignGameNumbers } from "@/lib/bracket/gameOrder";
 
@@ -27,6 +29,7 @@ export default async function PublicMatchSumulaPage({
       baskets: { include: { player: true, team: true }, orderBy: [{ period: "asc" }, { id: "asc" }] },
       fouls: { include: { player: true, team: true }, orderBy: [{ period: "asc" }, { id: "asc" }] },
       tableTennisGames: { include: { sets: { orderBy: { setNumber: "asc" } } }, orderBy: { gameNumber: "asc" } },
+      kingsEvents: { include: { player: true, team: true }, orderBy: { createdAt: "asc" } },
     },
   });
 
@@ -76,14 +79,25 @@ export default async function PublicMatchSumulaPage({
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
             Encerrada · {match.homeScore} x {match.awayScore}
             {match.homePenalties !== null && match.awayPenalties !== null &&
-              ` (${match.homePenalties} x ${match.awayPenalties} nos pênaltis)`}
+              ` (${match.homePenalties} x ${match.awayPenalties} nos ${shootoutLabel(match.tournament.sportType)})`}
           </span>
         ) : (
           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">Ainda não realizada</span>
         )}
       </div>
 
-      {family === "SCORE_ONLY" ? null : family === "TABLE_TENNIS_TIES" ? (
+      {family === "SCORE_ONLY" ? null : family === "KINGS" ? (
+        <div className="mt-8 flex flex-col gap-6">
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Linha do tempo</h2>
+            <KingsTimeline data={match} editable={false} />
+          </section>
+          <section className="rounded-lg border border-slate-200 bg-white p-4">
+            <h2 className="mb-2 text-sm font-semibold text-slate-700">Como funciona uma partida da Kings League</h2>
+            <KingsPhaseGuide phases={kingsPhases(match.tournament.kingsFirstHalfMinutes, match.tournament.kingsSecondHalfMinutes)} />
+          </section>
+        </div>
+      ) : family === "TABLE_TENNIS_TIES" ? (
         <div className="mt-8">
           <h2 className="mb-2 text-lg font-semibold text-slate-900">Jogos</h2>
           {match.tableTennisGames.length === 0 ? (

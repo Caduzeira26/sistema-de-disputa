@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { addPlayersToTeam, type AddPlayersState } from "@/lib/actions/teams";
-import { MAX_PLAYERS_PER_TEAM, SPORT_LABELS, getSportFamily, type SportType } from "@/lib/sport";
+import { MAX_PLAYERS_PER_TEAM, SPORT_LABELS, hasGoalkeeper, type SportType } from "@/lib/sport";
 
 const initialState: AddPlayersState = {};
 
@@ -35,7 +35,7 @@ export function CompleteRosterForm({
   const maxPlayers = MAX_PLAYERS_PER_TEAM[sportType];
   const remainingSlots = maxPlayers !== undefined ? Math.max(0, maxPlayers - existingPlayerCount) : undefined;
   const atMaximum = remainingSlots !== undefined && players.length >= remainingSlots;
-  const hasGoalkeepers = getSportFamily(sportType) === "GOALS_CARDS";
+  const hasGoalkeepers = hasGoalkeeper(sportType);
 
   function updatePlayer(index: number, field: keyof PlayerDraft, value: string) {
     setPlayers((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)));

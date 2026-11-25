@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { computeStandings } from "@/lib/bracket";
+import { computeStandings, pointsConfigFor } from "@/lib/bracket";
 import { toDisplayMatches } from "@/lib/bracket-view";
-import { SPORT_LABELS } from "@/lib/sport";
+import { SPORT_LABELS, shootoutDecidesLeagueDraws } from "@/lib/sport";
 import { BracketBoard } from "@/components/bracket/BracketBoard";
 import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
@@ -74,7 +74,7 @@ export default async function PrintBracketPage({
                 const standings = computeStandings(
                   teamIds,
                   tournament.matches.filter((m) => m.groupId === group.id),
-                  { win: tournament.pointsWin, draw: tournament.pointsDraw, loss: tournament.pointsLoss }
+                  pointsConfigFor(tournament)
                 );
                 return (
                   <div key={group.id} className="grid grid-cols-1 gap-4 break-inside-avoid lg:grid-cols-2">
@@ -83,6 +83,7 @@ export default async function PrintBracketPage({
                       standings={standings}
                       teamNames={teamNames}
                       advanceCount={tournament.advancePerGroup ?? undefined}
+                  shootouts={shootoutDecidesLeagueDraws(tournament.sportType)}
                     />
                     <GroupFixtures title="Partidas" matches={groupMatches.filter((m) => m.groupId === group.id)} />
                   </div>

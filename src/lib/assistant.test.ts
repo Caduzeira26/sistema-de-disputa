@@ -17,7 +17,7 @@ describe("buildSystemPrompt", () => {
   it("lists exactly the real sports and warns against inventing custom ones", () => {
     const prompt = buildSystemPrompt();
     expect(prompt).toContain(
-      "exatamente estas 10: Futebol de campo, Futsal, Futebol 7, Handebol, Vôlei, Basquete, Tênis de mesa, FIFA / EA FC, Just Dance, Free Fire"
+      "exatamente estas 11: Futebol de campo, Futsal, Futebol 7, Handebol, Vôlei, Basquete, Tênis de mesa, FIFA / EA FC, Just Dance, Free Fire, Kings League"
     );
     expect(prompt).toContain("não existe opção de o organizador criar um esporte novo");
   });
@@ -27,6 +27,8 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("confronto 1x1");
     expect(prompt).toContain("baterias de até 4 dançarinos");
     expect(prompt).toContain("O Free Fire funciona em quedas");
+    expect(prompt).toContain("A Kings League é futebol 7");
+    expect(prompt).toContain("2 por vitória nos shootouts");
     expect(prompt).toContain("Truco, sinuca e outros jogos NÃO estão disponíveis ainda");
   });
 

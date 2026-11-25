@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { generateEliminationFromStandings, recordMatchResult, resetBracket } from "@/lib/services/bracket";
-import { supportsPenalties } from "@/lib/sport";
+import { shootoutDecidesLeagueDraws, supportsPenalties } from "@/lib/sport";
 
 async function requireOwnedTournament(tournamentId: string) {
   const session = await auth();
@@ -96,6 +96,9 @@ export async function recordMatchResultAction(
     ? { home: homePenalties, away: awayPenalties }
     : null;
 
+  if (match.bracket === "GROUP" && homeScore === awayScore && !penalties && shootoutDecidesLeagueDraws(tournament.sportType)) {
+    return { error: "Na Kings League não existe empate: informe o resultado dos shootouts." };
+  }
   if (match.bracket !== "GROUP" && homeScore === awayScore && !penalties) {
     return {
       error: supportsPenalties(tournament.sportType)

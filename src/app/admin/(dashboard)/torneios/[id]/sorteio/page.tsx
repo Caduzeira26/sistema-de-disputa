@@ -26,6 +26,7 @@ export default async function DrawPage({ params }: { params: Promise<{ id: strin
 
   const isLobby = tournament.format === "LOBBY_LEAGUE";
   const isHeats = tournament.format === "HEATS";
+  const isKings = tournament.sportType === "KINGS_LEAGUE";
   const usesGroups = isLobby || isHeats || tournament.format === "GROUPS_SINGLE_ELIM" || tournament.format === "GROUPS_DOUBLE_ELIM";
   const teamNames = Object.fromEntries(tournament.teams.map((t) => [t.id, t.name]));
   const draw = tournament.draw;
@@ -85,8 +86,15 @@ export default async function DrawPage({ params }: { params: Promise<{ id: strin
                     ? Math.ceil(tournament.teams.length / HEAT_SIZE)
                     : isLobby
                       ? Math.ceil(tournament.teams.length / LOBBY_SIZE)
-                      : Math.max(1, Math.round(Math.sqrt(tournament.teams.length))))
+                      : isKings
+                        ? 1
+                        : Math.max(1, Math.round(Math.sqrt(tournament.teams.length))))
                 }
+                showAdvance={!isLobby && !isHeats && usesGroups}
+                defaultAdvance={
+                  tournament.advancePerGroup ?? (isKings ? Math.min(7, tournament.teams.length - 1) : 2)
+                }
+                isKings={isKings}
               />
             )}
           </>

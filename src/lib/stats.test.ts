@@ -182,3 +182,16 @@ describe("computeGameWinRanking", () => {
     ]);
   });
 });
+
+describe("computeTopScorers with goal values (Kings League)", () => {
+  it("counts a double goal as 2", () => {
+    const base = { playerName: "Ana", teamId: "T", teamName: "Time" };
+    const result = computeTopScorers([
+      { ...base, playerId: "a", value: 2 },
+      { ...base, playerId: "a" },
+      { ...base, playerId: "b", playerName: "Bia", value: 1 },
+    ]);
+    expect(result[0]).toMatchObject({ playerId: "a", goals: 3 });
+    expect(result[1]).toMatchObject({ playerId: "b", goals: 1 });
+  });
+});

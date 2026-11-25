@@ -16,6 +16,12 @@ const FORMAT_OPTIONS = [
 
 const HEATS_FORMAT_OPTION = { value: "HEATS", label: "Baterias de até 4 dançarinos (avançam os 2 melhores)" };
 
+const KINGS_FORMAT_OPTIONS = [
+  { value: "GROUPS_SINGLE_ELIM", label: "Liga (todos contra todos) + playoffs, como na Kings League" },
+  { value: "SINGLE_ELIMINATION", label: "Eliminatória simples (mata-mata)" },
+  { value: "DOUBLE_ELIMINATION", label: "Eliminatória dupla (com repescagem)" },
+];
+
 const LOBBY_FORMAT_OPTIONS = [
   { value: "LOBBY_LEAGUE", label: "Quedas em pontos corridos (com grande final opcional)" },
 ];
@@ -28,7 +34,9 @@ export function CreateTournamentForm({ allowedSports }: { allowedSports: readonl
       ? LOBBY_FORMAT_OPTIONS
       : sport === "JUST_DANCE"
         ? [...FORMAT_OPTIONS, HEATS_FORMAT_OPTION]
-        : FORMAT_OPTIONS;
+        : sport === "KINGS_LEAGUE"
+          ? KINGS_FORMAT_OPTIONS
+          : FORMAT_OPTIONS;
 
   return (
     <form action={formAction} className="flex max-w-lg flex-col gap-4">
@@ -100,7 +108,53 @@ export function CreateTournamentForm({ allowedSports }: { allowedSports: readonl
             </option>
           ))}
         </select>
+        {sport === "KINGS_LEAGUE" && (
+          <p className="text-xs text-slate-500">
+            Na liga, todos jogam contra todos e depois vem o mata-mata. No sorteio, use 1 grupo e escolha quantos avançam
+            (na Kings League Brasil são 7: o 1º vai direto à semifinal).
+          </p>
+        )}
       </div>
+
+      {sport === "KINGS_LEAGUE" && (
+        <fieldset className="flex flex-col gap-2 rounded-md border border-slate-200 p-3">
+          <legend className="px-1 text-sm font-medium text-slate-700">Duração da partida</legend>
+          <p className="text-xs text-slate-500">
+            O oficial é 20 + 16 minutos. Para jogos mais curtos, diminua: as fases (escalonado, gol em dobro, dado e
+            matchball) acompanham.
+          </p>
+          <div className="flex gap-4">
+            <div className="flex flex-1 flex-col gap-1">
+              <label htmlFor="kingsFirstHalfMinutes" className="text-xs font-medium text-slate-600">
+                1º tempo (min)
+              </label>
+              <input
+                id="kingsFirstHalfMinutes"
+                name="kingsFirstHalfMinutes"
+                type="number"
+                min={4}
+                max={45}
+                defaultValue={20}
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              />
+            </div>
+            <div className="flex flex-1 flex-col gap-1">
+              <label htmlFor="kingsSecondHalfMinutes" className="text-xs font-medium text-slate-600">
+                2º tempo (min)
+              </label>
+              <input
+                id="kingsSecondHalfMinutes"
+                name="kingsSecondHalfMinutes"
+                type="number"
+                min={4}
+                max={45}
+                defaultValue={16}
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        </fieldset>
+      )}
 
       <div className="flex gap-4">
         <div className="flex flex-1 flex-col gap-1">

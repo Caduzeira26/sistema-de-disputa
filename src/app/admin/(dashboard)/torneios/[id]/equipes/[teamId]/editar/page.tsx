@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { EditTeamForm } from "@/components/admin/EditTeamForm";
 import { PlayerGoalkeeperEditor } from "@/components/admin/PlayerGoalkeeperEditor";
 import { BrandFooter } from "@/components/BrandFooter";
-import { getSportFamily } from "@/lib/sport";
+import { hasGoalkeeper } from "@/lib/sport";
 
 export default async function EditTeamPage({
   params,
@@ -22,7 +22,7 @@ export default async function EditTeamPage({
 
   if (!team || team.tournament.organizerId !== session.user.id) notFound();
 
-  const hasGoalkeepers = getSportFamily(team.tournament.sportType) === "GOALS_CARDS";
+  const hasGoalkeepers = hasGoalkeeper(team.tournament.sportType);
 
   return (
     <div>

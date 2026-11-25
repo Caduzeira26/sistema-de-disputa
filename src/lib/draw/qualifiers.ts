@@ -1,4 +1,4 @@
-import { eliminationByeIndices } from "@/lib/bracket";
+import { eliminationByeIndices, seedOrderForElimination } from "@/lib/bracket";
 
 function isPowerOfTwo(n: number): boolean {
   return n >= 1 && (n & (n - 1)) === 0;
@@ -16,12 +16,15 @@ function isPowerOfTwo(n: number): boolean {
  * - 2 qualifiers per group, any other number of groups: the bracket needs
  *   byes, which shift the pairing, so group winners take the bye slots and
  *   each remaining winner faces the next group's runner-up (rotating).
+ * - A single group (a league): standard seeding by the table (see `seedOrderForElimination`).
  * - Any other qualifier count: plain order (winners of every group first).
  */
 export function orderQualifiersForBracket(byGroup: string[][]): string[] {
   const groups = byGroup.length;
   const advance = groups === 0 ? 0 : Math.min(...byGroup.map((g) => g.length));
 
+  // Um grupo só (liga com todos contra todos): cabeças de chave pela classificação.
+  if (groups === 1) return seedOrderForElimination(byGroup[0]);
   if (groups < 2 || advance !== 2) return byGroup.flatMap((g) => g);
 
   if (isPowerOfTwo(groups)) {

@@ -9,11 +9,12 @@ export const SPORT_TYPES = [
   "FIFA",
   "JUST_DANCE",
   "FREE_FIRE",
+  "KINGS_LEAGUE",
 ] as const;
 
 export type SportType = (typeof SPORT_TYPES)[number];
 
-export type SportFamily = "GOALS_CARDS" | "SETS_CARDS" | "PERIODS_FOULS" | "TABLE_TENNIS_TIES" | "SCORE_ONLY" | "LOBBY_POINTS";
+export type SportFamily = "GOALS_CARDS" | "SETS_CARDS" | "PERIODS_FOULS" | "TABLE_TENNIS_TIES" | "SCORE_ONLY" | "LOBBY_POINTS" | "KINGS";
 
 export const SPORT_LABELS: Record<SportType, string> = {
   FUTEBOL_CAMPO: "Futebol de campo",
@@ -26,6 +27,7 @@ export const SPORT_LABELS: Record<SportType, string> = {
   FIFA: "FIFA / EA FC",
   JUST_DANCE: "Just Dance",
   FREE_FIRE: "Free Fire",
+  KINGS_LEAGUE: "Kings League",
 };
 
 const SPORT_FAMILY: Record<SportType, SportFamily> = {
@@ -39,6 +41,8 @@ const SPORT_FAMILY: Record<SportType, SportFamily> = {
   FIFA: "SCORE_ONLY",
   JUST_DANCE: "SCORE_ONLY",
   FREE_FIRE: "LOBBY_POINTS",
+  // Futebol 7 com as regras da Kings League: gols que valem 2, cartas secretas, dado, shootouts.
+  KINGS_LEAGUE: "KINGS",
 };
 
 /**
@@ -71,6 +75,8 @@ export const MIN_PLAYERS_PER_TEAM: Record<SportType, number> = {
   JUST_DANCE: 1,
   // Esquadrão de Free Fire: 4 em campo (regulamentos oficiais aceitam 1 reserva).
   FREE_FIRE: 4,
+  // Kings League: 6 de linha + goleiro.
+  KINGS_LEAGUE: 7,
 };
 
 /**
@@ -85,8 +91,25 @@ export const MAX_PLAYERS_PER_TEAM: Partial<Record<SportType, number>> = {
 /**
  * Sports whose knockout matches can be level after regular time and go to a
  * penalty shootout. In FIFA/EA FC a tie is settled by extra time and then
- * penalties; Just Dance has no draws (the higher song score wins).
+ * penalties; Just Dance has no draws (the higher song score wins). In the Kings
+ * League every tie (league stage included) goes to shootouts.
  */
 export function supportsPenalties(sportType: SportType): boolean {
-  return sportType === "FIFA";
+  return sportType === "FIFA" || sportType === "KINGS_LEAGUE";
+}
+
+/** Kings League: não existe empate, nem na fase de liga — o empate vai para os shootouts. */
+export function shootoutDecidesLeagueDraws(sportType: SportType): boolean {
+  return sportType === "KINGS_LEAGUE";
+}
+
+/** Nome da disputa de desempate: "shootouts" na Kings League, "pênaltis" nos outros. */
+export function shootoutLabel(sportType: SportType): string {
+  return sportType === "KINGS_LEAGUE" ? "shootouts" : "pênaltis";
+}
+
+/** Esportes com goleiro (checkbox de goleiro na ficha e ranking de melhor goleiro). */
+export function hasGoalkeeper(sportType: SportType): boolean {
+  const family = getSportFamily(sportType);
+  return family === "GOALS_CARDS" || family === "KINGS";
 }

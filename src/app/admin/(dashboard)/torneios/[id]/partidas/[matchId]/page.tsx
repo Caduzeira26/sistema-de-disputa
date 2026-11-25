@@ -24,7 +24,10 @@ import {
   removeTableTennisGameAction,
   removeTableTennisSetAction,
 } from "@/lib/actions/sumula";
-import { getSportFamily, supportsPenalties } from "@/lib/sport";
+import { getSportFamily, shootoutLabel, supportsPenalties } from "@/lib/sport";
+import { kingsPhases, kingsScore } from "@/lib/kings";
+import { KingsGoalForm, SecretCardForm, PresidentPenaltyForm, DiceForm, FinishKingsMatchForm } from "@/components/admin/KingsForms";
+import { KingsPhaseGuide, KingsTimeline } from "@/components/kings/KingsTimeline";
 import { countSetsWon } from "@/lib/sets";
 import { sumPointsByTeam } from "@/lib/points";
 import { countGamesWon } from "@/lib/tableTennis";
@@ -55,6 +58,7 @@ export default async function MatchSumulaPage({
       baskets: { include: { player: true, team: true }, orderBy: [{ period: "asc" }, { id: "asc" }] },
       fouls: { include: { player: true, team: true }, orderBy: [{ period: "asc" }, { id: "asc" }] },
       tableTennisGames: { include: { sets: { orderBy: { setNumber: "asc" } } }, orderBy: { gameNumber: "asc" } },
+      kingsEvents: { include: { player: true, team: true }, orderBy: { createdAt: "asc" } },
     },
   });
 
@@ -119,7 +123,7 @@ export default async function MatchSumulaPage({
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
             Encerrada · {match.homeScore} x {match.awayScore}
             {match.homePenalties !== null && match.awayPenalties !== null &&
-              ` (${match.homePenalties} x ${match.awayPenalties} nos pênaltis)`}
+              ` (${match.homePenalties} x ${match.awayPenalties} nos ${shootoutLabel(match.tournament.sportType)})`}
           </span>
         ) : (
           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">Em aberto</span>
@@ -402,6 +406,86 @@ export default async function MatchSumulaPage({
             )}
           </div>
         </>
+      ) : family === "KINGS" ? (
+        (() => {
+          const phases = kingsPhases(match.tournament.kingsFirstHalfMinutes, match.tournament.kingsSecondHalfMinutes);
+          const live = kingsScore(match.goals, match.kingsEvents, match.homeTeamId!, match.awayTeamId!);
+          const open = match.status !== "FINISHED";
+          return (
+            <>
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-4">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Placar pela súmula</p>
+                  <p className="text-3xl font-semibold tabular-nums text-slate-900">
+                    {live.home} <span className="text-slate-400">x</span> {live.away}
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/torneios/${match.tournamentId}/sumula/${match.id}`}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Imprimir súmula em branco
+                </Link>
+              </div>
+
+              <details className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+                  Fases do jogo ({phases.firstHalf} + {phases.secondHalf} minutos)
+                </summary>
+                <div className="mt-3">
+                  <KingsPhaseGuide phases={phases} />
+                </div>
+              </details>
+
+              {open ? (
+                <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-slate-700">Gol</h2>
+                    <KingsGoalForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} phases={phases} />
+                  </section>
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-slate-700">Cartão</h2>
+                    <CardForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} />
+                    <p className="mt-2 text-xs text-slate-500">Amarelo: 2 minutos fora. Vermelho: expulso e time com um a menos por 5 minutos.</p>
+                  </section>
+                  <section className="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-2">
+                    <h2 className="mb-2 text-sm font-semibold text-slate-700">Carta secreta</h2>
+                    <SecretCardForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} />
+                  </section>
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-slate-700">Pênalti do presidente</h2>
+                    <PresidentPenaltyForm matchId={match.id} homeTeam={homeTeamActive!} awayTeam={awayTeamActive!} />
+                  </section>
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-slate-700">Dado ({phases.halfTime}&apos;)</h2>
+                    <DiceForm matchId={match.id} />
+                  </section>
+                </div>
+              ) : null}
+
+              <section className="mt-8">
+                <h2 className="mb-2 text-lg font-semibold text-slate-900">Linha do tempo</h2>
+                <KingsTimeline data={match} editable={open} />
+              </section>
+
+              <div className="mt-6">
+                {open ? (
+                  <div className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-slate-700">Encerrar partida</h2>
+                    <FinishKingsMatchForm
+                      matchId={match.id}
+                      homeName={match.homeTeam!.name}
+                      awayName={match.awayTeam!.name}
+                      tied={live.home === live.away}
+                    />
+                  </div>
+                ) : (
+                  <ReopenMatchButton matchId={match.id} />
+                )}
+              </div>
+            </>
+          );
+        })()
       ) : family === "SCORE_ONLY" ? (
         <div className="mt-6">
           {match.status === "FINISHED" ? (

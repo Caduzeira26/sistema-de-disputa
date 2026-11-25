@@ -211,3 +211,75 @@ export function eliminationByeIndices(n: number, offset = 0): number[] {
     ...Array.from({ length: backByes }, (_, i) => offset + n - backByes + i),
   ];
 }
+
+/**
+ * Ordena uma lista de classificados (melhor primeiro) para o mata-mata, no padrão de
+ * cabeças de chave: os melhores ficam nas folgas e longe uns dos outros, e na 1ª rodada
+ * o melhor restante enfrenta o pior (com 8: 1x8, 4x5, 2x7, 3x6; com 7: o 1º folga e
+ * pega o vencedor de 4x5, enquanto 2x7 e 3x6 decidem a outra semifinal).
+ *
+ * A chave deste sistema tem um formato próprio de folgas, então a distribuição percorre
+ * a própria árvore gerada: em cada partida, o lado com menos equipes (o que tem folga)
+ * recebe o melhor cabeça, e os demais são repartidos em ABBA.
+ */
+export function seedOrderForElimination(rankedTeamIds: string[]): string[] {
+  const n = rankedTeamIds.length;
+  if (n < 3) return [...rankedTeamIds];
+
+  const slotId = (i: number) => `slot-${i}`;
+  const { matches, finalMatchId } = buildEliminationTree(
+    Array.from({ length: n }, (_, i) => ({ id: slotId(i), seed: i + 1 })),
+    "SEED"
+  );
+  const byId = new Map(matches.map((m) => [m.id, m]));
+  const feeders = new Map<string, string[]>();
+  for (const m of matches) {
+    if (m.winnerNextMatchId) {
+      const list = feeders.get(m.winnerNextMatchId) ?? [];
+      list.push(m.id);
+      feeders.set(m.winnerNextMatchId, list);
+    }
+  }
+
+  type Side = { leaves: string[] } & ({ kind: "TEAM"; teamId: string } | { kind: "MATCH"; matchId: string });
+  const leavesOf = (matchId: string): string[] => {
+    const m = byId.get(matchId)!;
+    const own = [m.homeTeamId, m.awayTeamId].filter((t): t is string => !!t);
+    return [...own, ...(feeders.get(matchId) ?? []).flatMap(leavesOf)];
+  };
+  const sidesOf = (matchId: string): Side[] => {
+    const m = byId.get(matchId)!;
+    const sides: Side[] = [];
+    for (const t of [m.homeTeamId, m.awayTeamId]) if (t) sides.push({ kind: "TEAM", teamId: t, leaves: [t] });
+    for (const f of feeders.get(matchId) ?? []) sides.push({ kind: "MATCH", matchId: f, leaves: leavesOf(f) });
+    return sides;
+  };
+
+  const seedOfSlot = new Map<string, number>();
+  const assign = (side: Side, seeds: number[]) => {
+    if (side.kind === "TEAM") {
+      seedOfSlot.set(side.teamId, seeds[0]);
+      return;
+    }
+    const sides = sidesOf(side.matchId);
+    if (sides.length === 1) {
+      assign(sides[0], seeds); // folga: a partida só repassa a equipe
+      return;
+    }
+    const [x, y] = sides;
+    // O lado com menos equipes (folga) recebe o melhor cabeça.
+    const [a, b] = x.leaves.length <= y.leaves.length ? [x, y] : [y, x];
+    const forA: number[] = [];
+    const forB: number[] = [];
+    seeds.forEach((s, i) => {
+      const wantA = i % 4 === 0 || i % 4 === 3; // A B B A A B B A ...
+      if ((wantA && forA.length < a.leaves.length) || forB.length >= b.leaves.length) forA.push(s);
+      else forB.push(s);
+    });
+    assign(a, forA);
+    assign(b, forB);
+  };
+  assign({ kind: "MATCH", matchId: finalMatchId, leaves: leavesOf(finalMatchId) }, Array.from({ length: n }, (_, i) => i + 1));
+
+  return Array.from({ length: n }, (_, i) => rankedTeamIds[seedOfSlot.get(slotId(i))! - 1]);
+}

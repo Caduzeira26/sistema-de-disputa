@@ -5,11 +5,14 @@ export function StandingsTable({
   standings,
   teamNames,
   advanceCount,
+  shootouts = false,
 }: {
   title: string;
   standings: TeamStanding[];
   teamNames: Record<string, string>;
   advanceCount?: number;
+  /** Kings League: sem empate; mostra vitórias (VS) e derrotas (DS) nos shootouts no lugar de E. */
+  shootouts?: boolean;
 }) {
   return (
     <div>
@@ -22,7 +25,14 @@ export function StandingsTable({
               <th className="px-2 py-1 text-left font-medium">Equipe</th>
               <th className="px-2 py-1 text-center font-medium">PJ</th>
               <th className="px-2 py-1 text-center font-medium">V</th>
-              <th className="px-2 py-1 text-center font-medium">E</th>
+              {shootouts ? (
+                <>
+                  <th className="px-2 py-1 text-center font-medium" title="Vitórias nos shootouts">VS</th>
+                  <th className="px-2 py-1 text-center font-medium" title="Derrotas nos shootouts">DS</th>
+                </>
+              ) : (
+                <th className="px-2 py-1 text-center font-medium">E</th>
+              )}
               <th className="px-2 py-1 text-center font-medium">D</th>
               <th className="px-2 py-1 text-center font-medium">GP</th>
               <th className="px-2 py-1 text-center font-medium">GC</th>
@@ -37,7 +47,14 @@ export function StandingsTable({
                 <td className="px-2 py-1 font-medium text-slate-900">{teamNames[s.teamId] ?? s.teamId}</td>
                 <td className="px-2 py-1 text-center">{s.played}</td>
                 <td className="px-2 py-1 text-center">{s.wins}</td>
-                <td className="px-2 py-1 text-center">{s.draws}</td>
+                {shootouts ? (
+                  <>
+                    <td className="px-2 py-1 text-center">{s.shootoutWins}</td>
+                    <td className="px-2 py-1 text-center">{s.shootoutLosses}</td>
+                  </>
+                ) : (
+                  <td className="px-2 py-1 text-center">{s.draws}</td>
+                )}
                 <td className="px-2 py-1 text-center">{s.losses}</td>
                 <td className="px-2 py-1 text-center">{s.goalsFor}</td>
                 <td className="px-2 py-1 text-center">{s.goalsAgainst}</td>
@@ -48,6 +65,11 @@ export function StandingsTable({
           </tbody>
         </table>
       </div>
+      {shootouts && (
+        <p className="mt-1 text-[11px] text-slate-400">
+          VS/DS = vitória/derrota nos shootouts. Vitória no tempo vale 3, nos shootouts 2; derrota nos shootouts vale 1.
+        </p>
+      )}
     </div>
   );
 }

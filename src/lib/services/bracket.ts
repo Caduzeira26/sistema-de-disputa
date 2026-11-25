@@ -5,7 +5,7 @@ import {
   generateSingleElimination,
   generateDoubleElimination,
   generateGroupStageFromGroups,
-  computeStandings,
+  computeStandings, pointsConfigFor,
   applyMatchResult,
   type Penalties,
   type TeamInput,
@@ -198,11 +198,7 @@ export async function generateEliminationFromStandings(tournamentId: string): Pr
   for (const group of [...tournament.groups].sort((a, b) => a.name.localeCompare(b.name))) {
     const teamIds = group.teams.map((t) => t.id);
     const groupMatches = tournament.matches.filter((m) => m.groupId === group.id);
-    const standings = computeStandings(teamIds, groupMatches, {
-      win: tournament.pointsWin,
-      draw: tournament.pointsDraw,
-      loss: tournament.pointsLoss,
-    });
+    const standings = computeStandings(teamIds, groupMatches, pointsConfigFor(tournament));
     qualifiersByGroup.push(standings.slice(0, advancePerGroup).map((s) => s.teamId));
   }
 
@@ -231,12 +227,22 @@ export async function recordMatchResult(
 ): Promise<void> {
   const match = await prisma.match.findUniqueOrThrow({ where: { id: matchId } });
 
+  const shootout = homeScore === awayScore ? (penalties ?? null) : null;
   if (match.bracket === "GROUP") {
     if (match.status === "FINISHED") throw new Error("Esta partida já foi encerrada.");
-    await prisma.match.update({ where: { id: matchId }, data: { homeScore, awayScore, status: "FINISHED" } });
+    // Fase de liga: na Kings League o empate é decidido nos shootouts, que contam na classificação.
+    await prisma.match.update({
+      where: { id: matchId },
+      data: {
+        homeScore,
+        awayScore,
+        homePenalties: shootout?.home ?? null,
+        awayPenalties: shootout?.away ?? null,
+        status: "FINISHED",
+      },
+    });
     return;
   }
-  const shootout = homeScore === awayScore ? (penalties ?? null) : null;
   if (match.status === "FINISHED") {
     throw new Error("Esta partida já foi encerrada.");
   }

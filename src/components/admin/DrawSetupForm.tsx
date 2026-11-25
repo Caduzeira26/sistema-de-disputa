@@ -10,11 +10,18 @@ export function DrawSetupForm({
   teams,
   usesGroups,
   defaultNumGroups,
+  showAdvance = false,
+  defaultAdvance = 2,
+  isKings = false,
 }: {
   tournamentId: string;
   teams: { id: string; name: string; pot: number | null }[];
   usesGroups: boolean;
   defaultNumGroups: number;
+  /** Grupos + mata-mata: quantas equipes de cada grupo avançam. */
+  showAdvance?: boolean;
+  defaultAdvance?: number;
+  isKings?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(startDrawAction, initialState);
 
@@ -37,7 +44,31 @@ export function DrawSetupForm({
             required
             className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
-          <p className="text-xs text-slate-400">Cada grupo precisa de pelo menos 2 equipes.</p>
+          <p className="text-xs text-slate-400">
+            Cada grupo precisa de pelo menos 2 equipes.{isKings ? " Use 1 grupo para a liga com todos contra todos." : ""}
+          </p>
+        </div>
+      )}
+
+      {showAdvance && (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="advancePerGroup" className="text-sm font-medium text-slate-700">
+            Quantos avançam de cada grupo para o mata-mata
+          </label>
+          <input
+            id="advancePerGroup"
+            name="advancePerGroup"
+            type="number"
+            min={1}
+            max={Math.max(1, teams.length)}
+            defaultValue={defaultAdvance}
+            required
+            className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <p className="text-xs text-slate-400">
+            Os melhores colocados avançam como cabeças de chave: se sobrar vaga na chave, os primeiros folgam na 1ª
+            rodada.{isKings ? " Na Kings League Brasil são 7 com 1 grupo: o 1º vai direto à semifinal e do 2º ao 7º jogam as quartas." : ""}
+          </p>
         </div>
       )}
 

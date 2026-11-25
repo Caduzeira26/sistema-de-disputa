@@ -12,7 +12,7 @@ import { SPORT_LABELS, SPORT_TYPES } from "@/lib/sport";
 export const metadata: Metadata = {
   title: "Sistema de Disputa — gestão de torneios esportivos",
   description:
-    "Inscrições online, sorteio oficial, chaveamento, súmulas, tabela e estatísticas em um só lugar. Futebol, futsal, vôlei, basquete, FIFA, Free Fire, Just Dance e mais.",
+    "Inscrições online, sorteio oficial, chaveamento, súmulas, tabela e estatísticas em um só lugar. Futebol, futsal, Kings League, vôlei, basquete, FIFA, Free Fire, Just Dance e mais.",
 };
 
 const FEATURES = [
@@ -134,7 +134,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <ul className="anim-kickoff eyebrow mt-8 flex flex-wrap gap-2 text-slate-500" style={stagger(4)}>
-                <li className="rounded-full border border-slate-200 px-3 py-1.5">10 modalidades</li>
+                <li className="rounded-full border border-slate-200 px-3 py-1.5">11 modalidades</li>
                 <li className="rounded-full border border-slate-200 px-3 py-1.5">Sorteio ao vivo</li>
                 <li className="rounded-full border border-slate-200 px-3 py-1.5">Teste grátis</li>
               </ul>

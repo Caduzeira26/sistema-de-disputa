@@ -3,6 +3,8 @@ export interface GoalRecord {
   playerName: string;
   teamId: string;
   teamName: string;
+  /** Quanto o gol vale (Kings League: gol em dobro = 2). Padrão 1. */
+  value?: number;
 }
 
 export interface CardRecord {
@@ -35,8 +37,9 @@ export function computeTopScorers(goals: GoalRecord[]): ScorerStanding[] {
   const table = new Map<string, ScorerStanding>();
   for (const g of goals) {
     const existing = table.get(g.playerId);
-    if (existing) existing.goals += 1;
-    else table.set(g.playerId, { playerId: g.playerId, playerName: g.playerName, teamId: g.teamId, teamName: g.teamName, goals: 1 });
+    const value = g.value ?? 1;
+    if (existing) existing.goals += value;
+    else table.set(g.playerId, { playerId: g.playerId, playerName: g.playerName, teamId: g.teamId, teamName: g.teamName, goals: value });
   }
   return [...table.values()].sort((a, b) => b.goals - a.goals || a.playerName.localeCompare(b.playerName));
 }

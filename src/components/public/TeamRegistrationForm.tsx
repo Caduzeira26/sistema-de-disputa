@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { registerTeam, type RegisterTeamState } from "@/lib/actions/teams";
 import type { ManualPixSettings } from "@/lib/manualPix";
 import { MAX_LOGO_BYTES, MAX_LOGO_LABEL } from "@/lib/upload";
-import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, getSportFamily, type SportType } from "@/lib/sport";
+import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, hasGoalkeeper, type SportType } from "@/lib/sport";
 
 const initialState: RegisterTeamState = {};
 
@@ -44,7 +44,7 @@ export function TeamRegistrationForm({
   const maxPlayers = MAX_PLAYERS_PER_TEAM[sportType];
   const belowMinimum = players.length < minPlayers;
   const atMaximum = maxPlayers !== undefined && players.length >= maxPlayers;
-  const hasGoalkeepers = getSportFamily(sportType) === "GOALS_CARDS";
+  const hasGoalkeepers = hasGoalkeeper(sportType);
 
   useEffect(() => {
     if (state.paymentTxid) {

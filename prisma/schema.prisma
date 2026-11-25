@@ -65,6 +65,34 @@ enum SportType {
   FIFA
   JUST_DANCE
   FREE_FIRE
+  KINGS_LEAGUE
+}
+
+/// Kings League: tipo do gol, que define quanto ele vale no placar.
+enum GoalKind {
+  NORMAL
+  DOUBLE_PHASE
+  CARD_DOUBLE
+  STAR_PLAYER
+  PENALTY
+  SHOOTOUT
+  MATCHBALL
+}
+
+enum KingsEventType {
+  SECRET_CARD
+  PRESIDENT_PENALTY
+  DICE
+}
+
+enum SecretCard {
+  GOL_X2
+  SUSPENSAO
+  JOGADOR_ESTRELA
+  SHOOTOUT
+  CORINGA
+  PENALTI_INVERSO
+  PENALTI
 }
 
 enum PlanTier {
@@ -214,9 +242,16 @@ model Tournament {
   /// automatic cutoff — the organizer decides case by case.
   transferDeadline DateTime?
 
-  pointsWin  Int @default(3)
-  pointsDraw Int @default(1)
-  pointsLoss Int @default(0)
+  pointsWin          Int @default(3)
+  pointsDraw         Int @default(1)
+  pointsLoss         Int @default(0)
+  /// Kings League: pontos de quem vence / perde a partida nos shootouts (não há empate).
+  pointsShootoutWin  Int @default(2)
+  pointsShootoutLoss Int @default(1)
+
+  /// Kings League: duração de cada tempo em minutos. Vazio = oficial (20 + 16).
+  kingsFirstHalfMinutes  Int?
+  kingsSecondHalfMinutes Int?
 
   numGroups       Int?
   advancePerGroup Int?
@@ -295,6 +330,7 @@ model Team {
   transfersFrom  TransferRequest[] @relation("TransferFrom")
   transfersTo    TransferRequest[] @relation("TransferTo")
   lobbyEntries   LobbyEntry[]
+  kingsEvents    KingsEvent[]
 
   createdAt DateTime @default(now())
 
@@ -337,10 +373,11 @@ model Player {
   birthDate    DateTime?
   active       Boolean   @default(true)
 
-  goals   Goal[]
-  cards   Card[]
-  baskets Basket[]
-  fouls   Foul[]
+  goals       Goal[]
+  cards       Card[]
+  baskets     Basket[]
+  fouls       Foul[]
+  kingsEvents KingsEvent[]
 }
 
 enum TransferRequestStatus {
@@ -430,6 +467,7 @@ model Match {
   baskets          Basket[]
   fouls            Foul[]
   tableTennisGames TableTennisGame[]
+  kingsEvents      KingsEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -438,14 +476,40 @@ model Match {
 }
 
 model Goal {
-  id       String @id @default(cuid())
+  id       String   @id @default(cuid())
   matchId  String
-  match    Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  match    Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
   playerId String
-  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   teamId   String
-  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   minute   Int
+  /// Kings League: tipo do gol e quanto ele vale no placar (gol em dobro = 2). Outros esportes: NORMAL / 1.
+  kind     GoalKind @default(NORMAL)
+  value    Int      @default(1)
+}
+
+/// Kings League: carta secreta usada, pênalti do presidente ou resultado do dado.
+/// `goalsAwarded` é gol "sem autor" que entra no placar do time (pênalti do presidente
+/// convertido, ou pênalti inverso que o adversário errou).
+model KingsEvent {
+  id           String         @id @default(cuid())
+  matchId      String
+  match        Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  type         KingsEventType
+  teamId       String?
+  team         Team?          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  card         SecretCard?
+  minute       Int?
+  /// Alvo da suspensão ou jogador estrela.
+  playerId     String?
+  player       Player?        @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  scored       Boolean?
+  goalsAwarded Int            @default(0)
+  diceResult   Int?
+  createdAt    DateTime       @default(now())
+
+  @@index([matchId])
 }
 
 /// Used by the GOALS_CARDS family (minute) and by vôlei (setNumber) — exactly
@@ -634,9 +698,9 @@ model LobbyEntry {
 /// `status` only changes after re-reading the charge from Asaas (never from a
 /// webhook body alone) — see src/lib/gatewayPayments.ts.
 model GatewayPayment {
-  id             String               @id @default(cuid())
+  id             String       @id @default(cuid())
   subscriptionId String
-  subscription   Subscription         @relation(fields: [subscriptionId], references: [id])
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
 
   /// Asaas charge id (pay_...).
   gatewayId   String               @unique

@@ -10,6 +10,7 @@ import { tournamentNameSchema } from "@/lib/tournamentName";
 import { manualPixSchema, parseReaisToCents } from "@/lib/manualPix";
 import { MAX_LOGO_BYTES, MAX_LOGO_LABEL } from "@/lib/upload";
 import { SPORT_TYPES, getSportFamily } from "@/lib/sport";
+import { OFFICIAL_FIRST_HALF, OFFICIAL_SECOND_HALF, parseHalfMinutes } from "@/lib/kings";
 import { saveTournamentLogo } from "@/lib/storage";
 import {
   countTournamentsForLimit,
@@ -69,6 +70,19 @@ export async function createTournament(
     return { error: "O formato de baterias é exclusivo do Just Dance." };
   }
 
+  let kingsFirstHalfMinutes: number | null = null;
+  let kingsSecondHalfMinutes: number | null = null;
+  if (parsed.data.sportType === "KINGS_LEAGUE") {
+    const h1 = parseHalfMinutes(formData.get("kingsFirstHalfMinutes"));
+    const h2 = parseHalfMinutes(formData.get("kingsSecondHalfMinutes"));
+    if (h1 === "invalid" || h2 === "invalid") {
+      return { error: "A duração de cada tempo deve ser um número inteiro entre 4 e 45 minutos." };
+    }
+    // Guarda só o que difere do oficial (vazio = 20 + 16).
+    kingsFirstHalfMinutes = h1 === OFFICIAL_FIRST_HALF ? null : h1;
+    kingsSecondHalfMinutes = h2 === OFFICIAL_SECOND_HALF ? null : h2;
+  }
+
   const limits = await getPlanLimits(session.user.id);
   if (!isSportAllowed(limits, parsed.data.sportType)) {
     return { error: "Essa modalidade não está disponível no seu plano atual. Veja os planos em /planos." };
@@ -101,6 +115,8 @@ export async function createTournament(
       endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : null,
       slug,
       organizerId: session.user.id,
+      kingsFirstHalfMinutes,
+      kingsSecondHalfMinutes,
     },
   });
 

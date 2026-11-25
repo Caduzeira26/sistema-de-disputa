@@ -74,11 +74,27 @@ export async function startDrawAction(_prev: DrawActionState, formData: FormData
       }
     }
 
+    let advancePerGroup: number | null = null;
+    const isGroupsKnockout = tournament.format === "GROUPS_SINGLE_ELIM" || tournament.format === "GROUPS_DOUBLE_ELIM";
+    if (isGroupsKnockout && formData.get("advancePerGroup") !== null) {
+      advancePerGroup = Number(formData.get("advancePerGroup"));
+      const smallestGroup = Math.floor(teams.length / (numGroups ?? 1));
+      if (!Number.isInteger(advancePerGroup) || advancePerGroup < 1 || advancePerGroup > smallestGroup) {
+        return { error: `Quantos avançam deve ser um número de 1 a ${smallestGroup} (o tamanho do menor grupo).` };
+      }
+      if (advancePerGroup * (numGroups ?? 1) < 2) {
+        return { error: "Pelo menos 2 equipes precisam avançar para o mata-mata." };
+      }
+    }
+
     const steps: DrawStep[] = buildDrawSteps({ kind, teams: pots, numGroups: numGroups ?? undefined, rng: cryptoRng });
 
     await prisma.$transaction([
       ...pots.map((p) => prisma.team.update({ where: { id: p.id }, data: { pot: p.pot } })),
-      prisma.tournament.update({ where: { id: tournamentId }, data: { numGroups } }),
+      prisma.tournament.update({
+        where: { id: tournamentId },
+        data: advancePerGroup !== null ? { numGroups, advancePerGroup } : { numGroups },
+      }),
       prisma.tournamentDraw.create({
         data: { tournamentId, kind, numGroups, steps: steps as unknown as object },
       }),

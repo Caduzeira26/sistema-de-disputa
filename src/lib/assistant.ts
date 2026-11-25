@@ -8,7 +8,7 @@ import {
   isPromoActive,
   type PlanLimits,
 } from "@/lib/plans";
-import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES, getSportFamily } from "@/lib/sport";
+import { MAX_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM, SPORT_LABELS, SPORT_TYPES, hasGoalkeeper } from "@/lib/sport";
 import { isRosterCompletionWindowOpen } from "@/lib/roster";
 import type { Team, Tournament } from "@prisma/client";
 
@@ -56,7 +56,7 @@ export function buildSystemPrompt(now = new Date()): string {
 Seu papel: conversar com visitantes e potenciais clientes (organizadores — clubes, ligas, escolas, prefeituras), tirar dúvidas sobre o produto, explicar os planos e preços, e guiar quem tiver interesse a criar conta e assinar. Você está respondendo em nome da Digita Money para quem visita o site.
 
 REGRAS QUE VOCÊ NUNCA PODE QUEBRAR (não invente funcionalidades):
-- As modalidades disponíveis HOJE são exatamente estas ${SPORT_TYPES.length}: ${sportsList}. FIFA e Just Dance funcionam como confronto 1x1 (cada participante é uma "equipe" de 1 jogador; no FIFA o empate no mata-mata é decidido nos pênaltis). O Just Dance tem dois formatos: mata-mata 1x1 e baterias de até 4 dançarinos na mesma música, em que avançam os 2 melhores de cada bateria (vence quem faz mais pontos no jogo; empate de pontuação se resolve repetindo a música). O Free Fire funciona em quedas: equipes de 4 a 5 jogadores jogam juntas cada queda, pontuam pela colocação (1º = 12, 2º = 9, 3º = 8 e assim por diante até 0) mais 1 ponto por abate, somam numa tabela de pontos corridos e, se o organizador quiser, os melhores disputam uma grande final; acima de 12 equipes o sorteio divide em grupos. Truco, sinuca e outros jogos NÃO estão disponíveis ainda, e também não existe opção de o organizador criar um esporte novo/customizado — se perguntarem, diga que ainda não existe e pode virar novidade futura, sem prometer prazo.
+- As modalidades disponíveis HOJE são exatamente estas ${SPORT_TYPES.length}: ${sportsList}. FIFA e Just Dance funcionam como confronto 1x1 (cada participante é uma "equipe" de 1 jogador; no FIFA o empate no mata-mata é decidido nos pênaltis). O Just Dance tem dois formatos: mata-mata 1x1 e baterias de até 4 dançarinos na mesma música, em que avançam os 2 melhores de cada bateria (vence quem faz mais pontos no jogo; empate de pontuação se resolve repetindo a música). O Free Fire funciona em quedas: equipes de 4 a 5 jogadores jogam juntas cada queda, pontuam pela colocação (1º = 12, 2º = 9, 3º = 8 e assim por diante até 0) mais 1 ponto por abate, somam numa tabela de pontos corridos e, se o organizador quiser, os melhores disputam uma grande final; acima de 12 equipes o sorteio divide em grupos. A Kings League é futebol 7 (6 na linha + goleiro) com as regras da liga do Piqué: jogo de 20 + 16 minutos (o organizador pode encurtar), começo escalonado de 1x1 até 7x7, gols em dobro no fim do 1º tempo, dado no início do 2º tempo, cartas secretas (Gol x2, Suspensão, Jogador estrela, Shootout, Coringa, Pênalti inverso e Pênalti), pênalti do presidente e, no empate, shootouts; não existe empate, e a classificação dá 3 pontos por vitória no tempo, 2 por vitória nos shootouts e 1 por derrota nos shootouts. O formato é liga com todos contra todos e depois playoffs, com o número de classificados escolhido pelo organizador. A súmula registra tudo isso e o placar é calculado sozinho; também dá para imprimir a súmula em branco. Truco, sinuca e outros jogos NÃO estão disponíveis ainda, e também não existe opção de o organizador criar um esporte novo/customizado — se perguntarem, diga que ainda não existe e pode virar novidade futura, sem prometer prazo.
 - O pagamento PIX das inscrições cai hoje na conta da Digita Money, que repassa o valor ao organizador (descontada a taxa de R$ 2,00 por inscrição paga) manualmente após a confirmação — NÃO existe ainda repasse automático/split direto para a conta do organizador. Seja transparente sobre isso se perguntarem "pra quem cai o dinheiro do PIX".
 - O plano Liga inclui "white label" e "financeiro completo" como diferenciais vendidos, mas hoje isso ainda não está implementado tecnicamente em detalhe (domínio personalizado, etc.) — se perguntarem detalhes técnicos específicos do Liga além do que está listado abaixo, diga que vai conectar com um humano da Digita Money para alinhar.
 - Nunca prometa prazos de desenvolvimento, descontos além dos listados, reembolsos ou condições que você não tem certeza que existem. Na dúvida, diga que vai encaminhar para um humano.
@@ -93,7 +93,7 @@ export function buildRegistrationSystemPrompt(
 
   const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
   const maxPlayers = MAX_PLAYERS_PER_TEAM[tournament.sportType];
-  const hasGoalkeepers = getSportFamily(tournament.sportType) === "GOALS_CARDS";
+  const hasGoalkeepers = hasGoalkeeper(tournament.sportType);
 
   const documentSection = limits.canManageAthleteRegistry
     ? `O formulário tem um campo de CPF (só números, 11 dígitos) por jogador, mas ele é OPCIONAL — não é preciso preencher pra enviar a inscrição. Se for preenchido, precisa ter 11 dígitos válidos. Isso existe porque este campeonato usa o cadastro permanente de atletas: quando o CPF é informado, o mesmo atleta é reconhecido em outros campeonatos no futuro, e é o que permite pedir transferência dele entre equipes depois (em outra página, "/transferencias", se o organizador configurar isso). Sem CPF, o jogador é cadastrado normalmente, só não entra nesse cadastro entre campeonatos.`
@@ -140,7 +140,7 @@ export function buildRosterCompletionSystemPrompt(
 ): string {
   const minPlayers = MIN_PLAYERS_PER_TEAM[tournament.sportType];
   const maxPlayers = MAX_PLAYERS_PER_TEAM[tournament.sportType];
-  const hasGoalkeepers = getSportFamily(tournament.sportType) === "GOALS_CARDS";
+  const hasGoalkeepers = hasGoalkeeper(tournament.sportType);
   const open = isRosterCompletionWindowOpen(tournament, now) && team.status !== "REJECTED";
 
   const deadlineSection = (() => {

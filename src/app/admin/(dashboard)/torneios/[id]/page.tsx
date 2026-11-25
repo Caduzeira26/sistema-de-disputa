@@ -12,8 +12,8 @@ import { GroupFixtures } from "@/components/bracket/GroupFixtures";
 import { StandingsTable } from "@/components/bracket/StandingsTable";
 import { FinalPodium } from "@/components/bracket/FinalPodium";
 import { toDisplayMatches } from "@/lib/bracket-view";
-import { computeStandings } from "@/lib/bracket";
-import { SPORT_LABELS, getSportFamily } from "@/lib/sport";
+import { computeStandings, pointsConfigFor } from "@/lib/bracket";
+import { SPORT_LABELS, getSportFamily, shootoutDecidesLeagueDraws } from "@/lib/sport";
 import { TournamentLogoForm } from "@/components/admin/TournamentLogoForm";
 import { TournamentDatesForm } from "@/components/admin/TournamentDatesForm";
 import { TournamentNameForm } from "@/components/admin/TournamentNameForm";
@@ -418,7 +418,7 @@ export default async function TournamentDetailPage({
               const standings = computeStandings(
                 teamIds,
                 groupMatchesRaw.filter((m) => m.groupId === group.id),
-                { win: tournament.pointsWin, draw: tournament.pointsDraw, loss: tournament.pointsLoss }
+                pointsConfigFor(tournament)
               );
               return (
                 <div key={group.id} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -427,6 +427,7 @@ export default async function TournamentDetailPage({
                     standings={standings}
                     teamNames={teamNames}
                     advanceCount={tournament.advancePerGroup ?? undefined}
+                  shootouts={shootoutDecidesLeagueDraws(tournament.sportType)}
                   />
                   <GroupFixtures
                     title="Partidas"

@@ -43,7 +43,7 @@ export default async function PublicStatsPage({ params }: { params: Promise<{ sl
   ]);
 
   const scorers = computeTopScorers(
-    goals.map((g) => ({ playerId: g.playerId, playerName: g.player.name, teamId: g.teamId, teamName: g.team.name }))
+    goals.map((g) => ({ playerId: g.playerId, playerName: g.player.name, teamId: g.teamId, teamName: g.team.name, value: g.value }))
   );
   const cardRanking = computeCardRanking(
     cards.map((c) => ({ playerId: c.playerId, playerName: c.player.name, teamId: c.teamId, teamName: c.team.name, type: c.type }))
@@ -56,7 +56,7 @@ export default async function PublicStatsPage({ params }: { params: Promise<{ sl
   );
 
   let goalkeeperRanking: ReturnType<typeof computeGoalkeeperRanking> = [];
-  if (family === "GOALS_CARDS") {
+  if ((family === "GOALS_CARDS" || family === "KINGS")) {
     const [goalkeepers, finishedMatches] = await Promise.all([
       prisma.player.findMany({
         where: { isGoalkeeper: true, active: true, team: { tournamentId: tournament.id } },
@@ -103,14 +103,14 @@ export default async function PublicStatsPage({ params }: { params: Promise<{ sl
       <FinalPodium champion={tournament.championTeam} runnerUp={tournament.runnerUpTeam} thirdPlace={thirdPlaceTeams} />
 
       <div className="mt-8 flex flex-col gap-8">
-        {family === "GOALS_CARDS" && (
+        {(family === "GOALS_CARDS" || family === "KINGS") && (
           <section>
             <h2 className="mb-2 text-lg font-semibold text-slate-900">Artilharia</h2>
             <TopScorersTable scorers={scorers} />
           </section>
         )}
 
-        {family === "GOALS_CARDS" && (
+        {(family === "GOALS_CARDS" || family === "KINGS") && (
           <section>
             <h2 className="mb-2 text-lg font-semibold text-slate-900">Melhor goleiro</h2>
             <p className="mb-2 text-xs text-slate-400">Média de gols sofridos por partida (menor é melhor).</p>
@@ -139,7 +139,7 @@ export default async function PublicStatsPage({ params }: { params: Promise<{ sl
           </section>
         )}
 
-        {(family === "GOALS_CARDS" || family === "SETS_CARDS") && (
+        {((family === "GOALS_CARDS" || family === "KINGS") || family === "SETS_CARDS") && (
           <section>
             <h2 className="mb-2 text-lg font-semibold text-slate-900">Cartões</h2>
             <CardRankingTable cards={cardRanking} />

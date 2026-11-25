@@ -6,6 +6,9 @@ import {
   SPORT_LABELS,
   SPORT_TYPES,
   supportsPenalties,
+  shootoutDecidesLeagueDraws,
+  shootoutLabel,
+  hasGoalkeeper,
 } from "./sport";
 
 describe("getSportFamily", () => {
@@ -57,8 +60,9 @@ describe("electronic games", () => {
     expect(MIN_PLAYERS_PER_TEAM.JUST_DANCE).toBe(1);
   });
 
-  it("only FIFA goes to a penalty shootout", () => {
+  it("only FIFA and the Kings League go to a shootout", () => {
     expect(supportsPenalties("FIFA")).toBe(true);
+    expect(supportsPenalties("KINGS_LEAGUE")).toBe(true);
     expect(supportsPenalties("JUST_DANCE")).toBe(false);
     expect(supportsPenalties("FUTSAL")).toBe(false);
   });
@@ -72,5 +76,26 @@ describe("Free Fire", () => {
   it("takes squads of 4 to 5 players (4 starters + 1 reserve)", () => {
     expect(MIN_PLAYERS_PER_TEAM.FREE_FIRE).toBe(4);
     expect(MAX_PLAYERS_PER_TEAM.FREE_FIRE).toBe(5);
+  });
+});
+
+describe("Kings League", () => {
+  it("has its own súmula family, 7 players and a goalkeeper", () => {
+    expect(getSportFamily("KINGS_LEAGUE")).toBe("KINGS");
+    expect(MIN_PLAYERS_PER_TEAM.KINGS_LEAGUE).toBe(7);
+    expect(hasGoalkeeper("KINGS_LEAGUE")).toBe(true);
+    expect(SPORT_LABELS.KINGS_LEAGUE).toBe("Kings League");
+  });
+
+  it("decides league draws in shootouts and calls them shootouts", () => {
+    expect(shootoutDecidesLeagueDraws("KINGS_LEAGUE")).toBe(true);
+    expect(shootoutDecidesLeagueDraws("FIFA")).toBe(false);
+    expect(shootoutLabel("KINGS_LEAGUE")).toBe("shootouts");
+    expect(shootoutLabel("FIFA")).toBe("pênaltis");
+  });
+
+  it("keeps goalkeepers only for goal sports", () => {
+    expect(hasGoalkeeper("FUTSAL")).toBe(true);
+    expect(hasGoalkeeper("VOLEIBOL")).toBe(false);
   });
 });

@@ -60,3 +60,30 @@ describe("computeStandings", () => {
     expect(table.find((t) => t.teamId === A)!.points).toBe(2);
   });
 });
+
+describe("computeStandings with shootouts (Kings League)", () => {
+  const kings = { win: 3, draw: 1, loss: 0, shootoutWin: 2, shootoutLoss: 1 };
+  const f = (h: string, a: string, hs: number, as: number, hp?: number, ap?: number) => ({
+    homeTeamId: h,
+    awayTeamId: a,
+    homeScore: hs,
+    awayScore: as,
+    homePenalties: hp ?? null,
+    awayPenalties: ap ?? null,
+    status: "FINISHED" as const,
+  });
+
+  it("gives 3 for a regulation win, 2/1 for a shootout and never a draw", () => {
+    const table = computeStandings(["A", "B", "C"], [f("A", "B", 2, 1), f("B", "C", 3, 3, 2, 1), f("C", "A", 1, 1, 0, 3)], kings);
+    const byId = Object.fromEntries(table.map((t) => [t.teamId, t]));
+    expect(byId.A).toMatchObject({ points: 3 + 2, wins: 1, shootoutWins: 1, draws: 0 });
+    expect(byId.B).toMatchObject({ points: 0 + 2, losses: 1, shootoutWins: 1 });
+    expect(byId.C).toMatchObject({ points: 1 + 1, shootoutLosses: 2, draws: 0 });
+    expect(table.map((t) => t.teamId)).toEqual(["A", "B", "C"]);
+  });
+
+  it("treats a tie without shootouts as a draw (other sports)", () => {
+    const table = computeStandings(["A", "B"], [f("A", "B", 1, 1)]);
+    expect(table[0]).toMatchObject({ draws: 1, points: 1, shootoutWins: 0 });
+  });
+});
