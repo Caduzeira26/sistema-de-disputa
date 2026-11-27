@@ -19,12 +19,15 @@ export function BracketTree({
   matches,
   editable = false,
   quickResultEntry = true,
+  penaltiesLabel = null,
   tournamentId,
   publicSlug,
 }: {
   matches: DisplayMatch[];
   editable?: boolean;
   quickResultEntry?: boolean;
+  /** Nome do desempate no mata-mata ("pênaltis"); null = a modalidade não tem. */
+  penaltiesLabel?: string | null;
   tournamentId?: string;
   publicSlug?: string;
 }) {
@@ -78,6 +81,7 @@ export function BracketTree({
                 match={m}
                 editable={editable}
                 quickResultEntry={quickResultEntry}
+                penaltiesLabel={penaltiesLabel}
                 tournamentId={tournamentId}
                 publicSlug={publicSlug}
               />

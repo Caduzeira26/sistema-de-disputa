@@ -60,11 +60,21 @@ describe("electronic games", () => {
     expect(MIN_PLAYERS_PER_TEAM.JUST_DANCE).toBe(1);
   });
 
-  it("only FIFA and the Kings League go to a shootout", () => {
+  it("goal sports, FIFA and the Kings League settle knockout ties in a shootout", () => {
     expect(supportsPenalties("FIFA")).toBe(true);
     expect(supportsPenalties("KINGS_LEAGUE")).toBe(true);
+    expect(supportsPenalties("FUTSAL")).toBe(true);
+    expect(supportsPenalties("FUTEBOL_CAMPO")).toBe(true);
+    expect(supportsPenalties("FUTEBOL_7")).toBe(true);
+    expect(supportsPenalties("HANDEBOL")).toBe(true);
     expect(supportsPenalties("JUST_DANCE")).toBe(false);
-    expect(supportsPenalties("FUTSAL")).toBe(false);
+    expect(supportsPenalties("VOLEIBOL")).toBe(false);
+    expect(supportsPenalties("BASQUETE")).toBe(false);
+  });
+
+  it("calls handebol's shootout tiros de 7 metros", () => {
+    expect(shootoutLabel("HANDEBOL")).toBe("tiros de 7 metros");
+    expect(shootoutLabel("FUTSAL")).toBe("pênaltis");
   });
 });
 

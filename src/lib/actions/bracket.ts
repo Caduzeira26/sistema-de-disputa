@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { generateEliminationFromStandings, recordMatchResult, resetBracket } from "@/lib/services/bracket";
-import { shootoutDecidesLeagueDraws, supportsPenalties } from "@/lib/sport";
+import { shootoutDecidesLeagueDraws, shootoutLabel, supportsPenalties } from "@/lib/sport";
 
 async function requireOwnedTournament(tournamentId: string) {
   const session = await auth();
@@ -87,10 +87,10 @@ export async function recordMatchResultAction(
   const { homeScore, awayScore, homePenalties, awayPenalties } = parsed.data;
   const hasShootout = homePenalties !== undefined && awayPenalties !== undefined;
   if ((homePenalties === undefined) !== (awayPenalties === undefined)) {
-    return { error: "Informe os pênaltis dos dois lados." };
+    return { error: `Informe os ${shootoutLabel(tournament.sportType)} dos dois lados.` };
   }
   if (hasShootout && homeScore === awayScore && homePenalties === awayPenalties) {
-    return { error: "A disputa de pênaltis não pode terminar empatada." };
+    return { error: `A disputa de ${shootoutLabel(tournament.sportType)} não pode terminar empatada.` };
   }
   const penalties = hasShootout && supportsPenalties(tournament.sportType)
     ? { home: homePenalties, away: awayPenalties }
@@ -102,7 +102,7 @@ export async function recordMatchResultAction(
   if (match.bracket !== "GROUP" && homeScore === awayScore && !penalties) {
     return {
       error: supportsPenalties(tournament.sportType)
-        ? "Jogo eliminatório não pode terminar empatado: informe a disputa de pênaltis."
+        ? `Jogo eliminatório não pode terminar empatado: informe a disputa de ${shootoutLabel(tournament.sportType)}.`
         : "Jogo eliminatório não pode terminar empatado. Repita a partida ou ajuste o placar.",
     };
   }

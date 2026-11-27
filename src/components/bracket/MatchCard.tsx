@@ -31,6 +31,7 @@ export function MatchCard({
   match,
   editable = false,
   quickResultEntry = true,
+  penaltiesLabel = null,
   tournamentId,
   publicSlug,
 }: {
@@ -40,6 +41,8 @@ export function MatchCard({
    * Sets/baskets/games-based sports must go through the full súmula page,
    * since the score there is derived, not typed in. */
   quickResultEntry?: boolean;
+  /** Nome do desempate no mata-mata ("pênaltis"); null = a modalidade não tem. */
+  penaltiesLabel?: string | null;
   /** Admin context: enables the "Súmula" link to `/admin/torneios/[id]/partidas/[matchId]`. */
   tournamentId?: string;
   /** Public context: enables the "Súmula" link to `/torneios/[slug]/partidas/[matchId]`. */
@@ -89,7 +92,7 @@ export function MatchCard({
           {match.venueName}
         </div>
       )}
-      {editable && playable && quickResultEntry && <div className="px-2 pb-1.5">{<MatchResultForm matchId={match.id} />}</div>}
+      {editable && playable && quickResultEntry && <div className="px-2 pb-1.5">{<MatchResultForm matchId={match.id} penaltiesLabel={match.bracket !== "GROUP" ? penaltiesLabel : null} />}</div>}
       {detailsHref && (
         <div className="border-t border-slate-100 px-2 py-1">
           <Link href={detailsHref} className="text-[11px] text-slate-500 underline">

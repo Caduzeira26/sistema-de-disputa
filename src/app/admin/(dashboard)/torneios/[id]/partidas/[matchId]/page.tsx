@@ -118,7 +118,7 @@ export default async function MatchSumulaPage({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-3">
+      <div className="mt-3 flex flex-wrap items-center gap-3">
         {match.status === "FINISHED" ? (
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
             Encerrada · {match.homeScore} x {match.awayScore}
@@ -128,6 +128,15 @@ export default async function MatchSumulaPage({
         ) : (
           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">Em aberto</span>
         )}
+        <Link
+          href={`/admin/torneios/${match.tournamentId}/sumula/${match.id}`}
+          className="rounded-md border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Imprimir súmula
+        </Link>
+        <Link href={`/admin/torneios/${match.tournamentId}/sumula-em-branco`} className="text-sm text-slate-500 underline">
+          Súmula em branco
+        </Link>
       </div>
 
       {!bothTeamsSet ? (
@@ -140,7 +149,14 @@ export default async function MatchSumulaPage({
             ) : (
               <div className="rounded-lg border border-slate-200 bg-white p-4">
                 <h2 className="mb-2 text-sm font-semibold text-slate-700">Placar final</h2>
-                <MatchResultForm matchId={match.id} />
+                <MatchResultForm
+                  matchId={match.id}
+                  penaltiesLabel={
+                    match.bracket !== "GROUP" && supportsPenalties(match.tournament.sportType)
+                      ? shootoutLabel(match.tournament.sportType)
+                      : null
+                  }
+                />
               </div>
             )}
           </div>
@@ -420,12 +436,6 @@ export default async function MatchSumulaPage({
                     {live.home} <span className="text-slate-400">x</span> {live.away}
                   </p>
                 </div>
-                <Link
-                  href={`/admin/torneios/${match.tournamentId}/sumula/${match.id}`}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Imprimir súmula em branco
-                </Link>
               </div>
 
               <details className="mt-4 rounded-lg border border-slate-200 bg-white p-4">

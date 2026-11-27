@@ -90,12 +90,13 @@ export const MAX_PLAYERS_PER_TEAM: Partial<Record<SportType, number>> = {
 
 /**
  * Sports whose knockout matches can be level after regular time and go to a
- * penalty shootout. In FIFA/EA FC a tie is settled by extra time and then
- * penalties; Just Dance has no draws (the higher song score wins). In the Kings
- * League every tie (league stage included) goes to shootouts.
+ * penalty shootout: futebol, futsal, futebol 7 e handebol (tiros de 7 metros),
+ * FIFA/EA FC (after extra time) and the Kings League, where every tie (league
+ * stage included) goes to shootouts. Just Dance has no draws.
  */
 export function supportsPenalties(sportType: SportType): boolean {
-  return sportType === "FIFA" || sportType === "KINGS_LEAGUE";
+  // Futebol, futsal, futebol 7 e handebol: mata-mata empatado vai para os pênaltis (no handebol, tiros de 7 metros).
+  return sportType === "FIFA" || sportType === "KINGS_LEAGUE" || getSportFamily(sportType) === "GOALS_CARDS";
 }
 
 /** Kings League: não existe empate, nem na fase de liga — o empate vai para os shootouts. */
@@ -105,7 +106,9 @@ export function shootoutDecidesLeagueDraws(sportType: SportType): boolean {
 
 /** Nome da disputa de desempate: "shootouts" na Kings League, "pênaltis" nos outros. */
 export function shootoutLabel(sportType: SportType): string {
-  return sportType === "KINGS_LEAGUE" ? "shootouts" : "pênaltis";
+  if (sportType === "KINGS_LEAGUE") return "shootouts";
+  if (sportType === "HANDEBOL") return "tiros de 7 metros";
+  return "pênaltis";
 }
 
 /** Esportes com goleiro (checkbox de goleiro na ficha e ranking de melhor goleiro). */

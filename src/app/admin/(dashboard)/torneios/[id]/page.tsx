@@ -13,7 +13,7 @@ import { StandingsTable } from "@/components/bracket/StandingsTable";
 import { FinalPodium } from "@/components/bracket/FinalPodium";
 import { toDisplayMatches } from "@/lib/bracket-view";
 import { computeStandings, pointsConfigFor } from "@/lib/bracket";
-import { SPORT_LABELS, getSportFamily, shootoutDecidesLeagueDraws } from "@/lib/sport";
+import { SPORT_LABELS, getSportFamily, shootoutDecidesLeagueDraws, shootoutLabel, supportsPenalties } from "@/lib/sport";
 import { TournamentLogoForm } from "@/components/admin/TournamentLogoForm";
 import { TournamentDatesForm } from "@/components/admin/TournamentDatesForm";
 import { TournamentNameForm } from "@/components/admin/TournamentNameForm";
@@ -104,6 +104,7 @@ export default async function TournamentDetailPage({
   const teamNames = Object.fromEntries(tournament.teams.map((t) => [t.id, t.name]));
   const family = getSportFamily(tournament.sportType);
   const quickResultEntry = family === "GOALS_CARDS";
+  const penaltiesLabel = supportsPenalties(tournament.sportType) ? shootoutLabel(tournament.sportType) : null;
 
   return (
     <div className="relative overflow-hidden">
@@ -135,9 +136,17 @@ export default async function TournamentDetailPage({
                 Cartaz com QR Code
               </Link>
             </p>
-            <div className="mt-1 flex gap-3">
+            <div className="mt-1 flex flex-wrap gap-3">
               <Link href={`/admin/torneios/${tournament.id}/agenda`} className="text-sm text-slate-600 underline">
                 Gerenciar agenda e locais
+              </Link>
+              {(family === "LOBBY_POINTS" || tournament.format === "HEATS") && (
+                <Link href={`/admin/torneios/${tournament.id}/sumula-queda`} className="text-sm text-slate-600 underline">
+                  {tournament.format === "HEATS" ? "Imprimir súmula da bateria" : "Imprimir súmula da queda"}
+                </Link>
+              )}
+              <Link href={`/admin/torneios/${tournament.id}/sumula-em-branco`} className="text-sm text-slate-600 underline">
+                Súmula em branco
               </Link>
               <Link href={`/admin/torneios/${tournament.id}/estatisticas`} className="text-sm text-slate-600 underline">
                 Estatísticas
@@ -434,6 +443,7 @@ export default async function TournamentDetailPage({
                     matches={groupMatches.filter((m) => m.groupId === group.id)}
                     editable
                     quickResultEntry={quickResultEntry}
+                    penaltiesLabel={penaltiesLabel}
                     tournamentId={tournament.id}
                   />
                 </div>
@@ -454,6 +464,7 @@ export default async function TournamentDetailPage({
             matches={eliminationMatches}
             editable
             quickResultEntry={quickResultEntry}
+            penaltiesLabel={penaltiesLabel}
             tournamentId={tournament.id}
           />
           </div>
