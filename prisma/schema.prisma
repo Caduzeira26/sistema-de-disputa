@@ -371,6 +371,8 @@ model Player {
   /// on however the team happened to spell "goleiro" in position.
   isGoalkeeper Boolean   @default(false)
   birthDate    DateTime?
+  /// RG do jogador (opcional), impresso na súmula. Texto livre: o formato muda de estado para estado.
+  rg           String?
   active       Boolean   @default(true)
 
   goals       Goal[]

@@ -21,6 +21,8 @@ const playerSchema = z.object({
   birthDate: z.string().nullish(),
   /** CPF — only collected/validated when the tournament's plan allows the athlete registry. */
   document: z.string().nullish(),
+  /** RG (opcional), impresso na súmula. */
+  rg: z.string().trim().max(20, "RG muito longo").nullish(),
 });
 
 const registerTeamSchema = z.object({
@@ -125,6 +127,7 @@ export async function registerTeam(
         position: p.position || null,
         isGoalkeeper: p.isGoalkeeper,
         birthDate,
+        rg: p.rg || null,
         athleteId: athlete.id,
       };
     })
@@ -280,7 +283,10 @@ export async function updatePlayerGoalkeepers(
     players.map((p) =>
       prisma.player.update({
         where: { id: p.id },
-        data: { isGoalkeeper: formData.get(`goalkeeper_${p.id}`) === "on" },
+        data: {
+          ...(formData.has(`goalkeeper_present_${p.id}`) ? { isGoalkeeper: formData.get(`goalkeeper_${p.id}`) === "on" } : {}),
+          rg: String(formData.get(`rg_${p.id}`) ?? "").trim().slice(0, 20) || null,
+        },
       })
     )
   );
@@ -365,6 +371,7 @@ export async function addPlayersToTeam(
         position: p.position || null,
         isGoalkeeper: p.isGoalkeeper,
         birthDate,
+        rg: p.rg || null,
         athleteId: athlete.id,
       };
     })

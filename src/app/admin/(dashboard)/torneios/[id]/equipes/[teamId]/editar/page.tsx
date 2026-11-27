@@ -32,15 +32,14 @@ export default async function EditTeamPage({
         <EditTeamForm team={team} />
       </div>
 
-      {hasGoalkeepers && (
-        <div className="mt-8">
-          <h2 className="mb-2 text-lg font-semibold text-slate-900">Goleiros</h2>
-          <p className="mb-3 text-sm text-slate-500">
-            Marque quem joga no gol nesta equipe — alimenta a estatística de &quot;melhor goleiro&quot; do campeonato.
-          </p>
-          <PlayerGoalkeeperEditor teamId={team.id} players={team.players} />
-        </div>
-      )}
+      <div className="mt-8">
+        <h2 className="mb-2 text-lg font-semibold text-slate-900">Jogadores</h2>
+        <p className="mb-3 text-sm text-slate-500">
+          O RG sai impresso na súmula do jogo.
+          {hasGoalkeepers && " Marque também quem joga no gol: alimenta a estatística de \"melhor goleiro\" do campeonato."}
+        </p>
+        <PlayerGoalkeeperEditor teamId={team.id} players={team.players} showGoalkeeper={hasGoalkeepers} />
+      </div>
 
       <BrandFooter />
     </div>

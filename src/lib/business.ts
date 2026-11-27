@@ -13,7 +13,7 @@ export const BUSINESS = {
 } as const;
 
 /** Date the current Termos de Uso and Política de Privacidade took effect. */
-export const LEGAL_UPDATED_AT = "27 de outubro de 2026";
+export const LEGAL_UPDATED_AT = "27 de novembro de 2026";
 
 /** WhatsApp of Digita Money, used for plans that are sold by talking to the team: (43) 99680-0406. */
 export const WHATSAPP_NUMBER = "5543996800406";

@@ -8,9 +8,12 @@ const initialState: UpdateGoalkeepersState = {};
 export function PlayerGoalkeeperEditor({
   teamId,
   players,
+  showGoalkeeper = true,
 }: {
   teamId: string;
-  players: { id: string; name: string; shirtNumber: number | null; isGoalkeeper: boolean }[];
+  players: { id: string; name: string; shirtNumber: number | null; isGoalkeeper: boolean; rg: string | null }[];
+  /** Esportes sem goleiro mostram só o RG. */
+  showGoalkeeper?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(updatePlayerGoalkeepers, initialState);
 
@@ -24,21 +27,34 @@ export function PlayerGoalkeeperEditor({
 
       <div className="flex flex-col divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
         {players.map((p) => (
-          <label key={p.id} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
+          <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 text-sm">
             <span className="text-slate-900">
               {p.name}
               {p.shirtNumber !== null && <span className="ml-1 text-slate-400">#{p.shirtNumber}</span>}
             </span>
-            <span className="flex items-center gap-2 text-slate-600">
-              É goleiro
+            <span className="flex items-center gap-3 text-slate-600">
               <input
-                type="checkbox"
-                name={`goalkeeper_${p.id}`}
-                defaultChecked={p.isGoalkeeper}
-                className="h-4 w-4 rounded border-slate-300"
+                name={`rg_${p.id}`}
+                defaultValue={p.rg ?? ""}
+                placeholder="RG"
+                maxLength={20}
+                aria-label={`RG de ${p.name}`}
+                className="w-32 rounded-md border border-slate-300 px-2 py-1 text-sm"
               />
+              {showGoalkeeper && (
+                <label className="flex items-center gap-2">
+                  <input type="hidden" name={`goalkeeper_present_${p.id}`} value="1" />
+                  É goleiro
+                  <input
+                    type="checkbox"
+                    name={`goalkeeper_${p.id}`}
+                    defaultChecked={p.isGoalkeeper}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                </label>
+              )}
             </span>
-          </label>
+          </div>
         ))}
       </div>
 
@@ -50,7 +66,7 @@ export function PlayerGoalkeeperEditor({
         disabled={pending}
         className="self-start rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
       >
-        {pending ? "Salvando..." : "Salvar goleiros"}
+        {pending ? "Salvando..." : "Salvar jogadores"}
       </button>
     </form>
   );

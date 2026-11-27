@@ -17,10 +17,11 @@ type PlayerDraft = {
   isGoalkeeper: boolean;
   birthDate: string;
   document: string;
+  rg: string;
 };
 
 function emptyPlayer(): PlayerDraft {
-  return { name: "", shirtNumber: "", position: "", isGoalkeeper: false, birthDate: "", document: "" };
+  return { name: "", shirtNumber: "", position: "", isGoalkeeper: false, birthDate: "", document: "", rg: "" };
 }
 
 export function TeamRegistrationForm({
@@ -231,6 +232,13 @@ export function TeamRegistrationForm({
                   type="date"
                   value={player.birthDate}
                   onChange={(e) => updatePlayer(index, "birthDate", e.target.value)}
+                  className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                />
+                <input
+                  placeholder="RG (opcional)"
+                  maxLength={20}
+                  value={player.rg}
+                  onChange={(e) => updatePlayer(index, "rg", e.target.value)}
                   className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
                 />
                 {canManageAthleteRegistry && (

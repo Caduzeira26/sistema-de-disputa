@@ -138,7 +138,7 @@ export default async function TournamentAgendaPage({
                               {away}
                             </span>
                             {isFinished && <span className="ml-1 text-emerald-600">· Encerrada</span>}
-                            {tournament.sportType === "KINGS_LEAGUE" && m.homeTeam && m.awayTeam && (
+                            {m.homeTeam && m.awayTeam && (
                               <Link
                                 href={`/admin/torneios/${tournament.id}/sumula/${m.id}`}
                                 className="ml-2 text-xs text-slate-500 underline"

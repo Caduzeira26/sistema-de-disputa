@@ -35,7 +35,7 @@ export default function PrivacyPage() {
             <strong>Equipes:</strong> nome e logo da equipe, nome do responsável, telefone e e-mail de contato.
           </li>
           <li>
-            <strong>Atletas:</strong> nome, número da camisa, posição, data de nascimento e CPF (quando o organizador
+            <strong>Atletas:</strong> nome, número da camisa, posição, data de nascimento, RG (opcional, impresso na súmula do jogo) e CPF (quando o organizador
             usa o cadastro de atletas), além de gols, cartões e demais estatísticas de jogo.
           </li>
           <li>
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
         </ul>
         <p>
           Nas páginas públicas de cada campeonato aparecem nome da equipe, nome e número dos atletas e as estatísticas
-          esportivas. CPF e data de nascimento não são exibidos publicamente.
+          esportivas. RG, CPF e data de nascimento não são exibidos publicamente.
         </p>
       </LegalSection>
 
