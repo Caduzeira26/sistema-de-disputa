@@ -120,7 +120,9 @@ export default async function TournamentAgendaPage({
                     const awayWon = winnerSide === "AWAY";
                     return (
                       <MatchScheduleRow
-                        key={m.id}
+                        // A chave muda quando data/local mudam no servidor (ex.: depois de "Distribuir agenda"):
+                        // a linha é recriada e os campos mostram os valores novos em vez dos antigos.
+                        key={`${m.id}-${m.scheduledAt?.toISOString() ?? ""}-${m.venueId ?? ""}`}
                         matchId={m.id}
                         label={
                           <span>
