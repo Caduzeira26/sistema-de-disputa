@@ -1,6 +1,6 @@
 # Vídeos de ajuda do Sistema de Disputa
 
-Série de 5 vídeos passo a passo (mais 2 extras: planos e pagamento, e Kings League), para quem nunca usou o sistema. Narração em português do Brasil
+Série de 5 vídeos passo a passo (mais 3 extras: planos e pagamento, Kings League, e agenda e locais), para quem nunca usou o sistema. Narração em português do Brasil
 (voz masculina "Antônio", neural e gratuita da Microsoft, preparada para o Terço dos Homens) e legendas na tela, gravados numa cópia de teste do sistema
 com um campeonato de exemplo ("Copa Digita Money de Futsal").
 
@@ -13,6 +13,7 @@ com um campeonato de exemplo ("Copa Digita Money de Futsal").
 | `05-resultados.mp4` | Lançar placares, campeão, página pública e estatísticas | ~2,5 min |
 | `06-planos-e-pagamento.mp4` | Os planos (Grátis, Start, Pro, Liga, Corporativo) e como pagar | ~4 min |
 | `07-kings-league.mp4` | Campeonato Kings League: súmula, cartas, shootouts, classificação e playoffs | ~4 min |
+| `08-agenda-e-locais.mp4` | Locais, distribuição automática da agenda, ajuste de um jogo, impressão e agenda pública | ~2 min |
 
 Os `.mp4` não vão para o git (são grandes). O que vai são os roteiros, em `fonte/`.
 
@@ -42,7 +43,7 @@ então regravar sem mudar a fala não gasta crédito; só texto novo é cobrado 
 
 **Voz Antônio (gratuita, neural):** `python videos/fonte/voz-edge.py videos/tmp/NOME/voz/lista.json` gera as falas com a voz
 `pt-BR-AntonioNeural` do Microsoft Edge (a mesma preparada para o Terço dos Homens), sem gastar crédito. Todos os vídeos usam essa voz;
-depois é só rodar o `trocar-voz.py` abaixo.
+para gravar já com ela, rode o roteiro com `VOZ=edge`; para trocar a voz de um vídeo pronto, use o `trocar-voz.py` abaixo.
 
 **Trocar só a voz, sem regravar a tela:** `python videos/fonte/trocar-voz.py NOME` (por exemplo `01-criando-a-conta`) usa o vídeo
 original guardado em `videos/tmp/antigos/NOME.mp4` e as falas novas geradas em `videos/tmp/NOME/voz` (uma gravação com `VOZ=elevenlabs`
