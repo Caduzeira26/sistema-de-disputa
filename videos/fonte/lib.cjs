@@ -266,6 +266,8 @@ async function gravar(opcoes) {
   page.on("pageerror", (e) => erros.push("pageerror: " + e.message));
   page.on("console", (m) => m.type() === "error" && erros.push("console: " + m.text().slice(0, 200)));
   const aux = auxiliares(page);
+  // Gancho opcional (ex.: servir slides locais com page.route) antes da primeira navegação.
+  if (opcoes.antes) await opcoes.antes(page);
 
   const marcas = []; // { arquivo, inicioMs }
   const agora = () => Date.now() - t0;

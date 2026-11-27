@@ -1,6 +1,6 @@
 # Vídeos de ajuda do Sistema de Disputa
 
-Série de 5 vídeos passo a passo (mais 3 extras: planos e pagamento, Kings League, e agenda e locais), para quem nunca usou o sistema. Narração em português do Brasil
+Série de 5 vídeos passo a passo (mais 6 extras: planos e pagamento, Kings League, agenda e locais, súmula impressa e pênaltis, modalidades e regras da Kings League), para quem nunca usou o sistema. Narração em português do Brasil
 (voz masculina "Antônio", neural e gratuita da Microsoft, preparada para o Terço dos Homens) e legendas na tela, gravados numa cópia de teste do sistema
 com um campeonato de exemplo ("Copa Digita Money de Futsal").
 
@@ -14,6 +14,9 @@ com um campeonato de exemplo ("Copa Digita Money de Futsal").
 | `06-planos-e-pagamento.mp4` | Os planos (Grátis, Start, Pro, Liga, Corporativo) e como pagar | ~4 min |
 | `07-kings-league.mp4` | Campeonato Kings League: súmula, cartas, shootouts, classificação e playoffs | ~4 min |
 | `08-agenda-e-locais.mp4` | Locais, distribuição automática da agenda, ajuste de um jogo, impressão e agenda pública | ~2 min |
+| `09-sumula-impressa-e-penaltis.mp4` | Pênaltis no mata-mata, súmula impressa preenchida e em branco, RG | ~2,5 min |
+| `10-modalidades.mp4` | Como funciona cada modalidade (slides) | ~4 min |
+| `11-kings-league-regras.mp4` | Todas as regras da Kings League (slides) | ~5 min |
 
 Os `.mp4` não vão para o git (são grandes). O que vai são os roteiros, em `fonte/`.
 
@@ -59,3 +62,7 @@ Cada passo tem `fala` (narração), `legenda` (texto na tela), `etiqueta` (nome 
 (o que acontece na tela). O gravador gera a voz de todas as falas, grava a tela com cursor e
 destaques, espera cada fala terminar antes do passo seguinte, alinha o áudio com o vídeo por um
 clarão em degradê e normaliza o volume (-16 LUFS).
+
+**Slides:** os vídeos 10 e 11 não usam a tela do sistema; os slides ficam em `fonte/slides.cjs` e são servidos só durante a gravação.
+
+**YouTube:** títulos, descrições e agenda de publicação em `youtube.md`. Cópias abaixo de 10 MB para envio ficam em `videos/youtube/` (ignorada pelo git).
