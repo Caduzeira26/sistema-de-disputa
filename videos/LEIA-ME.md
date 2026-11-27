@@ -1,7 +1,7 @@
 # Vídeos de ajuda do Sistema de Disputa
 
 Série de 5 vídeos passo a passo (mais 2 extras: planos e pagamento, e Kings League), para quem nunca usou o sistema. Narração em português do Brasil
-(voz masculina "Lax Whisper", do ElevenLabs, a mesma do canal Terço dos Homens) e legendas na tela, gravados numa cópia de teste do sistema
+(voz masculina "Antônio", neural e gratuita da Microsoft, preparada para o Terço dos Homens) e legendas na tela, gravados numa cópia de teste do sistema
 com um campeonato de exemplo ("Copa Digita Money de Futsal").
 
 | Arquivo | Assunto | Duração |
@@ -41,7 +41,7 @@ O roteiro simula o pagamento por esse servidor falso (`ASAAS_FALSO` muda o ender
 então regravar sem mudar a fala não gasta crédito; só texto novo é cobrado (~9 mil caracteres para os 6 vídeos).
 
 **Voz Antônio (gratuita, neural):** `python videos/fonte/voz-edge.py videos/tmp/NOME/voz/lista.json` gera as falas com a voz
-`pt-BR-AntonioNeural` do Microsoft Edge (a mesma preparada para o Terço dos Homens), sem gastar crédito. O vídeo 7 usa essa voz;
+`pt-BR-AntonioNeural` do Microsoft Edge (a mesma preparada para o Terço dos Homens), sem gastar crédito. Todos os vídeos usam essa voz;
 depois é só rodar o `trocar-voz.py` abaixo.
 
 **Trocar só a voz, sem regravar a tela:** `python videos/fonte/trocar-voz.py NOME` (por exemplo `01-criando-a-conta`) usa o vídeo
