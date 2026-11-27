@@ -40,6 +40,10 @@ O roteiro simula o pagamento por esse servidor falso (`ASAAS_FALSO` muda o ender
 `videos/fonte/.env.local` (`ELEVENLABS_API_KEY=...`, arquivo ignorado pelo git). Cada texto fica em cache em `videos/tmp/cache-voz`,
 então regravar sem mudar a fala não gasta crédito; só texto novo é cobrado (~9 mil caracteres para os 6 vídeos).
 
+**Voz Antônio (gratuita, neural):** `python videos/fonte/voz-edge.py videos/tmp/NOME/voz/lista.json` gera as falas com a voz
+`pt-BR-AntonioNeural` do Microsoft Edge (a mesma preparada para o Terço dos Homens), sem gastar crédito. O vídeo 7 usa essa voz;
+depois é só rodar o `trocar-voz.py` abaixo.
+
 **Trocar só a voz, sem regravar a tela:** `python videos/fonte/trocar-voz.py NOME` (por exemplo `01-criando-a-conta`) usa o vídeo
 original guardado em `videos/tmp/antigos/NOME.mp4` e as falas novas geradas em `videos/tmp/NOME/voz` (uma gravação com `VOZ=elevenlabs`
 cria esses arquivos). O script acha o instante exato de cada fala original por correlação e coloca a voz nova no mesmo ponto;
